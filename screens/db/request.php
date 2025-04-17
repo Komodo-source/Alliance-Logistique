@@ -1,10 +1,8 @@
 <?php
 include('db.php');
 
-$UserEmail = $decodedData['Email'];
-$UserPW = md5($decodedData['Password']);
 
-$SQL = "SELECT * FROM newuser WHERE UserEmail = '$UserEmail'";
+$SQL = "SELECT * FROM HUB ORDER BY date_debut"; //MEttre une LIMITE CAR LA ON RECUP TT LES VAL
 $exeSQL = mysqli_query($conn, $SQL);
 $checkEmail =  mysqli_num_rows($exeSQL);
 
@@ -23,3 +21,5 @@ if ($checkEmail != 0) {
     }
 }
 $response[] = array("Message" => $Message);
+echo json_encode($response);
+?>
