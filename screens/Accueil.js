@@ -1,5 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Button} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button,Image} from 'react-native';
+import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+
 
 const Accueil = ({ navigation }) => {
   return (
@@ -10,41 +12,58 @@ const Accueil = ({ navigation }) => {
         onPress={() => navigation.navigate('Hub')}
       />
       
-      
-      <View style={styles.navbar}>
-        <Button
-          buttonStyle={styles.navButton}
-          titleStyle={styles.navButtonText}
-          title="Recherche"
-        
+      <View style={styles.navbar}> 
+
+        <TouchableOpacity 
+          style={styles.navButton}
           onPress={() => console.log('Recherche pressé')}
-        />
+        >
+          <Text style={styles.navButtonText}>Recherche</Text>
+ 
+        </TouchableOpacity>
 
-        <Button
-          buttonStyle={[styles.navButton, styles.activeButton]}
-          titleStyle={styles.navButtonText}
-          title="Accueil"
+        <TouchableOpacity 
+          style={[styles.navButton, styles.activeButton]}
           onPress={() => console.log('Accueil pressé')}
-        />
+        >
+          <Text style={styles.navButtonText}>Accueil</Text>
+            <Image
+              style={styles.logoNavBar}
+              source={require('../assets/Icons/Dark-House.png')}
+            />
+        </TouchableOpacity>
          
-        <Button
-          buttonStyle={styles.navButton}
-          titleStyle={styles.navButtonText}
-          title="Hub"
+        <TouchableOpacity 
+          style={styles.navButton}
           onPress={() => console.log('Hub pressé')}
-        />
+        >
+          <Text style={styles.navButtonText}>Hub</Text>
+          <Image
+              style={styles.logoNavBar}
+              source={require('../assets/Icons/Dark-Hub.png')}
+            />
+        </TouchableOpacity>
 
-        <Button
-          buttonStyle={styles.navButton}
-          title="Profil"
+        <TouchableOpacity 
+          style={styles.navButton}
           onPress={() => console.log('Profil pressé')}
-        />
+        >
+          <Text style={styles.navButtonText}>Profil</Text>
+          <Image
+              style={styles.logoNavBar}
+              source={require('../assets/Icons/Dark-profile.png')}
+            />
+        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  logoNavBar: {
+    width: 30,
+    height: 30,
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -61,23 +80,27 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#ddd',
+    borderTopColor: '#F9F6EE',
+    backgroundColor: '#F9F6EE',
   },
-
   navButton: {
     paddingHorizontal: 10,
+    paddingVertical: 8,
+    flexDirection: 'column',
+    alignItems: 'center'
   },
-
   activeButton: {
-    borderRadius: 90,
+    borderRadius: 40,
+    backgroundColor: '#7CC6FE',
+    width: 120
   },
   navButtonText: {
-    fontSize: 12,
-    marginLeft: 5,
+    fontSize: 18,
+    fontWeight: "bold"
   },
+
 });
 
 export default Accueil;

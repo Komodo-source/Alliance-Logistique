@@ -1,6 +1,7 @@
 <?php
 include('db.php');
 
+
 // Supposons que $decodedData provient d'une requête JSON
 //$decodedData = json_decode(file_get_contents('php://input'), true);
 
