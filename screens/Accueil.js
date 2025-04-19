@@ -3,28 +3,25 @@ import { View, Text, StyleSheet, TouchableOpacity, Button,Image} from 'react-nat
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 
 
+
 const Accueil = ({ navigation }) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Home Screen</Text>
-      <Button
-        title="Go to Details"
-        onPress={() => navigation.navigate('Hub')}
-      />
-      
-      <View style={styles.navbar}> 
 
+      <View style={styles.navbar}> 
         <TouchableOpacity 
           style={styles.navButton}
-          onPress={() => console.log('Recherche pressé')}
+          //onPress={() => console.log('Recherche pressé')}
+          onPress={() => navigation.navigate('Recherche')}
         >
           <Text style={styles.navButtonText}>Recherche</Text>
- 
         </TouchableOpacity>
+
 
         <TouchableOpacity 
           style={[styles.navButton, styles.activeButton]}
-          onPress={() => console.log('Accueil pressé')}
+          //onPress={() => console.log('Accueil pressé')}
+          onPress={() => navigation.navigate('Accueil')}
         >
           <Text style={styles.navButtonText}>Accueil</Text>
             <Image
@@ -32,10 +29,12 @@ const Accueil = ({ navigation }) => {
               source={require('../assets/Icons/Dark-House.png')}
             />
         </TouchableOpacity>
+        
          
         <TouchableOpacity 
           style={styles.navButton}
-          onPress={() => console.log('Hub pressé')}
+          //onPress={() => console.log('Hub pressé')}
+          onPress={() => navigation.navigate('Hub')}
         >
           <Text style={styles.navButtonText}>Hub</Text>
           <Image
@@ -46,7 +45,8 @@ const Accueil = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.navButton}
-          onPress={() => console.log('Profil pressé')}
+          //onPress={() => console.log('Profil pressé')}
+          onPress={() => navigation.navigate('Profil')}
         >
           <Text style={styles.navButtonText}>Profil</Text>
           <Image
@@ -55,6 +55,15 @@ const Accueil = ({ navigation }) => {
             />
         </TouchableOpacity>
       </View>
+      <View>
+      <TouchableOpacity 
+
+          style={styles.navButton}
+          //onPress={() => console.log('Hub pressé')}
+          onPress={() => navigation.navigate('Formulaire')} >
+              <Text>hdfs</Text>
+          </TouchableOpacity>
+        </View>
     </View>
   );
 };

@@ -1,8 +1,8 @@
 <?php
-$host = 'gy1ia.h.filess.io';
-$user = 'TestDBBackend_gatherlaw';
-$pass = 'a6c2b17f904747a290e01610190981732971948e';
-$db = 'TestDBBackend_gatherlaw';
+$host = 'db4free.net';
+$user = 'komodoadmin87';
+$pass = 'VcDsK1Yfcm4z6Nhb';
+$db = 'logibackkomododb';
 
 try {
     $conn = new mysqli($host, $user, $pass, $db, 3307);
