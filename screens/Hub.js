@@ -16,7 +16,7 @@ const Hub = ({ navigation }) => {
     return desc.slice(0, 75) + "..."
   }
   const [HUB, setHub] = useState([]); // nom table ici aussi
-
+  
   useEffect(() => {
     fetch('https://backend-logistique-api-latest.onrender.com/api.php')
       .then((response) => response.json())

@@ -61,7 +61,7 @@ const Accueil = ({ navigation }) => {
           style={styles.navButton}
           //onPress={() => console.log('Hub pressé')}
           onPress={() => navigation.navigate('Formulaire')} >
-              <Text>hdfs</Text>
+              <Text>Passer une commande</Text>
           </TouchableOpacity>
         </View>
     </View>

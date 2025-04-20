@@ -19,7 +19,7 @@ const Details = ({ route, navigation }) => {
       <Text style={styles.titleComposition}>Composition de la commande: </Text>
       <View style={styles.composition}> 
         <TouchableOpacity style={styles.produit}>
-          <Text style={styles.produitLibelle}>3 x Tomate</Text>
+          <Text style={styles.produitLibelle}>3 x Tomate - 300g/pièce</Text>
           <Image
           style={styles.logoProduit}
           source={require('../../assets/Icons/Dark-tomato.png')}
@@ -27,7 +27,7 @@ const Details = ({ route, navigation }) => {
         </TouchableOpacity>
         <View style={styles.divisor}></View>
         <TouchableOpacity style={styles.produit}>
-          <Text style={styles.produitLibelle}>3 x Tomate</Text>
+          <Text style={styles.produitLibelle}>3 x Tomate - 300g/pièce</Text>
           <Image
           style={styles.logoProduit}
           source={require('../../assets/Icons/Dark-tomato.png')}

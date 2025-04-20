@@ -15,10 +15,10 @@ const App = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Accueil">
-        <Stack.Screen name="Accueil" component={Accueil} />
-        <Stack.Screen name="Hub" component={Hub} />
-        <Stack.Screen name="Recherche" component={Recherche} />
-        <Stack.Screen name="Profil" component={Profil} />
+        <Stack.Screen name="Accueil" component={Accueil} options={{ headerShown: false }} />
+        <Stack.Screen name="Hub" component={Hub} options={{ headerShown: false }} />
+        <Stack.Screen name="Recherche" component={Recherche} options={{ headerShown: false }} />
+        <Stack.Screen name="Profil" component={Profil} options={{ headerShown: false }} />
         <Stack.Screen name="Formulaire" component={Formulaire} />
         <Stack.Screen name="Details" component={Details} />
       </Stack.Navigator>
