@@ -1,7 +1,9 @@
-import React, {useState} from 'react';
-import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, PermissionsAndroid, Alert} from 'react-native';
 import DatePicker from 'react-native-date-picker';
 import TomateImage from '../assets/Icons/Dark-tomato.png';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import Geolocation from 'react-native-geolocation-service';
 
 const Formulaire = ({ navigation }) => {
   const [date, setDate] = useState(new Date());
@@ -12,12 +14,79 @@ const Formulaire = ({ navigation }) => {
   const [nombre, setNombre] = useState('');
   const [commandeName, setCommandeName] = useState('');
   const [description, setDescription] = useState('');
-
   const [childViews, setChildViews] = useState([]);
-  const [products, setProducts] = useState([]); // Pour stocker les produits sélectionnés
+  const [products, setProducts] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [hasLocationPermission, setHasLocationPermission] = useState(false);
+
+  const [region, setRegion] = useState({
+    latitude: 9.3077,
+    longitude: 2.3158,
+    latitudeDelta: 0.822,
+    longitudeDelta: 0.0421,
+  });
 
   const dic_image_name = {
     "tomate": TomateImage
+  };
+
+  // Request location permission and get current location
+  const requestLocationPermission = async () => {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Geolocation Permission',
+          message: 'Can we access your location?',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      
+      if (granted === 'granted') {
+        setHasLocationPermission(true);
+        getCurrentLocation();
+        return true;
+      } else {
+        setHasLocationPermission(false);
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
+  const getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ latitude, longitude });
+        setSelectedLocation({ latitude, longitude });
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+      },
+      (error) => {
+        console.log(error.code, error.message);
+        Alert.alert('Error', 'Could not get your current location');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+    );
+  };
+
+  useEffect(() => {
+    requestLocationPermission();
+  }, []);
+
+  const handleMapPress = (e) => {
+    const { coordinate } = e.nativeEvent;
+    setSelectedLocation(coordinate);
   };
 
   const add_product = (name, poids, nombre) => {
@@ -57,16 +126,22 @@ const Formulaire = ({ navigation }) => {
   };
 
   const handleSubmit = () => {
-    // Préparer les données à envoyer
+    if (!selectedLocation) {
+      Alert.alert('Error', 'Please select a location on the map');
+      return;
+    }
+
     const formData = {
       commandeName,
       description,
       deliveryDate: date.toISOString(),
-      products
+      products,
+      location: selectedLocation // Include location in form data
     };
 
-    // Envoyer les données au serveur
-    fetch('https://votre-serveur.com/api/commandes', {
+    console.log('Form data with location:', formData);
+
+    fetch('', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -82,12 +157,12 @@ const Formulaire = ({ navigation }) => {
     .then(data => {
       console.log('Succès:', data);
       alert('Commande créée avec succès!');
-      // Réinitialiser le formulaire si nécessaire
       setCommandeName('');
       setDescription('');
       setDate(new Date());
       setProducts([]);
       setChildViews([]);
+      setSelectedLocation(null);
     })
     .catch(error => {
       console.error('Erreur:', error);
@@ -95,7 +170,7 @@ const Formulaire = ({ navigation }) => {
     });
   };
   
-  return (
+  return(
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
@@ -170,7 +245,7 @@ const Formulaire = ({ navigation }) => {
                   </View>
 
                   <View style={styles.InputModal}>
-                    <Text style={styles.txtInput}>Poids en grammes {selectedProduct?.key}</Text>
+                    <Text style={styles.txtInput}>Poids en grammes/pièce {selectedProduct?.key}</Text>
                     <TextInput
                       style={styles.inputNB}
                       keyboardType="decimal-pad"
@@ -188,6 +263,7 @@ const Formulaire = ({ navigation }) => {
                           add_product(selectedProduct.key, poids, nombre);
                         } else {
                           alert("Veuillez remplir tous les champs");
+                          
                         }
                       }}
                     >
@@ -233,22 +309,57 @@ const Formulaire = ({ navigation }) => {
             <View style={{marginBottom: 10}}>
               {childViews}
             </View>
-      
-            <Text style={styles.localisationText}>Votre localisation sera utilisée pour obtenir une livraison plus rapide</Text>
-
-            <TouchableOpacity
-              style={styles.reponseCommande}
-              onPress={handleSubmit}
+                      
+          <Text style={styles.localisationText}>Votre localisation sera utilisée pour obtenir une livraison plus rapide</Text>
+          
+          <View style={styles.locationButtons}>
+            <TouchableOpacity 
+              style={styles.locationButton}
+              onPress={getCurrentLocation}
+              disabled={!hasLocationPermission}
             >
-              <Text style={styles.textButton}>Mettre en ligne</Text>
+              <Text style={styles.locationButtonText}>Use My Current Location</Text>
             </TouchableOpacity>
+            <Text style={styles.orText}>OR</Text>
+            <Text style={styles.tapText}>Tap on the map to select a location</Text>
           </View>
+          
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              region={region}
+              provider={PROVIDER_GOOGLE}
+              showsUserLocation={hasLocationPermission && userLocation !== null}
+              showsMyLocationButton={false}
+              onPress={handleMapPress}
+            >
+              {selectedLocation && (
+                <Marker
+                  coordinate={selectedLocation}
+                  title="Selected Location"
+                />
+              )}
+            </MapView>
+          </View>
+          
+          {selectedLocation && (
+            <Text style={styles.coordinatesText}>
+              Selected Location: {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+            </Text>
+          )}
+          
+          <TouchableOpacity
+            style={styles.reponseCommande}
+            onPress={handleSubmit}
+          >
+            <Text style={styles.textButton}>Mettre en ligne</Text>
+          </TouchableOpacity>
+        </View>
         </View>
       </ScrollView>
     </TouchableWithoutFeedback>
   );
 };
-
 
 const styles = StyleSheet.create({
   scrollContainer: {
@@ -329,7 +440,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: "#B8E0FF",
     padding: 15,
-    
   },
   titleProd: {
     fontSize: 18,
@@ -401,7 +511,6 @@ const styles = StyleSheet.create({
     width: '50%',
     alignItems: 'center',
     marginTop: 15,
-    
   },
   modalButtonAnnul: {
     borderWidth: 3,
@@ -443,14 +552,50 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row"
   },
-
-  containerProduct : {
-    borderRadius : 7,
+  containerProduct: {
+    borderRadius: 7,
     backgroundColor: "#75D4F2",
     marginTop: 10,
     padding: 10,
   },
-  
+  mapContainer: {
+    width: '100%',
+    height: 300,
+    marginTop: 20,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  locationButtons: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  locationButton: {
+    backgroundColor: '#45b308',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  locationButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  orText: {
+    marginVertical: 5,
+    fontWeight: 'bold',
+  },
+  tapText: {
+    marginBottom: 10,
+    fontStyle: 'italic',
+  },
+  coordinatesText: {
+    textAlign: 'center',
+    marginTop: 10,
+    color: '#555',
+  },
 });
 
 export default Formulaire;

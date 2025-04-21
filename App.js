@@ -7,6 +7,8 @@ import Recherche from './screens/Recherche';
 import Profil from './screens/Profil';
 import Formulaire from './screens/Formulaire';
 import Details from './screens/sub_screens/Details';
+import HomePage from './screens/sub_screens/Home-Page';
+import Login from './screens/sub_screens/login';
 
 
 const Stack = createNativeStackNavigator();
@@ -21,6 +23,8 @@ const App = () => {
         <Stack.Screen name="Profil" component={Profil} options={{ headerShown: false }} />
         <Stack.Screen name="Formulaire" component={Formulaire} />
         <Stack.Screen name="Details" component={Details} />
+        <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
+        <Stack.Screen name="Login" component={Login} />
       </Stack.Navigator>
     </NavigationContainer>
   );
