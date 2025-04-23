@@ -8,8 +8,9 @@ import Profil from './screens/Profil';
 import Formulaire from './screens/Formulaire';
 import Details from './screens/sub_screens/Details';
 import HomePage from './screens/sub_screens/Home-Page';
+import choixType from './screens/sub_screens/choixType';
 import Login from './screens/sub_screens/login';
-
+import enregistrer from './screens/sub_screens/enregistrer';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,7 +25,9 @@ const App = () => {
         <Stack.Screen name="Formulaire" component={Formulaire} />
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
+        <Stack.Screen name="choixType" component={choixType} />
         <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="enregistrer" component={enregistrer} />
       </Stack.Navigator>
     </NavigationContainer>
   );

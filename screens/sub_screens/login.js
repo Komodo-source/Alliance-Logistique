@@ -30,6 +30,7 @@ const Login = ({ navigation }) => {
           .then(data => {
             console.log('Succès:', data);
             alert('Bien Login');
+            
           })
           .catch(error => {
             console.error('Erreur:', error);
@@ -51,7 +52,7 @@ const Login = ({ navigation }) => {
           style={styles.input}
           keyboardType="default"
           placeholder="Identifiant"
-          autoFocus={true}
+          //autoFocus={true}
           placeholderTextColor="#a2a2a9"
           value={username}
           onChangeText={setUsername}
@@ -65,12 +66,22 @@ const Login = ({ navigation }) => {
           keyboardType="password"
           secureTextEntry={true}
           placeholder="Identifiant"
-          autoFocus={true}
+          //autoFocus={true}
           placeholderTextColor="#a2a2a9"
           value={password}
           onChangeText={setPassword}
         />        
       </View>
+
+      <TouchableOpacity
+      style={styles.LoginButton}
+      onPress={login()}
+      >
+        <Text style={{fontSize : 16, color : "#000", textAlign : "center", fontWeight : "600"}}>Connexion</Text>
+
+      </TouchableOpacity>
+
+
     </View>
   );
 };

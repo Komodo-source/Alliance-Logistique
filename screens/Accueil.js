@@ -55,14 +55,17 @@ const Accueil = ({ navigation }) => {
             />
         </TouchableOpacity>
       </View>
+
       <View>
       <TouchableOpacity 
 
           style={styles.navButton}
           //onPress={() => console.log('Hub pressé')}
           onPress={() => navigation.navigate('Formulaire')} >
-              <Text>Passer une commande</Text>
+              <Text style={{fontSize : 20, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>Passer une commande</Text>
           </TouchableOpacity>
+
+        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>Vos commandes: </Text>
         </View>
     </View>
   );

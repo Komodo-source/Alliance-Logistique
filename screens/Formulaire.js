@@ -1,12 +1,15 @@
 import React, {useState, useEffect} from 'react';
-import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, PermissionsAndroid, Alert} from 'react-native';
-import DatePicker from 'react-native-date-picker';
+import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, Alert, PermissionsAndroid} from 'react-native';
+
 import TomateImage from '../assets/Icons/Dark-tomato.png';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import Geolocation from 'react-native-geolocation-service';
+import dayjs from 'dayjs';
+import DatePicker from 'react-native-ui-datepicker';
 
 const Formulaire = ({ navigation }) => {
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(dayjs());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [open, setOpen] = useState(false);
@@ -19,13 +22,14 @@ const Formulaire = ({ navigation }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
-
   const [region, setRegion] = useState({
     latitude: 9.3077,
     longitude: 2.3158,
-    latitudeDelta: 0.822,
-    longitudeDelta: 0.0421,
+    latitudeDelta: 0.0421,
+    longitudeDelta: 0.822,
   });
+  const [produit, setProduit] = useState([]);
+
 
   const dic_image_name = {
     "tomate": TomateImage
@@ -37,20 +41,21 @@ const Formulaire = ({ navigation }) => {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         {
-          title: 'Geolocation Permission',
-          message: 'Can we access your location?',
-          buttonNeutral: 'Ask Me Later',
-          buttonNegative: 'Cancel',
+          title: 'Permission de Localisation',
+          message: 'Accéder à votre location?',
+          buttonNeutral: 'Plus tard',
+          buttonNegative: 'Annuler',
           buttonPositive: 'OK',
         },
       );
       
-      if (granted === 'granted') {
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
         setHasLocationPermission(true);
         getCurrentLocation();
         return true;
       } else {
         setHasLocationPermission(false);
+        Alert.alert('Permission refusée', 'Vous devez autoriser la localisation');
         return false;
       }
     } catch (err) {
@@ -59,17 +64,35 @@ const Formulaire = ({ navigation }) => {
     }
   };
 
+
+  const postCommande = () => {
+    
+  }
+
+  const getProduct = () => {
+    fetch('https://backend-logistique-api-latest.onrender.com/product.php')
+    .then((response) => response.json())
+    .then((data) => setProduit(data))
+    .catch((error) => console.error(error));
+  }
+
   const getCurrentLocation = () => {
-    Geolocation.getCurrentPosition(
+    if (!hasLocationPermission) {
+      Alert.alert('Permission requise', 'Vous devez autoriser la localisation');
+      return;
+    }
+    
+    Geolocation.getCurrentPosition(      
       (position) => {
         const { latitude, longitude } = position.coords;
+        console.log("Current location:", latitude, longitude);
         setUserLocation({ latitude, longitude });
         setSelectedLocation({ latitude, longitude });
         setRegion({
           latitude,
           longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          latitudeDelta: region.latitudeDelta,
+          longitudeDelta: region.longitudeDelta,
         });
       },
       (error) => {
@@ -125,6 +148,22 @@ const Formulaire = ({ navigation }) => {
     setModalVisible(true);
   };
 
+  const zoomOut = () => {
+    setRegion(prev => ({
+      ...prev,
+      latitudeDelta: prev.latitudeDelta * 1.2,
+      longitudeDelta: prev.longitudeDelta * 1.2
+    }));
+  };
+
+  const zoomIn = () => {
+    setRegion(prev => ({
+      ...prev,
+      latitudeDelta: Math.max(prev.latitudeDelta * 0.8, 0.0001),
+      longitudeDelta: Math.max(prev.longitudeDelta * 0.8, 0.0001)
+    }));
+  };
+
   const handleSubmit = () => {
     if (!selectedLocation) {
       Alert.alert('Error', 'Please select a location on the map');
@@ -136,7 +175,7 @@ const Formulaire = ({ navigation }) => {
       description,
       deliveryDate: date.toISOString(),
       products,
-      location: selectedLocation // Include location in form data
+      location: selectedLocation 
     };
 
     console.log('Form data with location:', formData);
@@ -201,23 +240,44 @@ const Formulaire = ({ navigation }) => {
               onChangeText={setDescription}
             />
 
-            <Text style={styles.descInput}>Date de livraison impérative</Text>
+<Text style={styles.descInput}>Date de livraison impérative</Text>
             <View style={styles.datePickerContainer}>
               <Button 
-                title="Selectionner une date" 
-                onPress={() => setOpen(true)} 
+                title={"Sélectionner une date"} 
+                onPress={() => setShowDatePicker(true) } 
               />
-              <Text>Date sélectionnée : {date.toDateString()}</Text>
+              
+              {showDatePicker && (
+                <Modal
+                  transparent={true}
+                  animationType="slide"
+                  visible={showDatePicker}
+                  onRequestClose={() => setShowDatePicker(false)}
+                >
+                  <View style={styles.modalOverlay}>
+                    <View style={styles.datePickerModal}>
+                      <DatePicker
+                        mode="single"
+                        date={date}
+                        onChange={(params) => {
+                          setDate(params.date);
+                          setShowDatePicker(false);
+                        }}
+                        minDate={dayjs()}
+                        headerButtonColor="#45b308"
+                        selectedItemColor="#45b308"
+                      />
+                      <TouchableOpacity
+                        style={styles.datePickerCloseButton}
+                        onPress={() => setShowDatePicker(false)}
+                      >
+                        <Text style={styles.datePickerCloseButtonText}>Fermer</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </Modal>
+              )}
             </View>
-            <DatePicker
-              modal
-              open={open}
-              date={date}
-              mode="date"
-              onConfirm={handleConfirm}
-              onCancel={() => setOpen(false)}
-              androidVariant="nativeAndroid"
-            />
 
             <Modal
               animationType="fade"
@@ -284,21 +344,10 @@ const Formulaire = ({ navigation }) => {
             <View style={styles.listProduit}>
               <Text style={styles.titleProd}>Sélectionner vos produits</Text>
               <FlatList
-                data={[
-                  {key: 'Devin'},
-                  {key: 'Dan'},
-                  {key: 'Dominic'},
-                  {key: 'Jackson'},
-                  {key: 'James'},
-                  {key: 'Joel'},
-                  {key: 'John'},
-                  {key: 'Jillian'},
-                  {key: 'Jimmy'},
-                  {key: 'Julie'},
-                ]}
+                data={produit}
                 renderItem={({item}) => (
                   <TouchableOpacity onPress={() => handleProductPress(item)}>
-                    <Text style={styles.item}>{item.key}</Text>
+                    <Text style={styles.item}>{item.nom_produit}</Text>
                   </TouchableOpacity>
                 )}
                 scrollEnabled={false}
@@ -309,7 +358,7 @@ const Formulaire = ({ navigation }) => {
             <View style={{marginBottom: 10}}>
               {childViews}
             </View>
-                      
+          <Text style={{fontSize : 18, fontWeight : "800"}}>Livraison: </Text>
           <Text style={styles.localisationText}>Votre localisation sera utilisée pour obtenir une livraison plus rapide</Text>
           
           <View style={styles.locationButtons}>
@@ -318,10 +367,10 @@ const Formulaire = ({ navigation }) => {
               onPress={getCurrentLocation}
               disabled={!hasLocationPermission}
             >
-              <Text style={styles.locationButtonText}>Use My Current Location</Text>
+              <Text style={styles.locationButtonText}>utilisez votre localisation</Text>
             </TouchableOpacity>
-            <Text style={styles.orText}>OR</Text>
-            <Text style={styles.tapText}>Tap on the map to select a location</Text>
+            <Text style={styles.orText}>OU</Text>
+            <Text style={styles.tapText}>Tappez sur la pour choisir la localisation</Text>
           </View>
           
           <View style={styles.mapContainer}>
@@ -336,17 +385,33 @@ const Formulaire = ({ navigation }) => {
               {selectedLocation && (
                 <Marker
                   coordinate={selectedLocation}
-                  title="Selected Location"
+                  title="Localisation Séléctionné"
                 />
               )}
             </MapView>
-          </View>
-          
+
+            <View style={{display: "flex", flexDirection : "row", justifyContent: "space-around", marginTop: 20}}>
+            <TouchableOpacity 
+                style={{borderRadius: 15, borderWidth: 2, width: 150, alignItems: "center", height: 30}}
+                onPress={zoomIn}
+              >
+                <Image source={require('../assets/Icons/Dark-Plus.png')} />  
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={{borderRadius: 15, borderWidth: 2, width: 150, alignItems: "center", height: 30}}
+                onPress={zoomOut}
+              >
+                <Image source={require('../assets/Icons/Dark-Moins.png')} />  
+              </TouchableOpacity>
+            </View>
           {selectedLocation && (
             <Text style={styles.coordinatesText}>
-              Selected Location: {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+              Localisation sélectionné: {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
             </Text>
           )}
+
+          </View>
           
           <TouchableOpacity
             style={styles.reponseCommande}
@@ -362,6 +427,23 @@ const Formulaire = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  datePickerModal: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    alignItems: 'center',
+  },
+  datePickerCloseButton: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#45b308',
+    borderRadius: 5,
+  },
+  datePickerCloseButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
   scrollContainer: {
     flexGrow: 1,
     paddingBottom: 40,
@@ -467,7 +549,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF',
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
@@ -481,7 +563,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 15,
     color: '#333',
@@ -563,7 +645,9 @@ const styles = StyleSheet.create({
     height: 300,
     marginTop: 20,
     borderRadius: 10,
-    overflow: 'hidden',
+    marginBottom: 45,
+    textAlign : "center",
+    
   },
   map: {
     width: '100%',
@@ -598,4 +682,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Formulaire;
+export default Formulaire;  

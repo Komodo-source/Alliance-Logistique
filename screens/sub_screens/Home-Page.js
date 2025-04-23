@@ -41,6 +41,7 @@ const HomePage = ({ navigation }) => {
         
         <TouchableOpacity // Signup 
         style={styles.SignUpButton}
+        onPress={() => navigation.navigate('choixType')}
         >
            <Image
             style={styles.logoNavBar}

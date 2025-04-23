@@ -17,7 +17,7 @@ $SQL = "INSERT INTO HUB(id_dmd, nom_dmd, desc_dmd, localisation_dmd, date_fin, e
 VALUES(?, ?, ?, ?, ?, ?, ?)";
 
 $stmt = $conn->prepare($SQL);
-$stmt->bind_param("sssssii", $id, $nom, $desc, $localisation, $date_fin, $est_commandé, $id_client);
+$stmt->bind_param("sssssss", $id, $nom, $desc, $localisation, $date_fin, $est_commandé, $id_client);
 
 if ($stmt->execute()) {
     $response = array("Message" => "OK");
