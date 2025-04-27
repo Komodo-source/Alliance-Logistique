@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Loading from './screens/loading';
 import Accueil from './screens/Accueil';
 import Hub from './screens/Hub';
 import Recherche from './screens/Recherche';
@@ -17,7 +18,8 @@ const Stack = createNativeStackNavigator();
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Accueil">
+      <Stack.Navigator initialRouteName="Loading">
+      <Stack.Screen name="Loading" component={Loading} options={{ headerShown: false }} />
         <Stack.Screen name="Accueil" component={Accueil} options={{ headerShown: false }} />
         <Stack.Screen name="Hub" component={Hub} options={{ headerShown: false }} />
         <Stack.Screen name="Recherche" component={Recherche} options={{ headerShown: false }} />

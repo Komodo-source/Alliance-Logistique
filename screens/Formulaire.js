@@ -3,9 +3,11 @@ import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, 
 
 import TomateImage from '../assets/Icons/Dark-tomato.png';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
-import Geolocation from 'react-native-geolocation-service';
+import * as Location from 'expo-location';
 import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
+
+import * as dataUser from '../assets/data/auto.json';
 
 const Formulaire = ({ navigation }) => {
   const [date, setDate] = useState(dayjs());
@@ -38,18 +40,9 @@ const Formulaire = ({ navigation }) => {
   // Request location permission and get current location
   const requestLocationPermission = async () => {
     try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Permission de Localisation',
-          message: 'Accéder à votre location?',
-          buttonNeutral: 'Plus tard',
-          buttonNegative: 'Annuler',
-          buttonPositive: 'OK',
-        },
-      );
+      const { status } = await Location.requestForegroundPermissionsAsync();
       
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      if (status === 'granted') {
         setHasLocationPermission(true);
         getCurrentLocation();
         return true;
@@ -65,46 +58,57 @@ const Formulaire = ({ navigation }) => {
   };
 
 
-  const postCommande = () => {
-    
-  }
-
   const getProduct = () => {
     fetch('https://backend-logistique-api-latest.onrender.com/product.php')
-    .then((response) => response.json())
-    .then((data) => setProduit(data))
-    .catch((error) => console.error(error));
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Produits reçus:", data); // Vérifiez la structure des données
+        setProduit(data);
+      })
+      .catch((error) => console.error(error));
   }
 
-  const getCurrentLocation = () => {
+  const transform_date = (date_value) => {
+    const date = new Date(date_value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); 
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  const getCurrentLocation = async () => {
     if (!hasLocationPermission) {
       Alert.alert('Permission requise', 'Vous devez autoriser la localisation');
       return;
     }
     
-    Geolocation.getCurrentPosition(      
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log("Current location:", latitude, longitude);
-        setUserLocation({ latitude, longitude });
-        setSelectedLocation({ latitude, longitude });
-        setRegion({
-          latitude,
-          longitude,
-          latitudeDelta: region.latitudeDelta,
-          longitudeDelta: region.longitudeDelta,
-        });
-      },
-      (error) => {
-        console.log(error.code, error.message);
-        Alert.alert('Error', 'Could not get your current location');
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-    );
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      console.log("Current location:", latitude, longitude);
+      setUserLocation({ latitude, longitude });
+      setSelectedLocation({ latitude, longitude });
+      setRegion({
+        latitude,
+        longitude,
+        latitudeDelta: region.latitudeDelta,
+        longitudeDelta: region.longitudeDelta,
+      });
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Error', 'Could not get your current location');
+    }
   };
 
   useEffect(() => {
     requestLocationPermission();
+    getProduct();
   }, []);
 
   const handleMapPress = (e) => {
@@ -112,22 +116,29 @@ const Formulaire = ({ navigation }) => {
     setSelectedLocation(coordinate);
   };
 
-  const add_product = (name, poids, nombre) => {
+  const add_product = (name, poids, nombre, id) => {
     setModalVisible(false);
     const newProduct = {
+      id,
       name,
-      poids,
-      nombre
+      productDetails: {
+        ...selectedProduct.originalItem,
+        nombre: nombre,
+        poids: poids
+      }
     };
     
     setProducts([...products, newProduct]);
     
     const newView = (
       <View style={styles.containerProduct} key={`${name}-${Date.now()}`}>
-        <Text style={{fontSize: 16, fontWeight: "500"}}>{nombre}x {name} - {poids}g/pièce</Text>
+        <Text style={{fontSize: 16, fontWeight: "500"}}>
+          {nombre}x {name} - {poids}g/pièce
+        </Text>
+        <Text style={styles.categoryText}>({selectedProduct.originalItem.nom_categorie})</Text>
         <Image
           style={styles.logoProduit}
-          source={dic_image_name[name]}
+          source={dic_image_name[name.toLowerCase()] /*|| require('../assets/default.png')*/}
         />
       </View>
     );
@@ -171,16 +182,20 @@ const Formulaire = ({ navigation }) => {
     }
 
     const formData = {
-      commandeName,
-      description,
-      deliveryDate: date.toISOString(),
-      products,
-      location: selectedLocation 
+      nom_dmd: commandeName,
+      desc_dmd: description,
+      date_fin: transform_date(date.toISOString()),
+      id_client: dataUser.id, 
+      localisation_dmd: selectedLocation,
+      produit_contenu: products.map(product => ({
+        id_produit: product.id,
+        nb_produit: product.productDetails.nombre,
+        poids_piece_produit: product.productDetails.poids
+      }))
     };
-
-    console.log('Form data with location:', formData);
-
-    fetch('', {
+    
+    console.log('sent:', formData);
+    fetch('https://backend-logistique-api-latest.onrender.com/create_command.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -195,7 +210,7 @@ const Formulaire = ({ navigation }) => {
     })
     .then(data => {
       console.log('Succès:', data);
-      alert('Commande créée avec succès!');
+      alert('Succès','Commande créée avec succès!');
       setCommandeName('');
       setDescription('');
       setDate(new Date());
@@ -246,6 +261,7 @@ const Formulaire = ({ navigation }) => {
                 title={"Sélectionner une date"} 
                 onPress={() => setShowDatePicker(true) } 
               />
+              <Text style={{marginTop: 15}}>Date sélectionné: {date.toISOString()} </Text>
               
               {showDatePicker && (
                 <Modal
@@ -305,7 +321,7 @@ const Formulaire = ({ navigation }) => {
                   </View>
 
                   <View style={styles.InputModal}>
-                    <Text style={styles.txtInput}>Poids en grammes/pièce {selectedProduct?.key}</Text>
+                    <Text style={styles.txtInput}>Poids de  {selectedProduct?.key}</Text>
                     <TextInput
                       style={styles.inputNB}
                       keyboardType="decimal-pad"
@@ -320,7 +336,7 @@ const Formulaire = ({ navigation }) => {
                       style={styles.modalButtonOK}
                       onPress={() => {
                         if (selectedProduct && poids && nombre) {
-                          add_product(selectedProduct.key, poids, nombre);
+                          add_product(selectedProduct.key, poids, nombre, selectedProduct.id);
                         } else {
                           alert("Veuillez remplir tous les champs");
                           
@@ -346,11 +362,28 @@ const Formulaire = ({ navigation }) => {
               <FlatList
                 data={produit}
                 renderItem={({item}) => (
-                  <TouchableOpacity onPress={() => handleProductPress(item)}>
-                    <Text style={styles.item}>{item.nom_produit}</Text>
+                  <TouchableOpacity 
+                    style={styles.productItem}
+                    onPress={() => {
+                      setSelectedProduct({
+                        id: item.id_produit,
+                        key: item.nom_produit,
+                        originalItem: item
+                      });
+                      setModalVisible(true);
+                    }}
+                  >
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                      <Image
+                        style={styles.smallProductIcon}
+                        source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
+                      />
+                      <Text style={styles.item}>{item.nom_produit}</Text>
+                    </View>
+                    {/*<Text style={styles.categoryText}>{item.nom_categorie}</Text>*/}
                   </TouchableOpacity>
                 )}
-                scrollEnabled={false}
+                keyExtractor={item => item.id_produit}
               />
             </View>
 
@@ -427,6 +460,24 @@ const Formulaire = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  productItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  categoryText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic'
+  },
+  smallProductIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10
+  },
   datePickerModal: {
     backgroundColor: 'white',
     borderRadius: 10,
@@ -471,8 +522,8 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderWidth: 1,
-    borderRadius: 5,
+    borderWidth: 2.5,
+    borderRadius: 7,
     width: '80%',
     padding: 10,
     color: '#111',
@@ -481,10 +532,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: '#fff',
   },
+
   inputDesc: {
     height: 80,
-    borderWidth: 1,
-    borderRadius: 5,
+    borderWidth: 2.5,
+    borderRadius: 7,
     width: '80%',
     padding: 10,
     color: '#111',
@@ -620,10 +672,10 @@ const styles = StyleSheet.create({
     marginTop: 15
   },
   inputNB: {
-    width: 190,
+    width: 210,
     borderColor: "#111",
-    borderWidth: 1,
-    borderRadius: 5,
+    borderWidth: 2.5,
+    borderRadius: 7,
     padding: 10,
     color: '#111',
   },

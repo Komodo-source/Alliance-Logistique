@@ -17,6 +17,7 @@
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "expo": "~52.0.46",
+    "expo-location": "^18.0.10",
     "expo-status-bar": "~2.0.1",
     "express": "^5.1.0",
     "lodash-es": "^4.17.21",
