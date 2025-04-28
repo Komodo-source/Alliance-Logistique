@@ -1,6 +1,6 @@
 import React, { useEffect} from 'react';
 import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
-
+import * as dataUser from '../assets/data/auto.json';
 
 
 const Loading = ({ navigation }) => {
@@ -10,11 +10,19 @@ const Loading = ({ navigation }) => {
           console.log(response);
           if (response.ok) {
             console.log('connecté a internet');
+            //doit faire une requête pour savoir si le serveur est actif
             const response_server = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
             console.log(response_server);
             if(response_server.ok){
                 console.log('[OK] serveur actif');                
-                navigation.navigate('Accueil');
+                if(dataUser.id == "" && dataUser.type == ""){
+                  //l'utilisateur n'est pas connecté
+                  navigation.navigate('HomePage');  
+                }else{
+                  navigation.navigate('Accueil');
+                  //l'utilisateur est connecté
+                }
+                
             }else{
                 console.log('[NO] serveur inactif');
                 Alert.alert('Erreur', 'Le serveur est actuellement inaccessible.');
@@ -38,7 +46,7 @@ const Loading = ({ navigation }) => {
         <Text style={styles.title}>Chargement...</Text>
         <Image
           style={styles.image}
-          source={require('../assets/Icons/logo.png')}
+          source={require('../assets/Icons/logo-Blue.jpeg')}
         />
         <ActivityIndicator size="large" color="#035dca" style={styles.loader} />
       </View>
@@ -65,9 +73,12 @@ const styles = StyleSheet.create({
     marginBottom: 45,
   },
   image: {
-    height: 400,
-    width: 400,
+    height: 350,
+    width: 350,
     resizeMode: 'contain',
+    borderRadius: 100,
+    marginLeft: 20,
+    marginRight: 20,
   },
   loader: {
     marginTop: 25,
