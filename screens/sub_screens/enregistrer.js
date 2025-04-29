@@ -12,7 +12,6 @@ var headers = {
 //il faudra mettre une confirmation par email pour les nouveaux utilisateurs
 //on doit aussi checker que le mail/tel n'existe pas déjà dans la base de données
 
-
 const enregistrer = ({route, navigation }) => {
   const { data } = route.params;
   const [nom, setNom] = useState('');
@@ -36,6 +35,7 @@ const enregistrer = ({route, navigation }) => {
       }
     }
   };
+
 
   const validateForm = () => {
     if (!nom.trim()) {

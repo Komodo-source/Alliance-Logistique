@@ -12,6 +12,9 @@ import HomePage from './screens/sub_screens/Home-Page';
 import choixType from './screens/sub_screens/choixType';
 import Login from './screens/sub_screens/login';
 import enregistrer from './screens/sub_screens/enregistrer';
+import Produit from './screens/Produit';
+import DetailProduit from './screens/sub_screens/DetailProduit';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -27,9 +30,11 @@ const App = () => {
         <Stack.Screen name="Formulaire" component={Formulaire} />
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
-        <Stack.Screen name="choixType" component={choixType} />
+        <Stack.Screen name="choixType" component={choixType} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="enregistrer" component={enregistrer} />
+        <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
+        <Stack.Screen name="DetailProduit" component={DetailProduit} />
       </Stack.Navigator>
     </NavigationContainer>
   );

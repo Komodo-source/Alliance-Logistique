@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include_once('db.php'); // ✅ plus de ../config/
+include_once('db.php');
 
 $sql = "SELECT *  FROM HUB";
 $result = $conn->query($sql);

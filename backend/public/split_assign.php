@@ -7,6 +7,7 @@ include_once('db.php');
 // 
 //  ATTENTION : TODO, appliquer a tous les produits de toutes les catégories
 //  faire avec une liste des producteurs les plus proches et vendant le plus
+//  La bd est update avec la localisation du coursier toutes les 20minutes
 // _______________________________
 
 function calculate_dist($x, $y){ //x et y sont des liste de taille 2
@@ -102,7 +103,7 @@ if ($stmt->execute()) {
     $response = array("Message" => "OK");
 } else {
     $response = array("Message" => "Erreur lors de l'insertion: " . $conn->error);
-
+}
 $stmt->close();
 $conn->close();
 ?>

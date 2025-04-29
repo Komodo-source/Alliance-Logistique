@@ -1,9 +1,23 @@
 import React, { useEffect} from 'react';
 import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import * as dataUser from '../assets/data/auto.json';
+import RFNS from 'react-native-fs';
 
 
 const Loading = ({ navigation }) => {
+  const fileProduct = RFNS.DocumentDirectoryPath + '/assets/data/product.json';
+
+  const clearJsonFile = async () => {
+  
+    try {
+      // Écrire un objet vide ou un tableau vide selon votre structure
+      await RNFS.writeFile(fileProduct, JSON.stringify({}), 'utf8');
+      console.log('Fichier JSON vidé avec succès');
+    } catch (error) {
+      console.error('Erreur lors du vidage du fichier:', error);
+    }
+  };
+
     const checkServer = async () => {
         try {
           const response = await fetch('https://google.com');
@@ -14,9 +28,12 @@ const Loading = ({ navigation }) => {
             const response_server = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
             console.log(response_server);
             if(response_server.ok){
-                console.log('[OK] serveur actif');                
+                console.log('[OK] serveur actif'); 
+                clearJsonFile();
+                //meme si le fichier jsonn'est pas vide on envoie l'user vers la page de connexion
                 if(dataUser.id == "" && dataUser.type == ""){
                   //l'utilisateur n'est pas connecté
+
                   navigation.navigate('HomePage');  
                 }else{
                   navigation.navigate('Accueil');

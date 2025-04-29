@@ -4,19 +4,18 @@ include_once('db.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-// Vérification des champs obligatoires
 if (!isset($data['nom_dmd'], $data['localisation_dmd'], $data['date_fin'], $data['produit_contenu'])) {
     echo json_encode(['error' => 'Champs manquants']);
     exit;
 }
 
-$id = uniqid(); // Optionnel si auto-incrément
+$id = uniqid(); 
 $nom_dmd = $data['nom_dmd'];
 $desc_dmd = $data['desc_dmd'] ?? "";
 $localisation_dmd = $data['localisation_dmd'];
 $loca = $localisation_dmd["latitude"] . ";" . $localisation_dmd["longitude"];
 $date_fin = $data['date_fin'];
-$id_client = $data['id_client'] ?? 1; // Valeur par défaut si non défini
+$id_client = $data['id_client'] ?? 1; 
 $all_inserted = true;
 
 // Insertion dans HUB
@@ -28,7 +27,6 @@ if (!$stmt->execute()) {
     exit;
 }
 
-// Récupération de l'ID auto-incrémenté si nécessaire
 if (!$id) {
     $id = $conn->insert_id;
 }

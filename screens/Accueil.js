@@ -12,9 +12,14 @@ const Accueil = ({ navigation }) => {
         <TouchableOpacity 
           style={styles.navButton}
           //onPress={() => console.log('Recherche pressé')}
-          onPress={() => navigation.navigate('HomePage')}
+          //onPress={() => navigation.navigate('HomePage')}
+          onPress={() => navigation.navigate('Produit')}
         >
-          <Text style={styles.navButtonText}>Recherche</Text>
+          <Text style={styles.navButtonText}>Produit</Text>
+          <Image
+            style={styles.logoNavBar}
+            source={require('../assets/Icons/Dark-Product.png')}
+          />
         </TouchableOpacity>
 
 
