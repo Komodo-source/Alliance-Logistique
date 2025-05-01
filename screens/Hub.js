@@ -59,9 +59,9 @@ const Hub = ({ navigation }) => {
                   <TouchableOpacity 
                     style={styles.navButton}
                     //onPress={() => console.log('Recherche pressé')}
-                    onPress={() => navigation.navigate('Recherche')}
+                    onPress={() => navigation.navigate('HomePage')}
                   >
-                    <Text style={styles.navButtonText}>Recherche</Text>
+                    <Text style={styles.navButtonText}>HomePage</Text>
                   </TouchableOpacity>
           
           

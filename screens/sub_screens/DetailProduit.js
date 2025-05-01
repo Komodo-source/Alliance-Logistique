@@ -7,17 +7,26 @@ var headers = {
 };
 
 export const loadImages = (id_produit) => {
-    switch(id_produit){
-        case "1":
-            return require('../../assets/img_product/1.jpg');
-        case "2":
-            return require('../../assets/img_product/1.jpg');
-        case "3":
-            return require('../../assets/img_product/1.jpg');
-
-        default:
-            return require('../../assets/img_product/default.png');
-    }
+  switch(id_produit){
+      case "1":
+          return require('../../assets/img_product/3.jpg');
+      case "2":
+          return require('../../assets/img_product/2.jpg');
+      case "3":
+          return require('../../assets/img_product/3.jpg');
+      case "4":
+          return require('../../assets/img_product/4.jpg');        
+      case "8":
+          return require('../../assets/img_product/8.jpg');
+      case "10":
+          return require('../../assets/img_product/10.jpg');
+      case "11":
+          return require('../../assets/img_product/11.jpg');
+      case "12":
+          return require('../../assets/img_product/12.jpg');
+      default:
+          return require('../../assets/img_product/default.png');
+  }
 }
 
 const DetailProduit = ({ route, navigation }) => {
@@ -72,10 +81,11 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     title : {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: 'bold',
         marginTop: 45,
         marginLeft: 25,
+        width: '80%',
     },
 
     price : {

@@ -2,8 +2,8 @@
 header('Content-Type: application/json');
 include_once('db.php'); 
 
-// _______________________________
-// 
+// IL FAUDRA L'ADAPTER POUR LE NV BD
+// _______________________________ 
 // 
 //  ATTENTION : TODO, appliquer a tous les produits de toutes les catégories
 //  faire avec une liste des producteurs les plus proches et vendant le plus
@@ -55,7 +55,6 @@ if ($result->num_rows > 0) {
 $nb_produit = 0;
 $meilleur_nb_tt = -1;
 $id_fournisseur_produisant_le_plus = "";
-
 
 //nous donne pour un produit donné (par son id) quel producteur le produit le plus 
 //on peut ajouter une condition dans le if pour avoir une distance raisonnable pour l'instant inutile

@@ -1,78 +1,135 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, FlatList, Dimensions } from 'react-native';
-import RFNS from 'react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const loadImages = (id_produit) => {
   switch(id_produit){
       case "1":
-          return require('../../assets/img_product/1.jpg');
+          return require('../assets/img_product/3.jpg'); 
       case "2":
-          return require('../../assets/img_product/1.jpg');
+          return require('../assets/img_product/2.jpg');
       case "3":
-          return require('../../assets/img_product/1.jpg');
-
+          return require('../assets/img_product/3.jpg');
+      case "4":
+          return require('../assets/img_product/4.jpg');        
+      case "8":
+          return require('../assets/img_product/8.jpg');
+      case "10":
+          return require('../assets/img_product/10.jpg');
+      case "11":
+          return require('../assets/img_product/11.jpg');
+      case "12":
+          return require('../assets/img_product/12.jpg');
       default:
-          return require('../../assets/img_product/default.png');
+          return require('../assets/img_product/default.png');
   }
 }
 
 const Produit = ({ navigation }) => {
   const [produits, setProduits] = useState([]);
+  const [allProduits, setAllProduits] = useState([]); 
   const [commandeName, setCommandeName] = useState('');
-  const fileProduct = RFNS.DocumentDirectoryPath + '/assets/data/product.json';
+  const STORAGE_KEY = '@products_data';
+  let  storage;
 
   const isProductEmpty = async () => {
     try {
-      const content = await RNFS.readFile(filePath, 'utf8');
-      return JSON.parse(content).length == 0;
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      return jsonValue == null || JSON.parse(jsonValue).length === 0;
     } catch (error) {
       console.error('Erreur de lecture:', error);
       return null;
     }
   };
 
-  const getProductFromJson = async () => {
+  const getProductFromStorage = async () => {
     try {
-      const content = await RNFS.readFile(fileProduct, 'utf8');
-      setProduits(JSON.parse(content));
+      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+      if (jsonValue != null) {
+        const data = JSON.parse(jsonValue);
+        setProduits(data);
+        setAllProduits(data); // <- ADD this
+      }
     } catch (error) {
       console.error('Erreur de lecture:', error);
-      return null;
     }
   };
 
-  const writeProductToJson = async (produits) => {
+  const writeProductToStorage = async (produits) => {
     try {
-      await RNFS.writeFile(fileProduct, JSON.stringify(produits, null, 2), 'utf8');
-      console.log('Produits écrits dans le fichier JSON');
+      const jsonValue = JSON.stringify(produits);
+      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+      console.log('Produits écrits dans le stockage');
     } catch (error) {
       console.error('Erreur d\'écriture:', error);
     }
   };
 
-
-  const getProduct = () => {
-    fetch('https://backend-logistique-api-latest.onrender.com/product.php')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Produits reçus:", data);
-        setProduits(data);
-      })
-      .catch((error) => console.error(error));
-  }
-
-
-  //je préfère mettre ici le script pour récupérer les produits pour éviter 
-  // de surcharger la connexion user au début
-  useEffect(() => {
-    if (isProductEmpty()) {
-      //on check de base si nous n'avons pas les produits dans le fichier json
-      getProduct();
-    }else {
-      getProductFromJson();
+  const saveProductsToStorage = async (products) => {
+    try {
+      const jsonString = JSON.stringify(products);
+      await AsyncStorage.setItem('@products_json', jsonString);
+      console.log('Produits sauvegardés dans AsyncStorage');
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde dans AsyncStorage:', error);
     }
-    writeProductToJson(produits);
+  };
+
+  const loadProductsFromStorage = async () => {
+    try {
+      const jsonString = await AsyncStorage.getItem('@products_json');
+      if (jsonString) {
+        return JSON.parse(jsonString);
+      }
+      return null;
+    } catch (error) {
+      console.error('Erreur lors de la lecture depuis AsyncStorage:', error);
+      return null;
+    }
+  };
+
+  const getProduct = async () => {
+    try {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
+      const data = await response.json();
+      console.log("Produits reçus:", data);
+      setProduits(data);
+      setAllProduits(data);
+      await saveProductsToStorage(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      const empty = await isProductEmpty();
+      if (empty) {
+        const storedData = await loadProductsFromStorage();
+        if (storedData) {
+          setProduits(storedData);
+          setAllProduits(storedData);
+        } else {
+          await getProduct();
+        }
+      } else {
+        getProductFromStorage();
+      }
+    };
+    loadData();
   }, []);
+
+  const researchProduct = (text) => {
+    setCommandeName(text);
+    if (text.trim() === "") {
+      setProduits(allProduits);
+    } else {
+      const filtered = allProduits.filter(item =>
+        item.nom_produit.toLowerCase().includes(text.toLowerCase())
+      );
+      setProduits(filtered);
+    }
+  };
 
   const renderProduct = ({ item }) => (
     <TouchableOpacity style={styles.productCard}
@@ -92,15 +149,20 @@ const Produit = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-
-    <TextInput
-       style={styles.input}
-       keyboardType="default"
-       placeholder="Rechercher un produit"
-       placeholderTextColor="#a2a2a9"
-       value={commandeName}
-       onChangeText={setCommandeName}
-    />
+    <View style={styles.searchContainer}>
+      <TextInput
+        style={styles.input}
+        keyboardType="default"
+        placeholder="Rechercher un produit"
+        placeholderTextColor="#a2a2a9"
+        value={commandeName}
+        onChangeText={researchProduct}
+      />      
+      <Image 
+          source = {require('../assets/Icons/Dark-Search.png')}
+          style={styles.imageSearch}
+        />  
+    </View>
 
       <FlatList
         data={produits}
@@ -242,13 +304,26 @@ const styles = StyleSheet.create({
     height: 40,
     borderWidth: 2.5,
     borderRadius: 5,
-    width: '90%',
+    width: '80%',
     padding: 10,
     color: '#111',
     marginBottom: 20,
     marginTop: 45,
     alignSelf: 'center',
     backgroundColor: '#fff',
+  },
+  imageSearch: {
+    width: 30,
+    height: 30,
+    marginTop: 25,
+    marginLeft: -30,
+  },
+  searchContainer : {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    justifyContent: 'space-around',
   },
 });
 

@@ -1,61 +1,56 @@
 import React, { useEffect} from 'react';
 import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert } from 'react-native';
 import * as dataUser from '../assets/data/auto.json';
-import RFNS from 'react-native-fs';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Loading = ({ navigation }) => {
-  const fileProduct = RFNS.DocumentDirectoryPath + '/assets/data/product.json';
+  const STORAGE_KEY = '@products_data';
 
-  const clearJsonFile = async () => {
-  
+  const clearStorage = async () => {
     try {
-      // Écrire un objet vide ou un tableau vide selon votre structure
-      await RNFS.writeFile(fileProduct, JSON.stringify({}), 'utf8');
-      console.log('Fichier JSON vidé avec succès');
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      console.log('Stockage vidé avec succès');
     } catch (error) {
-      console.error('Erreur lors du vidage du fichier:', error);
+      console.error('Erreur lors du vidage du stockage:', error);
     }
   };
 
-    const checkServer = async () => {
-        try {
-          const response = await fetch('https://google.com');
-          console.log(response);
-          if (response.ok) {
-            console.log('connecté a internet');
-            //doit faire une requête pour savoir si le serveur est actif
-            const response_server = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
-            console.log(response_server);
-            if(response_server.ok){
-                console.log('[OK] serveur actif'); 
-                clearJsonFile();
-                //meme si le fichier jsonn'est pas vide on envoie l'user vers la page de connexion
-                if(dataUser.id == "" && dataUser.type == ""){
-                  //l'utilisateur n'est pas connecté
-
-                  navigation.navigate('HomePage');  
-                }else{
-                  navigation.navigate('Accueil');
-                  //l'utilisateur est connecté
-                }
-                
-            }else{
-                console.log('[NO] serveur inactif');
-                Alert.alert('Erreur', 'Le serveur est actuellement inaccessible.');
-            }
-          } else {
-            console.log('pas connecté a internet');
+  const checkServer = async () => {
+    try {
+      const response = await fetch('https://google.com');
+      console.log(response);
+      if (response.ok) {
+        console.log('connecté a internet');
+        //doit faire une requête pour savoir si le serveur est actif
+        const response_server = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
+        console.log(response_server);
+        if(response_server.ok){
+          console.log('[OK] serveur actif'); 
+          clearStorage();
+          //meme si le fichier jsonn'est pas vide on envoie l'user vers la page de connexion
+          if(dataUser.id == "" && dataUser.type == ""){
+            //l'utilisateur n'est pas connecté
+            navigation.navigate('HomePage');  
+          }else{
+            navigation.navigate('Accueil');
+            //l'utilisateur est connecté
           }
-        } catch (error) {
-          console.log('Pas de connexion internet', error);
-          Alert.alert('Erreur', 'Vérifier votre connexion internet.');
+        }else{
+          console.log('[NO] serveur inactif');
+          Alert.alert('Erreur', 'Le serveur est actuellement inaccessible.');
         }
-      };
+      } else {
+        console.log('pas connecté a internet');
+      }
+    } catch (error) {
+      console.log('Pas de connexion internet', error);
+      Alert.alert('Erreur', 'Vérifier votre connexion internet.');
+    }
+  };
 
-    useEffect(() => {  
-        checkServer();
-    }, []);
+  useEffect(() => {  
+    checkServer();
+  }, []);
 
   return (
     <View style={styles.wrapper}>
@@ -70,7 +65,6 @@ const Loading = ({ navigation }) => {
       <Text style={styles.versionText}>Admin Beta 0.0.3</Text>
     </View>
   );
-  
 };
 
 const styles = StyleSheet.create({
