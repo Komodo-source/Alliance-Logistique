@@ -9,7 +9,5 @@ if($conn->connect_error){
 }else{
     echo json_encode(['success' => "Connection successful"]);
 }
-echo json_encode($data);
 $conn->close();
 ?>
-

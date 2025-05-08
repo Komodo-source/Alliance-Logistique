@@ -1,12 +1,51 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button,Image} from 'react-native';
+import React, {useState, useEffect} from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Button,Image, FlatList} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-
+import data from './../assets/data/auto.json'
 
 
 const Accueil = ({ navigation }) => {
+  const [commande, setCommande] = useState([]);
+
+  const fetch_commande = () => {
+    const id_client = data.id;
+    console.log("id_client : ", id_client);
+    fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({id_client})
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("commande récupérée");
+      console.log(data);
+      setCommande(data);
+    });
+  }
+
+  const renderCommande = ({item}) => {
+    return (
+      <TouchableOpacity
+        style={styles.commandeCard}
+        onPress={() => navigation.navigate('detail_Commande', {item})}
+      >
+        <Text>{item.id_dmd}</Text>
+        <Text>Date Livraison: {item.date_fin}</Text>
+        <Text>Temp restant</Text>
+        <Text>Description: {item.desc_dmd}</Text>
+      </TouchableOpacity>
+    )
+  }
+
+  useEffect(() => {
+    fetch_commande();
+  }, []);
+
   return (
     <View style={styles.container}>
+
 
       <View style={styles.navbar}> 
         <TouchableOpacity 
@@ -72,11 +111,39 @@ const Accueil = ({ navigation }) => {
 
         <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>Vos commandes: </Text>
         </View>
+              {/*ici qu'il ya la liste des commandes*/}
+         <View style={styles.commandeBox}>
+         <View>
+            {commande.length !== 0 ? (
+                <FlatList
+                data={commande}
+                renderItem={renderCommande}
+                keyExtractor={(item) => item.id_commande.toString()}
+                numColumns={2}
+                contentContainerStyle={styles.productGrid}
+              />
+            ) : (
+              <View>
+                <Text style={{fontSize : 18, fontWeight : "600", marginBottom : 5, textAlign : "center", marginTop : 20}}>Vous n'avez passé aucune commande pour le moment</Text>
+                  <TouchableOpacity 
+                    style={styles.NvCommande}
+                    onPress={() => navigation.navigate('Formulaire')}>
+                    <Text style={{color : "#fff", fontSize : 18, fontWeight : "600"}}>Passer une commande</Text>
+                </TouchableOpacity>
+            </View>
+            )}
+          </View>
+
+        </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  productGrid: {
+    padding: 10,
+    paddingBottom: 80, 
+  },
   logoNavBar: {
     width: 30,
     height: 30,
@@ -116,6 +183,17 @@ const styles = StyleSheet.create({
   navButtonText: {
     fontSize: 18,
     fontWeight: "bold"
+  },
+  NvCommande : {
+    height: 40,
+    borderRadius: 7,
+    width: '80%',
+    backgroundColor: '#000',
+    alignSelf: 'center',
+    marginTop: 20,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
 });

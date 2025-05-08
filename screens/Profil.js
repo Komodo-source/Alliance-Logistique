@@ -8,13 +8,22 @@ var headers = {
 
 
 const Profile = ({ navigation }) => {
+
+  const fetch_user_data  = async () => {
+    try {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_user_info.php');
+      const data = await response.json();
+      console.log("data user: ", data);
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
   return (
     <View>
-      <Text>Details Screen</Text>
-      <Button title="Go Back" onPress={() => navigation.goBack()} />
-        <View>
-          
-        </View>
+      <Text>Name</Text>
     </View>
   );
 };

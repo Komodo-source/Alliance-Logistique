@@ -41,7 +41,7 @@ const Login = ({ navigation }) => {
 
     console.log("sent data : ", formData);
     
-    fetch('https://backend-logistique-api-latest.onrender.com/login.php', {
+    fetch('  login.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

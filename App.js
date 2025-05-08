@@ -14,7 +14,7 @@ import Login from './screens/sub_screens/login';
 import enregistrer from './screens/sub_screens/enregistrer';
 import Produit from './screens/Produit';
 import DetailProduit from './screens/sub_screens/DetailProduit';
-
+import detail_Commande from './screens/sub_screens/detail_Commande';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +35,7 @@ const App = () => {
         <Stack.Screen name="enregistrer" component={enregistrer} />
         <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
         <Stack.Screen name="DetailProduit" component={DetailProduit} />
+        <Stack.Screen name="detail_Commande" component={detail_Commande} />
       </Stack.Navigator>
     </NavigationContainer>
   );

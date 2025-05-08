@@ -68,7 +68,6 @@ const enregistrer = ({route, navigation }) => {
     }
     return true;
   };
-
   const register = () => {
     if (!validateForm()) return;
     
@@ -81,7 +80,7 @@ const enregistrer = ({route, navigation }) => {
       Email,
       Tel,
       Password,
-      data //pour savoir dans quelle table on l'insert
+      data // pour savoir dans quelle table on l'insert
     }
     console.log("sent data : ", formData);
     
@@ -92,25 +91,42 @@ const enregistrer = ({route, navigation }) => {
         },
         body: JSON.stringify(formData)
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Erreur réseau');
+      .then(async response => {
+        console.log('Response status:', response.status);
+        
+        // First get the raw text
+        const text = await response.text();
+        console.log('Raw response:', text);
+        
+        try {
+          // Try to parse as JSON
+          const data = text ? JSON.parse(text) : {};
+          
+          if (!response.ok) {
+            // Handle HTTP errors (4xx, 5xx)
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+          }
+          
+          return data;
+        } catch (e) {
+          console.error('JSON parse error:', e);
+          // If JSON parsing fails but we got text, include it in the error
+          throw new Error(text || 'Invalid JSON response');
         }
-        return response.json();
       })
       .then(data => {
-        console.log('Succès:', data);
-        if (data.message === 'message') { // ici c'est message parce que c'est un message de succès
+        console.log('Parsed response:', data);
+        if (data.status === 'success') {
           AutoSave();
-          Alert.alert('Succès', 'Inscription réussie');
+          Alert.alert('Succès', data.message);
           navigation.navigate('Accueil');
         } else {
           Alert.alert('Erreur', data.message || "Une erreur est survenue lors de l'inscription");
         }
       })
       .catch(error => {
-        console.error('Erreur:', error);
-        Alert.alert('Erreur', "Une erreur est survenue lors de la création de l'enregistrement");
+        console.error('Error details:', error);
+        Alert.alert('Erreur', error.message || "Une erreur est survenue lors de la création de l'enregistrement");
       })
       .finally(() => {
         setIsLoading(false);

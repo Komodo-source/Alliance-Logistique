@@ -24,6 +24,7 @@ const Formulaire = ({ navigation }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
+  const [chargement, setChargement] = useState(false);
   const [region, setRegion] = useState({
     latitude: 9.3077,
     longitude: 2.3158,
@@ -176,6 +177,7 @@ const Formulaire = ({ navigation }) => {
   };
 
   const handleSubmit = () => {
+    setChargement(true);
     if (!selectedLocation) {
       Alert.alert('Error', 'Please select a location on the map');
       return;
@@ -186,7 +188,7 @@ const Formulaire = ({ navigation }) => {
       desc_dmd: description,
       date_fin: transform_date(date.toISOString()),
       id_client: dataUser.id, 
-      localisation_dmd: selectedLocation,
+      localisation_dmd: selectedLocation.replace(",", ";"),
       produit_contenu: products.map(product => ({
         id_produit: product.id,
         nb_produit: product.productDetails.nombre,
@@ -209,6 +211,9 @@ const Formulaire = ({ navigation }) => {
       return response.json();
     })
     .then(data => {
+      const appel_split = fetch('https://backend-logistique-api-latest.onrender.com/split_assign.php');
+      //on appel split assign pour assigner les produits aux fournisseurs
+      
       console.log('Succès:', data);
       alert('Succès','Commande créée avec succès!');
       setCommandeName('');
@@ -217,6 +222,7 @@ const Formulaire = ({ navigation }) => {
       setProducts([]);
       setChildViews([]);
       setSelectedLocation(null);
+      navigation.navigate('Accueil');
     })
     .catch(error => {
       console.error('Erreur:', error);
@@ -450,7 +456,7 @@ const Formulaire = ({ navigation }) => {
             style={styles.reponseCommande}
             onPress={handleSubmit}
           >
-            <Text style={styles.textButton}>Mettre en ligne</Text>
+            <Text style={styles.textButton}>{chargement ? "Commande en cours..." : "Mettre en ligne"}</Text>
           </TouchableOpacity>
         </View>
         </View>
@@ -466,7 +472,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    
   },
   categoryText: {
     fontSize: 12,
