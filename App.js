@@ -27,15 +27,15 @@ const App = () => {
         <Stack.Screen name="Hub" component={Hub} options={{ headerShown: false }} />
         <Stack.Screen name="Recherche" component={Recherche} options={{ headerShown: false }} />
         <Stack.Screen name="Profil" component={Profil} options={{ headerShown: false }} />
-        <Stack.Screen name="Formulaire" component={Formulaire} />
+        <Stack.Screen name="Formulaire" component={Formulaire} options={{headerTitle : "Formulaire " }}/>
         <Stack.Screen name="Details" component={Details} />
         <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
         <Stack.Screen name="choixType" component={choixType} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="enregistrer" component={enregistrer} />
         <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
-        <Stack.Screen name="DetailProduit" component={DetailProduit} />
-        <Stack.Screen name="detail_Commande" component={detail_Commande} />
+        <Stack.Screen name="DetailProduit" component={DetailProduit} options={{headerTitle : "Produit" }}/>
+        <Stack.Screen name="detail_Commande" component={detail_Commande} options={{headerTitle : "Commande" }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

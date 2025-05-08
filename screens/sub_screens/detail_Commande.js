@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet, MapView, Marker, PROVIDER_GOOGLE, TouchableOpacity} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Button, StyleSheet, MapView, Marker, PROVIDER_GOOGLE, TouchableOpacity, FlatList } from 'react-native';
 
 var headers = {
   'Accept' : 'application/json',
@@ -27,34 +27,28 @@ const detail_Commande = ({ route, navigation }) => {
           <Text style={styles.title}>{item.nom_dmd}</Text>
           <Text style={styles.date}>{item.desc_dmd}</Text>
           </View>
-        <MapView
-              style={styles.map}
-              region={region}
-              provider={PROVIDER_GOOGLE}
-              showsUserLocation={hasLocationPermission && userLocation !== null}              
-            >
-            <Marker
-              coordinate={region}
-              title="Localisation Séléctionné"
-            />              
-            </MapView>
+
           </View>
         <View style={styles.info_comple}>
           <Text>Date de livraison: {item.date_fin}</Text>
           <Text>Status: Livraison en cours</Text>
-          <Text>Bon de livraison: {item.id_public_cmd}</Text>
-          {/*faire une flat list de tout les produits commandées*/ }
+          <Text>Bon de commande: {item.id_public_cmd}</Text>
           <FlatList
             data={item.produits}
-            renderItem={({ item }) => <Text>{item.nom_produit}</Text>}
+            renderItem={({ item: produit }) => (
+              <View style={styles.produitItem}>
+                <Text>{produit.nom_produit}</Text>
+              </View>
+            )}
+            keyExtractor={(produit, index) => index.toString()}
           />
-          <Text>Total: {item.prix_total} FCFA</Text> 
+          <Text style={styles.prix_total}>Total: {item.prix_total} FCFA</Text> 
           {/*AJoutées un prix total de la commande*/ }
         </View>
 
         <View style={styles.Footer}>
           <TouchableOpacity style={styles.button}>
-            <Text>Générer une facture</Text>
+            <Text style={{color : "#fff", fontSize: 19, fontWeight: "500"}}>Générer une facture</Text>
           </TouchableOpacity>
         </View>
        </View>
@@ -63,6 +57,56 @@ const detail_Commande = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  main: {
+    flex: 1,
+    padding: 15,
+  },
+  header: {
+    marginBottom: 20,
+  },
+  header_title: {
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  date: {
+    fontSize: 16,
+    color: '#666',
+  },
+  map: {
+    height: 200,
+    borderRadius: 10,
+  },
+  info_comple: {
+    flex: 1,
+  },
+  produitItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  Footer: {
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: '#7CC6FE',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+
+  },
+  prix_total: {
+    fontSize: 19,
+    fontWeight: "800",
+    fontStyle: "italic",
+  },
 });
 
 export default detail_Commande;

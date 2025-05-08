@@ -18,11 +18,18 @@ const Accueil = ({ navigation }) => {
       body: JSON.stringify({id_client})
     })
     .then(response => response.json())
+    
     .then(data => {
-      console.log("commande récupérée");
-      console.log(data);
+      console.log("Received data:", data);
+      if (!data || data.length === 0) {
+        console.log("No data received or empty array");
+      }
       setCommande(data);
+    })
+    .catch(error => {
+      console.log("Error fetching data:", error);
     });
+    
   }
 
   const renderCommande = ({item}) => {
@@ -31,10 +38,10 @@ const Accueil = ({ navigation }) => {
         style={styles.commandeCard}
         onPress={() => navigation.navigate('detail_Commande', {item})}
       >
-        <Text>{item.id_dmd}</Text>
-        <Text>Date Livraison: {item.date_fin}</Text>
-        <Text>Temp restant</Text>
-        <Text>Description: {item.desc_dmd}</Text>
+        <Text style={{fontSize : 18, fontWeight : "800", marginBottom : 5}}>{item.nom_dmd}</Text>
+        <Text style={{fontSize : 15, fontWeight : "300", marginLeft : 15, marginBottom : 5}}>Date de livraison: {item.date_fin}</Text>
+        <Text style={{fontSize : 15, fontWeight : "300", marginLeft : 15, marginBottom : 5}}>Temp restant: {item.temp_restant}</Text>
+        <Text style={{fontSize : 14, marginLeft : 15, marginBottom : 5}}>Description: {item.desc_dmd}</Text>
       </TouchableOpacity>
     )
   }
@@ -105,7 +112,7 @@ const Accueil = ({ navigation }) => {
 
           style={styles.navButton}
           //onPress={() => console.log('Hub pressé')}
-          onPress={() => navigation.navigate('Formulaire')} >
+          onPress={() => navigation.navigate('Formulaire')}>
               <Text style={{fontSize : 20, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>Passer une commande</Text>
           </TouchableOpacity>
 
@@ -115,12 +122,10 @@ const Accueil = ({ navigation }) => {
          <View style={styles.commandeBox}>
          <View>
             {commande.length !== 0 ? (
-                <FlatList
-                data={commande}
+              <FlatList
+                data={[commande]}
                 renderItem={renderCommande}
-                keyExtractor={(item) => item.id_commande.toString()}
-                numColumns={2}
-                contentContainerStyle={styles.productGrid}
+                keyExtractor={(item) => item.id_dmd.toString()}
               />
             ) : (
               <View>
@@ -140,6 +145,17 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  commandeBox: {
+    height: 500, // Test with fixed height
+    marginBottom: 80,
+    marginTop: 20,
+  },
+  commandeCard: {
+    backgroundColor: 'lightblue', // Temporary bright color
+    height: 100, // Fixed height for testing
+    width: '100%', // Full width
+    marginTop: 20,
+  },
   productGrid: {
     padding: 10,
     paddingBottom: 80, 
@@ -184,7 +200,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold"
   },
-  NvCommande : {
+  NvCommande: {
     height: 40,
     borderRadius: 7,
     width: '80%',
@@ -195,7 +211,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
+  commandeBox: {
+    flex: 1,
+    marginBottom: 80, // Add space for the navbar
+  },
+  commandeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    margin: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    flex: 1,
+    minWidth: '45%',
+  },
 });
 
 export default Accueil;

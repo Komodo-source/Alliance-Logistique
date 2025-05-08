@@ -31,7 +31,7 @@ export const loadImages = (id_produit) => {
 
 const DetailProduit = ({ route, navigation }) => {
     const { item } = route.params;
-    console.log(item);
+    console.log(item );
   return (
     <View style={styles.container}>
       <View style={styles.main}>
