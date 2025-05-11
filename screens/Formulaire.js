@@ -1,8 +1,10 @@
 import React, {useState, useEffect} from 'react';
 import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, Alert, PermissionsAndroid} from 'react-native';
-
+import * as FileSystem from 'expo-file-system';
 import TomateImage from '../assets/Icons/Dark-tomato.png';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+//import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
@@ -25,6 +27,10 @@ const Formulaire = ({ navigation }) => {
   const [userLocation, setUserLocation] = useState(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [chargement, setChargement] = useState(false);
+  const [isNameFocused, setIsNameFocused] = useState(false);
+  const [isDescFocused, setIsDescFocused] = useState(false);
+  const [isNombreFocused, setIsNombreFocused] = useState(false);
+  const [isPoidsFocused, setIsPoidsFocused] = useState(false);
   const [region, setRegion] = useState({
     latitude: 9.3077,
     longitude: 2.3158,
@@ -32,6 +38,7 @@ const Formulaire = ({ navigation }) => {
     longitudeDelta: 0.822,
   });
   const [produit, setProduit] = useState([]);
+  const fileUri = FileSystem.documentDirectory + 'product.json';
 
 
   const dic_image_name = {
@@ -58,7 +65,56 @@ const Formulaire = ({ navigation }) => {
     }
   };
 
+  const getProduct = async () => {
+    let data = {};
+    try {
+      const fileData = await readProductFile();
+      if (fileData && Object.keys(fileData).length > 0) {
+        console.log("Lecture depuis le fichier local");
+        data = fileData;
+      } else {
+        console.log("Fichier vide ou inexistant, récupération depuis le serveur");
+        const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
+        data = await response.json();
+        console.log("Produits reçus du serveur:", data);
+      }
+      setProduit(data);
+      //setAllProduits(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des produits:", error);
+    }
+  };
 
+  const readProductFile = async () => {
+    try {
+      console.log('lecture du fichier:', fileUri);
+  
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (!fileInfo.exists) {
+        console.warn('Fichier inexistant:', fileUri);
+        return null;
+      }
+  
+      const fileContents = await FileSystem.readAsStringAsync(fileUri);
+      console.log('Contenu du fichier:', fileContents);
+  
+      const parsedData = JSON.parse(fileContents);
+      console.log('Parse du json:', parsedData);
+      
+      return parsedData;
+    } catch (error) {
+      console.error('Error reading product.json:', error);
+      if (error instanceof SyntaxError) {
+        console.error('Failed to parse JSON - file may be corrupted');
+      } else if (error.code === 'ENOENT') {
+        console.error('File not found - path may be incorrect');
+      }
+      
+      return null;
+    }
+  }
+
+/*
   const getProduct = () => {
     fetch('https://backend-logistique-api-latest.onrender.com/product.php')
       .then((response) => response.json())
@@ -67,7 +123,7 @@ const Formulaire = ({ navigation }) => {
         setProduit(data);
       })
       .catch((error) => console.error(error));
-  }
+  }*/
 
   const transform_date = (date_value) => {
     const date = new Date(date_value);
@@ -77,6 +133,17 @@ const Formulaire = ({ navigation }) => {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  }
+
+  const normaliseDate = (date_value) => {
+    const date = new Date(date_value);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
@@ -239,18 +306,20 @@ const Formulaire = ({ navigation }) => {
           <View style={styles.form}>
             <Text style={styles.descInput}>Nom de la commande</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, isNameFocused && { borderColor: '#2E3192' }]}
               keyboardType="default"
               placeholder="Nom commande"
               autoFocus={true}
               placeholderTextColor="#a2a2a9"
               value={commandeName}
               onChangeText={setCommandeName}
+              onFocus={() => setIsNameFocused(true)}
+              onBlur={() => setIsNameFocused(false)}
             />
 
             <Text style={styles.descInput}>Description de la commande</Text>
             <TextInput
-              style={styles.inputDesc}
+              style={[styles.inputDesc, isDescFocused && { borderColor: '#2E3192' }]}
               keyboardType="default"
               placeholder="Description commande"
               placeholderTextColor="#a2a2a9"
@@ -259,6 +328,8 @@ const Formulaire = ({ navigation }) => {
               maxLength={40}
               value={description}
               onChangeText={setDescription}
+              onFocus={() => setIsDescFocused(true)}
+              onBlur={() => setIsDescFocused(false)}
             />
 
 <Text style={styles.descInput}>Date de livraison impérative</Text>
@@ -267,7 +338,7 @@ const Formulaire = ({ navigation }) => {
                 title={"Sélectionner une date"} 
                 onPress={() => setShowDatePicker(true) } 
               />
-              <Text style={{marginTop: 15}}>Date sélectionné: {date.toISOString()} </Text>
+              <Text style={{marginTop: 15}}>Date sélectionné: {normaliseDate(date.toISOString())} </Text>
               
               {showDatePicker && (
                 <Modal
@@ -317,24 +388,28 @@ const Formulaire = ({ navigation }) => {
                   <View style={styles.InputModal}>
                     <Text style={styles.txtInput}>Nombre de {selectedProduct?.key}</Text>
                     <TextInput
-                      style={styles.inputNB}
+                      style={[styles.inputNB, isNombreFocused && { borderColor: '#2E3192' }]}
                       keyboardType="decimal-pad"
                       placeholder="Nombre"
                       placeholderTextColor="#a2a2a9"
                       value={nombre}
                       onChangeText={setNombre}
+                      onFocus={() => setIsNombreFocused(true)}
+                      onBlur={() => setIsNombreFocused(false)}
                     />
                   </View>
 
                   <View style={styles.InputModal}>
                     <Text style={styles.txtInput}>Poids de  {selectedProduct?.key}</Text>
                     <TextInput
-                      style={styles.inputNB}
+                      style={[styles.inputNB, isPoidsFocused && { borderColor: '#2E3192' }]}
                       keyboardType="decimal-pad"
                       placeholder="Poids"
                       placeholderTextColor="#a2a2a9"
                       value={poids}
                       onChangeText={setPoids}
+                      onFocus={() => setIsPoidsFocused(true)}
+                      onBlur={() => setIsPoidsFocused(false)}
                     />
                   </View>
                   <View style={styles.buttonModal}>
@@ -363,35 +438,36 @@ const Formulaire = ({ navigation }) => {
               </View>
             </Modal>
 
-            <View style={styles.listProduit}>
-              <Text style={styles.titleProd}>Sélectionner vos produits</Text>
-              <FlatList
-                data={produit}
-                renderItem={({item}) => (
-                  <TouchableOpacity 
-                    style={styles.productItem}
-                    onPress={() => {
-                      setSelectedProduct({
-                        id: item.id_produit,
-                        key: item.nom_produit,
-                        originalItem: item
-                      });
-                      setModalVisible(true);
-                    }}
-                  >
-                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                      <Image
-                        style={styles.smallProductIcon}
-                        source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
-                      />
-                      <Text style={styles.item}>{item.nom_produit}</Text>
-                    </View>
-                    {/*<Text style={styles.categoryText}>{item.nom_categorie}</Text>*/}
-                  </TouchableOpacity>
-                )}
-                keyExtractor={item => item.id_produit}
-              />
-            </View>
+            <View style={styles.listProduit}>              
+                <Text style={styles.titleProd}>Sélectionner vos produits</Text>
+                <FlatList
+                  data={produit}
+                  renderItem={({item}) => (
+                    <TouchableOpacity 
+                      style={styles.productItem}
+                      onPress={() => {
+                        setSelectedProduct({
+                          id: item.id_produit,
+                          key: item.nom_produit,
+                          originalItem: item
+                        });
+                        setModalVisible(true);
+                      }}
+                    >
+                      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Image
+                          style={styles.smallProductIcon}
+                          source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
+                        />
+                        <Text style={styles.item}>{item.nom_produit}</Text>
+                      </View>
+                      {/*<Text style={styles.categoryText}>{item.nom_categorie}</Text>*/}
+                    </TouchableOpacity>
+                  )}
+                  keyExtractor={item => item.id_produit}
+                />
+              </View>
+              
 
             <Text style={styles.modalTitle}>Produits Sélectionnés: </Text>
             <View style={{marginBottom: 10}}>
@@ -408,7 +484,7 @@ const Formulaire = ({ navigation }) => {
             >
               <Text style={styles.locationButtonText}>utilisez votre localisation</Text>
             </TouchableOpacity>
-            <Text style={styles.orText}>OU</Text>
+            <Text style={styles.orText}>OU</Text> 
             <Text style={styles.tapText}>Tappez sur la pour choisir la localisation</Text>
           </View>
           
@@ -522,6 +598,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   descInput: {
+    
     color: "#000",
     marginBottom: 10,
     marginLeft: '10%',
@@ -537,10 +614,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 5,
     alignSelf: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f8f8',
+    borderColor: '#666',
   },
 
-  inputDesc: {
+  inputDesc: {  
+    verticalAlign: "top",  
     height: 80,
     borderWidth: 2.5,
     borderRadius: 7,
@@ -549,7 +628,10 @@ const styles = StyleSheet.create({
     color: '#111',
     marginBottom: 20,
     alignSelf: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#f8f8f8',
+    borderColor: '#666',
+    
+    
   },
   datePickerContainer: {
     alignItems: 'center',
@@ -581,6 +663,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: "#B8E0FF",
     padding: 15,
+    
   },
   titleProd: {
     fontSize: 18,
@@ -680,11 +763,12 @@ const styles = StyleSheet.create({
   },
   inputNB: {
     width: 210,
-    borderColor: "#111",
+    borderColor: "#666",
     borderWidth: 2.5,
     borderRadius: 7,
     padding: 10,
     color: '#111',
+    backgroundColor: '#f8f8f8',
   },
   InputModal: {
     borderColor: "#111"

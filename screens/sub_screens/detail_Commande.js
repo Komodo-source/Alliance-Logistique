@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, MapView, Marker, PROVIDER_GOOGLE, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 
 var headers = {
   'Accept' : 'application/json',
@@ -16,7 +17,15 @@ const detail_Commande = ({ route, navigation }) => {
       latitudeDelta: 0.0421,
       longitudeDelta: 0.822,
     });
-    //const [selectedLocation, setSelectedLocation] = useState(null);
+    const [selectedLocation, setSelectedLocation] = useState(null);
+
+
+    useEffect(() => {
+      setSelectedLocation({
+        latitude: parseFloat(item.localisation_dmd.split(';')[0]),  
+        longitude: parseFloat(item.localisation_dmd.split(';')[1]),
+      });
+    }, []);
 
   return (
     <View style={styles.container}>
@@ -27,20 +36,39 @@ const detail_Commande = ({ route, navigation }) => {
           <Text style={styles.title}>{item.nom_dmd}</Text>
           <Text style={styles.date}>{item.desc_dmd}</Text>
           </View>
+          <MapView
+              style={styles.map}
+              region={region}
+              provider={PROVIDER_GOOGLE}              
+              showsMyLocationButton={false}
+              //onPress={handleMapPress}
+            >
+              {selectedLocation && (
+                <Marker
+                  coordinate={selectedLocation}
+                  title="Localisation Séléctionné"
+                />
+              )}
+            </MapView>
 
           </View>
         <View style={styles.info_comple}>
-          <Text>Date de livraison: {item.date_fin}</Text>
+          <Text style={{fontSize: 16, fontWeight: "bold"}}>Date de livraison: {item.date_fin}</Text>
           <Text>Status: Livraison en cours</Text>
           <Text>Bon de commande: {item.id_public_cmd}</Text>
+          <Text>Lieu de livraison: {item.localisation_dmd}</Text>
+          
+          <Text style={{fontSize: 18, fontWeight: "bold", marginTop: 30}}>Produits</Text>
           <FlatList
-            data={item.produits}
-            renderItem={({ item: produit }) => (
+            data={item}
+            renderItem={({ item }) => (
               <View style={styles.produitItem}>
-                <Text>{produit.nom_produit}</Text>
+                {/*<Text>{produit.nom_produit}</Text>*/}
+                <Text>{item.id_produit}</Text>
               </View>
             )}
-            keyExtractor={(produit, index) => index.toString()}
+            
+            keyExtractor={ item => item.id_produit.toString()  }
           />
           <Text style={styles.prix_total}>Total: {item.prix_total} FCFA</Text> 
           {/*AJoutées un prix total de la commande*/ }
@@ -109,4 +137,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default detail_Commande;
+export default detail_Commande; 

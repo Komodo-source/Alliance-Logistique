@@ -2,12 +2,46 @@ import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button,Image, FlatList} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import data from './../assets/data/auto.json'
+import * as FileSystem from 'expo-file-system';
 
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
 
+  const readProductFile = async () => {
+    try {
+      const fileUri = FileSystem.documentDirectory + 'product.json';
+      console.log('lecture du fichier:', fileUri);
+  
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      if (!fileInfo.exists) {
+        console.warn('Fichier inexistant:', fileUri);
+        return null;
+      }
+  
+      const fileContents = await FileSystem.readAsStringAsync(fileUri);
+      console.log('Contenu du fichier:', fileContents);
+  
+      const parsedData = JSON.parse(fileContents);
+      console.log('Parse du json:', parsedData);
+      
+      return parsedData;
+    } catch (error) {
+      console.error('Error reading product.json:', error);
+      
+      // Enhanced error logging
+      if (error instanceof SyntaxError) {
+        console.error('Failed to parse JSON - file may be corrupted');
+      } else if (error.code === 'ENOENT') {
+        console.error('File not found - path may be incorrect');
+      }
+      
+      return null;
+    }
+  };
+
   const fetch_commande = () => {
+    readProductFile();
     const id_client = data.id;
     console.log("id_client : ", id_client);
     fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
@@ -108,15 +142,8 @@ const Accueil = ({ navigation }) => {
       </View>
 
       <View>
-      <TouchableOpacity 
 
-          style={styles.navButton}
-          //onPress={() => console.log('Hub pressé')}
-          onPress={() => navigation.navigate('Formulaire')}>
-              <Text style={{fontSize : 20, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>Passer une commande</Text>
-          </TouchableOpacity>
-
-        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>Vos commandes: </Text>
+        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop : 30}}>Vos commandes: </Text>
         </View>
               {/*ici qu'il ya la liste des commandes*/}
          <View style={styles.commandeBox}>
@@ -138,6 +165,13 @@ const Accueil = ({ navigation }) => {
             </View>
             )}
           </View>
+          <TouchableOpacity 
+            style={styles.formButton}
+            //onPress={() => console.log('Hub pressé')}
+            onPress={() => navigation.navigate('Formulaire')}>
+              <Image source={require('../assets/Icons/Light-commande.png')} style={{width: 20, height: 20, marginLeft: 15, marginBottom: 5, color: "#FFF"}}/>
+                <Text style={{fontSize : 17, fontWeight : "500", marginLeft : 15, marginBottom : 5, color: "#FFF", textAlign: "center"}}>Passer une commande</Text>
+            </TouchableOpacity>
 
         </View>
     </View>
@@ -145,6 +179,23 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  formButton: {
+    height: 40,
+    borderRadius: 7,
+    width: '80%',
+    backgroundColor: '#000',
+    alignSelf: 'end',
+    width: "70%",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.5)",
+    position: "absolute",
+    bottom: 20,
+    left: 100,
+
+  },
   commandeBox: {
     height: 500, // Test with fixed height
     marginBottom: 80,

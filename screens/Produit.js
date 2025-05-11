@@ -1,6 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, FlatList, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+
 
 export const loadImages = (id_produit) => {
   switch(id_produit){
@@ -29,92 +31,82 @@ const Produit = ({ navigation }) => {
   const [produits, setProduits] = useState([]);
   const [allProduits, setAllProduits] = useState([]); 
   const [commandeName, setCommandeName] = useState('');
-  const STORAGE_KEY = '@products_data';
-  let  storage;
+  const fileUri = FileSystem.documentDirectory + 'product.json';
 
-  const isProductEmpty = async () => {
+  const checkIfProductFileEmpty = async() => {
     try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      return jsonValue == null || JSON.parse(jsonValue).length === 0;
-    } catch (error) {
-      console.error('Erreur de lecture:', error);
-      return null;
-    }
-  };
-
-  const getProductFromStorage = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
-      if (jsonValue != null) {
-        const data = JSON.parse(jsonValue);
-        setProduits(data);
-        setAllProduits(data); // <- ADD this
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+  
+      if (!fileInfo.exists) {
+        console.log('File does not exist.');
+        return true;
       }
+  
+      const content = await FileSystem.readAsStringAsync(fileUri);
+      const isEmpty = content.trim().length === 0;
+      
+      console.log('Is file empty?', isEmpty);
+      return isEmpty;
     } catch (error) {
-      console.error('Erreur de lecture:', error);
+      console.error('Error checking file:', error);
+      return true;
     }
-  };
+  }
 
-  const writeProductToStorage = async (produits) => {
-    try {
-      const jsonValue = JSON.stringify(produits);
-      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
-      console.log('Produits écrits dans le stockage');
-    } catch (error) {
-      console.error('Erreur d\'écriture:', error);
-    }
-  };
-
-  const saveProductsToStorage = async (products) => {
-    try {
-      const jsonString = JSON.stringify(products);
-      await AsyncStorage.setItem('@products_json', jsonString);
-      console.log('Produits sauvegardés dans AsyncStorage');
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde dans AsyncStorage:', error);
-    }
-  };
-
-  const loadProductsFromStorage = async () => {
-    try {
-      const jsonString = await AsyncStorage.getItem('@products_json');
-      if (jsonString) {
-        return JSON.parse(jsonString);
+  const readProductFile = async () => {
+      try {
+        console.log('lecture du fichier:', fileUri);
+    
+        const fileInfo = await FileSystem.getInfoAsync(fileUri);
+        if (!fileInfo.exists) {
+          console.warn('Fichier inexistant:', fileUri);
+          return null;
+        }
+    
+        const fileContents = await FileSystem.readAsStringAsync(fileUri);
+        console.log('Contenu du fichier:', fileContents);
+    
+        const parsedData = JSON.parse(fileContents);
+        console.log('Parse du json:', parsedData);
+        
+        return parsedData;
+      } catch (error) {
+        console.error('Error reading product.json:', error);
+        if (error instanceof SyntaxError) {
+          console.error('Failed to parse JSON - file may be corrupted');
+        } else if (error.code === 'ENOENT') {
+          console.error('File not found - path may be incorrect');
+        }
+        
+        return null;
       }
-      return null;
-    } catch (error) {
-      console.error('Erreur lors de la lecture depuis AsyncStorage:', error);
-      return null;
-    }
-  };
+    };
+
 
   const getProduct = async () => {
+    let data = {};
     try {
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
-      const data = await response.json();
-      console.log("Produits reçus:", data);
+      const fileData = await readProductFile();
+      if (fileData && Object.keys(fileData).length > 0) {
+        console.log("Lecture depuis le fichier local");
+        data = fileData;
+      } else {
+        console.log("Fichier vide ou inexistant, récupération depuis le serveur");
+        const response = await fetch('https://backend-logistique-ap i-latest.onrender.com/product.php');
+        data = await response.json();
+        console.log("as reçus du serveur:", data);
+      }
       setProduits(data);
       setAllProduits(data);
-      await saveProductsToStorage(data);
     } catch (error) {
-      console.error(error);
+      console.error("Erreur lors de la récupération des produits:", error);
     }
   };
 
   useEffect(() => {
     const loadData = async () => {
-      const empty = await isProductEmpty();
-      if (empty) {
-        const storedData = await loadProductsFromStorage();
-        if (storedData) {
-          setProduits(storedData);
-          setAllProduits(storedData);
-        } else {
-          await getProduct();
-        }
-      } else {
-        getProductFromStorage();
-      }
+      await getProduct();
+
     };
     loadData();
   }, []);
