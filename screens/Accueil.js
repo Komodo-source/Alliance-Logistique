@@ -52,20 +52,20 @@ const Accueil = ({ navigation }) => {
       body: JSON.stringify({id_client})
     })
     .then(response => response.json())
-    
     .then(data => {
       console.log("Received data:", data);
       if (!data || data.length === 0) {
         console.log("No data received or empty array");
+        setCommande([]); // Explicitly set empty array if no data
+      } else {
+        setCommande(data); // Set the entire array of commands
       }
-      setCommande(data);
     })
     .catch(error => {
       console.log("Error fetching data:", error);
+      setCommande([]); // Set empty array on error
     });
-    
   }
-
   const renderCommande = ({item}) => {
     return (
       <TouchableOpacity
@@ -148,21 +148,25 @@ const Accueil = ({ navigation }) => {
               {/*ici qu'il ya la liste des commandes*/}
          <View style={styles.commandeBox}>
          <View>
-            {commande.length !== 0 ? (
+          
+          
+         {commande && commande.length > 0 ? (              
               <FlatList
-                data={[commande]}
+                data={commande}
                 renderItem={renderCommande}
                 keyExtractor={(item) => item.id_dmd.toString()}
               />
             ) : (
               <View>
-                <Text style={{fontSize : 18, fontWeight : "600", marginBottom : 5, textAlign : "center", marginTop : 20}}>Vous n'avez passé aucune commande pour le moment</Text>
-                  <TouchableOpacity 
-                    style={styles.NvCommande}
-                    onPress={() => navigation.navigate('Formulaire')}>
-                    <Text style={{color : "#fff", fontSize : 18, fontWeight : "600"}}>Passer une commande</Text>
+                <Text style={{fontSize: 18, fontWeight: "600", marginBottom: 5, textAlign: "center", marginTop: 20}}>
+                  Vous n'avez passé aucune commande pour le moment
+                </Text>
+                <TouchableOpacity 
+                  style={styles.NvCommande}
+                  onPress={() => navigation.navigate('Formulaire')}>
+                  <Text style={{color: "#fff", fontSize: 18, fontWeight: "600"}}>Passer une commande</Text>
                 </TouchableOpacity>
-            </View>
+              </View>
             )}
           </View>
           <TouchableOpacity 

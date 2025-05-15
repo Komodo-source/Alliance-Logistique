@@ -251,11 +251,11 @@ const Formulaire = ({ navigation }) => {
     }
 
     const formData = {
-      nom_dmd: commandeName,
-      desc_dmd: description,
+      nom_dmd: `${commandeName.replace("'", "''")}`, //pour éviter les erreurs sql
+      desc_dmd: `${description.replace("'", "''")}`,
       date_fin: transform_date(date.toISOString()),
       id_client: dataUser.id, 
-      localisation_dmd: selectedLocation.replace(",", ";"),
+      localisation_dmd: `${selectedLocation.latitude};${selectedLocation.longitude}`,
       produit_contenu: products.map(product => ({
         id_produit: product.id,
         nb_produit: product.productDetails.nombre,
@@ -277,12 +277,12 @@ const Formulaire = ({ navigation }) => {
       }
       return response.json();
     })
-    .then(data => {
+    .then(data => {      
       const appel_split = fetch('https://backend-logistique-api-latest.onrender.com/split_assign.php');
       //on appel split assign pour assigner les produits aux fournisseurs
       
       console.log('Succès:', data);
-      alert('Succès','Commande créée avec succès!');
+      alert('Commande créée avec succès!');
       setCommandeName('');
       setDescription('');
       setDate(new Date());
@@ -301,194 +301,203 @@ const Formulaire = ({ navigation }) => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          <Text style={styles.textH1}>Formulaire de commande</Text>
+          <Text style={styles.textH1}>Nouvelle Commande</Text>
           
           <View style={styles.form}>
-            <Text style={styles.descInput}>Nom de la commande</Text>
-            <TextInput
-              style={[styles.input, isNameFocused && { borderColor: '#2E3192' }]}
-              keyboardType="default"
-              placeholder="Nom commande"
-              autoFocus={true}
-              placeholderTextColor="#a2a2a9"
-              value={commandeName}
-              onChangeText={setCommandeName}
-              onFocus={() => setIsNameFocused(true)}
-              onBlur={() => setIsNameFocused(false)}
-            />
-
-            <Text style={styles.descInput}>Description de la commande</Text>
-            <TextInput
-              style={[styles.inputDesc, isDescFocused && { borderColor: '#2E3192' }]}
-              keyboardType="default"
-              placeholder="Description commande"
-              placeholderTextColor="#a2a2a9"
-              multiline
-              numberOfLines={4}
-              maxLength={40}
-              value={description}
-              onChangeText={setDescription}
-              onFocus={() => setIsDescFocused(true)}
-              onBlur={() => setIsDescFocused(false)}
-            />
-
-<Text style={styles.descInput}>Date de livraison impérative</Text>
-            <View style={styles.datePickerContainer}>
-              <Button 
-                title={"Sélectionner une date"} 
-                onPress={() => setShowDatePicker(true) } 
+            {/* Name Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Nom de la commande</Text>
+              <TextInput
+                style={[styles.input, isNameFocused && styles.inputFocused]}
+                placeholder="Ex: Commande pour restaurant"
+                placeholderTextColor="#a2a2a9"
+                value={commandeName}
+                onChangeText={setCommandeName}
+                onFocus={() => setIsNameFocused(true)}
+                onBlur={() => setIsNameFocused(false)}
               />
-              <Text style={{marginTop: 15}}>Date sélectionné: {normaliseDate(date.toISOString())} </Text>
+            </View>
+
+            {/* Description Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Description</Text>
+              <TextInput
+                style={[styles.inputDesc, isDescFocused && styles.inputFocused]}
+                placeholder="Décrivez votre commande en détail..."
+                placeholderTextColor="#a2a2a9"
+                multiline
+                numberOfLines={4}
+                maxLength={200}
+                value={description}
+                onChangeText={setDescription}
+                onFocus={() => setIsDescFocused(true)}
+                onBlur={() => setIsDescFocused(false)}
+              />
+            </View>
+
+            {/* Date Picker */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Date de livraison</Text>
+              <TouchableOpacity 
+                style={styles.datePickerButton}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={styles.datePickerButtonText}>
+                  {normaliseDate(date.toISOString())}
+                </Text>
+                <Image 
+                  source={require('../assets/Icons/calendar-icon.png')} 
+                  style={styles.calendarIcon}
+                />
+              </TouchableOpacity>
               
-              {showDatePicker && (
-                <Modal
+              <Modal
+                  animationType="fade"
                   transparent={true}
-                  animationType="slide"
-                  visible={showDatePicker}
-                  onRequestClose={() => setShowDatePicker(false)}
+                  visible={modalVisible}
+                  onRequestClose={() => setModalVisible(false)}
                 >
                   <View style={styles.modalOverlay}>
-                    <View style={styles.datePickerModal}>
-                      <DatePicker
-                        mode="single"
-                        date={date}
-                        onChange={(params) => {
-                          setDate(params.date);
-                          setShowDatePicker(false);
-                        }}
-                        minDate={dayjs()}
-                        headerButtonColor="#45b308"
-                        selectedItemColor="#45b308"
+                    <View style={styles.modalContent}>
+                      <Text style={styles.modalTitle}>
+                        Produit sélectionné: 
+                      </Text>
+                      <Text style={styles.modalTextSelected}>
+                      {selectedProduct?.key}
+                    </Text>
+
+                      <Text style={styles.modalText}>
+                        Quantité (nombre de pièces):
+                      </Text>
+                      <TextInput
+                        style={styles.inputNB}
+                        placeholder="Ex: 10"
+                        keyboardType="numeric"
+                        value={nombre}
+                        onChangeText={setNombre}
                       />
-                      <TouchableOpacity
-                        style={styles.datePickerCloseButton}
-                        onPress={() => setShowDatePicker(false)}
-                      >
-                        <Text style={styles.datePickerCloseButtonText}>Fermer</Text>
-                      </TouchableOpacity>
+
+                      <Text style={styles.modalText}>
+                        Poids par pièce (en grammes):
+                      </Text>
+                      <TextInput
+                        style={[styles.inputNB, { marginBottom: 20 }]}
+                        placeholder="Ex: 150"
+                        keyboardType="numeric"
+                        value={poids}
+                        onChangeText={setPoids}
+                      />
+
+                      <View style={styles.buttonModal}>
+                        <TouchableOpacity
+                          style={styles.modalButtonAnnul}
+                          onPress={() => setModalVisible(false)}
+                        >
+                          <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={styles.modalButtonOK}
+                          onPress={() => {
+                            if (nombre && poids) {
+                              add_product(
+                                selectedProduct.key,
+                                poids,
+                                nombre,
+                                selectedProduct.id
+                              );
+                            } else {
+                              Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+                            }
+                          }}
+                        >
+                          <Text style={styles.modalButtonText}>Confirmer</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 </Modal>
+
+                </View>
               )}
+            
+
+            {/* Product Modal (keep existing modal code) */}
+
+            {/* Products List Section */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Produits à commander</Text>
+              <FlatList
+                data={produit}
+                renderItem={({item}) => (
+                  <TouchableOpacity 
+                    style={styles.productItem}
+                    onPress={() => {                      
+                      setSelectedProduct({
+                        id: item.id_produit,
+                        key: item.nom_produit,
+                        originalItem: item
+                      });    
+                      setModalVisible(true);                  
+                    }}
+                  >
+                    <View style={styles.productItemContent}>
+                      <Image
+                        style={styles.smallProductIcon}
+                        source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
+                      />
+                      <Text style={styles.productName}>{item.nom_produit}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+                keyExtractor={item => item.id_produit}
+                scrollEnabled={false}
+              />
             </View>
 
-            <Modal
-              animationType="fade"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Produit sélectionné</Text>
-                  <Text style={styles.modalText}>Vous avez sélectionné :</Text>
-                  <View style={styles.productBox}>
-                    <Text style={styles.productText}>{selectedProduct?.key}</Text>
-                  </View>
-                  <View style={styles.InputModal}>
-                    <Text style={styles.txtInput}>Nombre de {selectedProduct?.key}</Text>
-                    <TextInput
-                      style={[styles.inputNB, isNombreFocused && { borderColor: '#2E3192' }]}
-                      keyboardType="decimal-pad"
-                      placeholder="Nombre"
-                      placeholderTextColor="#a2a2a9"
-                      value={nombre}
-                      onChangeText={setNombre}
-                      onFocus={() => setIsNombreFocused(true)}
-                      onBlur={() => setIsNombreFocused(false)}
-                    />
-                  </View>
-
-                  <View style={styles.InputModal}>
-                    <Text style={styles.txtInput}>Poids de  {selectedProduct?.key}</Text>
-                    <TextInput
-                      style={[styles.inputNB, isPoidsFocused && { borderColor: '#2E3192' }]}
-                      keyboardType="decimal-pad"
-                      placeholder="Poids"
-                      placeholderTextColor="#a2a2a9"
-                      value={poids}
-                      onChangeText={setPoids}
-                      onFocus={() => setIsPoidsFocused(true)}
-                      onBlur={() => setIsPoidsFocused(false)}
-                    />
-                  </View>
-                  <View style={styles.buttonModal}>
-                    <TouchableOpacity 
-                      style={styles.modalButtonOK}
-                      onPress={() => {
-                        if (selectedProduct && poids && nombre) {
-                          add_product(selectedProduct.key, poids, nombre, selectedProduct.id);
-                        } else {
-                          alert("Veuillez remplir tous les champs");
-                          
-                        }
-                      }}
-                    >
-                      <Text style={styles.modalButtonText}>Ajouter</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                      style={styles.modalButtonAnnul}
-                      onPress={() => setModalVisible(false)}
-                    >
-                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
-                    </TouchableOpacity>
-                  </View>
+            {/* Selected Products */}
+            {childViews.length > 0 && (
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
+                <View style={styles.selectedProductsContainer}>
+                  {childViews}
                 </View>
               </View>
-            </Modal>
+            )}
 
-            <View style={styles.listProduit}>              
-                <Text style={styles.titleProd}>Sélectionner vos produits</Text>
-                <FlatList
-                  data={produit}
-                  renderItem={({item}) => (
-                    <TouchableOpacity 
-                      style={styles.productItem}
-                      onPress={() => {
-                        setSelectedProduct({
-                          id: item.id_produit,
-                          key: item.nom_produit,
-                          originalItem: item
-                        });
-                        setModalVisible(true);
-                      }}
-                    >
-                      <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                        <Image
-                          style={styles.smallProductIcon}
-                          source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
-                        />
-                        <Text style={styles.item}>{item.nom_produit}</Text>
-                      </View>
-                      {/*<Text style={styles.categoryText}>{item.nom_categorie}</Text>*/}
-                    </TouchableOpacity>
-                  )}
-                  keyExtractor={item => item.id_produit}
-                />
+            {/* Delivery Section */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Livraison</Text>
+              <Text style={styles.locationHelpText}>
+                Sélectionnez le lieu de livraison sur la carte ci-dessous
+              </Text>
+              
+              <View style={styles.locationButtons}>
+                <TouchableOpacity 
+                  style={styles.locationButton}
+                  onPress={getCurrentLocation}
+                  disabled={!hasLocationPermission}
+                >
+                  <Image 
+                    source={require('../assets/Icons/location-icon.png')} 
+                    style={styles.locationIcon}
+                  />
+                  <Text style={styles.locationButtonText}>Utiliser ma position</Text>
+                </TouchableOpacity>
+                
+                <Text style={styles.orDivider}>
+                  <View style={styles.dividerLine}></View>
+                  <Text style={styles.orText}>OU</Text>
+                  <View style={styles.dividerLine}></View>
+                </Text>
+                
+                <Text style={styles.tapInstruction}>
+                  Touchez la carte pour choisir manuellement
+                </Text>
               </View>
               
-
-            <Text style={styles.modalTitle}>Produits Sélectionnés: </Text>
-            <View style={{marginBottom: 10}}>
-              {childViews}
-            </View>
-          <Text style={{fontSize : 18, fontWeight : "800"}}>Livraison: </Text>
-          <Text style={styles.localisationText}>Votre localisation sera utilisée pour obtenir une livraison plus rapide</Text>
-          
-          <View style={styles.locationButtons}>
-            <TouchableOpacity 
-              style={styles.locationButton}
-              onPress={getCurrentLocation}
-              disabled={!hasLocationPermission}
-            >
-              <Text style={styles.locationButtonText}>utilisez votre localisation</Text>
-            </TouchableOpacity>
-            <Text style={styles.orText}>OU</Text> 
-            <Text style={styles.tapText}>Tappez sur la pour choisir la localisation</Text>
-          </View>
-          
-          <View style={styles.mapContainer}>
+              {/* Map Section */}
+              <View style={styles.mapContainer}>
             <MapView
               style={styles.map}
               region={region}
@@ -500,41 +509,55 @@ const Formulaire = ({ navigation }) => {
               {selectedLocation && (
                 <Marker
                   coordinate={selectedLocation}
-                  title="Localisation Séléctionné"
+                  title="Lieu de livraison"
                 />
               )}
             </MapView>
 
-            <View style={{display: "flex", flexDirection : "row", justifyContent: "space-around", marginTop: 20}}>
-            <TouchableOpacity 
-                style={{borderRadius: 15, borderWidth: 2, width: 150, alignItems: "center", height: 30}}
+            <View style={styles.mapControlsContainer}>
+              <TouchableOpacity 
+                style={styles.mapControlButton}
                 onPress={zoomIn}
               >
-                <Image source={require('../assets/Icons/Dark-Plus.png')} />  
+                <Text style={styles.mapControlText}>+</Text>  
               </TouchableOpacity>
 
               <TouchableOpacity 
-                style={{borderRadius: 15, borderWidth: 2, width: 150, alignItems: "center", height: 30}}
+                style={styles.mapControlButton}
                 onPress={zoomOut}
               >
-                <Image source={require('../assets/Icons/Dark-Moins.png')} />  
+                <Text style={styles.mapControlText}>-</Text>  
               </TouchableOpacity>
             </View>
-          {selectedLocation && (
-            <Text style={styles.coordinatesText}>
-              Localisation sélectionné: {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-            </Text>
-          )}
-
+            
+            {selectedLocation && (
+              <View style={styles.coordinatesContainer}>
+                <Image 
+                  source={require('../assets/Icons/marker-icon.png')} 
+                  style={styles.markerIcon}
+                />
+                <Text style={styles.coordinatesText}>
+                  {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+                </Text>
+              </View>
+            )}
           </View>
+            </View>
           
-          <TouchableOpacity
-            style={styles.reponseCommande}
-            onPress={handleSubmit}
-          >
-            <Text style={styles.textButton}>{chargement ? "Commande en cours..." : "Mettre en ligne"}</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={[styles.submitButton, chargement && styles.submitButtonDisabled]}
+              onPress={handleSubmit}
+              disabled={chargement}
+            >
+              <Text style={styles.submitButtonText}>
+                {chargement ? "Envoi en cours..." : "Valider la commande"}
+              </Text>
+              {chargement && (
+                <ActivityIndicator color="#fff" style={styles.loadingIndicator} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </TouchableWithoutFeedback>
@@ -641,8 +664,8 @@ const styles = StyleSheet.create({
   reponseCommande: {
     backgroundColor: "#45b308",
     padding: 15,
-    borderRadius: 15,
-    width: 160,
+    borderRadius: 7,
+    width: 180,
     height: 60,
     marginTop: 40,
     alignSelf: 'center',
@@ -689,6 +712,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   modalContent: {
     width: '80%',
     backgroundColor: '#FFF',
@@ -710,41 +739,56 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: '#333',
   },
+  modalTextSelected : {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#555',
+    backgroundColor: "#f8f8f8",
+    padding: 10,
+    width: '80%',
+    textAlign: 'center',
+    fontWeight: "500",
+    borderRadius: 7,
+  },
   modalText: {
     fontSize: 16,
     marginBottom: 10,
     color: '#555',
   },
-  productBox: {
-    backgroundColor: '#f0f0f0',
-    padding: 15,
-    borderRadius: 5,
-    marginVertical: 10,
-    width: '100%',
-    alignItems: 'center',
+  inputNB: {
+    height: 40,
+    borderWidth: 2.5,
+    borderRadius: 7,
+    width: '80%',
+    padding: 10,
+    color: '#111',
+    marginBottom: 20,
+    marginTop: 5,
+    alignSelf: 'center',
+    backgroundColor: '#f8f8f8',
+    borderColor: '#666',
   },
-  productText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#45b308',
+  buttonModal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
   },
   modalButtonOK: {
     backgroundColor: '#45b308',
     padding: 10,
     borderRadius: 5,
-    width: '50%',
+    flex: 1,
+    marginLeft: 10,
     alignItems: 'center',
-    marginTop: 15,
   },
   modalButtonAnnul: {
-    borderWidth: 3,
+    borderWidth: 1,
     padding: 10,
     borderRadius: 5,
-    width: '50%',
+    flex: 1,
+    marginRight: 10,
+    borderColor: "#c51b18",
     alignItems: 'center',
-    marginTop: 15,
-    marginLeft: 15,
-    borderColor: "#c51b18"
   },
   modalButtonText: {
     color: '#fff',
@@ -756,6 +800,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  
+  productText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#45b308',
+  },
+
   txtInput: {
     fontSize: 16,
     fontWeight: "400",
@@ -823,6 +874,312 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#555',
   },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+  },
+  form: {
+    marginTop: 15,
+  },
+  
+  // Header
+  textH1: {
+    fontSize: 24,
+    marginVertical: 15,
+    color: '#2E3192',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  
+  // Input Fields
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    color: "#555",
+    marginBottom: 8,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    fontSize: 15,
+  },
+  inputFocused: {
+    borderColor: '#2E3192',
+    borderWidth: 1.5,
+    shadowColor: '#2E3192',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  inputDesc: {  
+    height: 100,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    textAlignVertical: 'top',
+    fontSize: 15,
+  },
+  
+  // Date Picker
+  datePickerButton: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  datePickerButtonText: {
+    color: '#333',
+    fontSize: 15,
+  },
+  calendarIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#555',
+  },
+  
+  // Section Styles
+  sectionContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E3192',
+    marginBottom: 15,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  
+  // Product List
+  productItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  productItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  smallProductIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 12,
+  },
+  productName: {
+    fontSize: 15,
+    color: '#444',
+  },
+  
+  // Selected Products
+  selectedProductsContainer: {
+    marginTop: 10,
+  },
+  containerProduct: {
+    borderRadius: 8,
+    backgroundColor: "#f0f8ff",
+    marginTop: 8,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#45b308',
+  },
+  
+  // Location Section
+  locationHelpText: {
+    color: '#666',
+    fontSize: 13,
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  locationButtons: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  locationButton: {
+    backgroundColor: '#2E3192',
+    padding: 12,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  locationIcon: {
+    width: 16,
+    height: 16,
+    tintColor: '#fff',
+    marginRight: 8,
+  },
+  locationButtonText: {
+    color: 'white',
+    fontWeight: '500',
+  },
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 15,
+    width: '100%',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#eee',
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  tapInstruction: {
+    color: '#666',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  
+  // Map Styles
+  mapContainer: {
+    width: '100%',
+    height: 250,
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  mapControlButton: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  controlIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#2E3192',
+  },
+  coordinatesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 5,
+  },
+  markerIcon: {
+    width: 14,
+    height: 14,
+    tintColor: '#2E3192',
+    marginRight: 6,
+  },
+  coordinatesText: {
+    fontSize: 12,
+    color: '#555',
+  },
+  
+  
+  submitButton: {
+    backgroundColor: "#45b308",
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 25,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#45b308',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#a0d080",
+  },
+  submitButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  loadingIndicator: {
+    marginLeft: 10,
+  },
+
+  mapControlsContainer: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  mapControlButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  mapControlText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E3192',
+  },
+  
 });
 
 export default Formulaire;  

@@ -134,7 +134,7 @@ const Produit = ({ navigation }) => {
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.nom_produit}</Text>
         <Text style={styles.productPrice}>{item.prix_produit} FCFA</Text>
-        <Text style={styles.deliveryTime}>~3h</Text>
+        {/*<Text style={styles.deliveryTime}>~3h</Text>*/}
       </View>
     </TouchableOpacity>
   );

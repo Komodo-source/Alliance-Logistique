@@ -14,6 +14,8 @@ error_reporting(E_ALL);
 //  La bd est update avec la localisation du coursier toutes les 20minutes
 // _______________________________
 
+//on doit aussi checker si le fournisseur a des produits
+
 function calculate_dist($x, $y) {
     // Coordinates are already exploded arrays
     $x_coords = array_map('floatval', $x);
@@ -49,7 +51,7 @@ $commande_non_traite = "SELECT H.localisation_dmd, C.id_produit, H.id_dmd, P.id_
                        H.id_client FROM HUB H 
                        INNER JOIN CONTENANCE C ON C.id_dmd = H.id_dmd
                        INNER JOIN PRODUIT P ON P.id_produit = C.id_produit
-                       WHERE est_commande IS FALSE
+                       WHERE est_commande = '0'
                        GROUP BY H.localisation_dmd, C.id_produit, H.id_dmd, P.id_categorie";
 
 $result = $conn->query($commande_non_traite);
@@ -59,11 +61,11 @@ if ($result->num_rows > 0) {
         $commande_regroupe[] = $row;
     }
 }
-echo "<br>commande_regroupe<br>";
+echo "<br>  <br>";
 echo json_encode($commande_regroupe);
 
 // Récupérer les coursiers disponibles
-$coursier_sql = "SELECT * FROM COURSIER WHERE est_occupe IS FALSE";
+$coursier_sql = "SELECT * FROM COURSIER WHERE est_occupe = '0'";
 $result = $conn->query($coursier_sql);
 $tout_les_coursiers_dispo = [];
 if ($result->num_rows > 0) {
@@ -125,6 +127,7 @@ foreach ($commande_regroupe as $commande) {
                 $coursier_plus_proche = $coursier;
             }
         }
+        echo $coursier_plus_proche;
         echo "Coursier trouvé";
         echo $coursier_plus_proche['id_coursier'];
 
@@ -155,13 +158,13 @@ foreach ($commande_regroupe as $commande) {
             
             try {
                 if ($stmt->execute()) {
-                    $update_coursier = "UPDATE COURSIER SET est_occupe IS TRUE WHERE id_coursier = ?";
+                    $update_coursier = "UPDATE COURSIER SET est_occupe = '1' WHERE id_coursier = ?";
                     $stmt2 = $conn->prepare($update_coursier);
                     $stmt2->bind_param("i", $id_coursier_int);
                     $stmt2->execute();
                     $stmt2->close();
                     
-                    $update_commande = "UPDATE HUB SET est_commande IS TRUE WHERE id_dmd = ?";
+                    $update_commande = "UPDATE HUB SET est_commande = '1'  WHERE id_dmd = ?";
                     $stmt3 = $conn->prepare($update_commande);
                     $stmt3->bind_param("s", $commande['id_dmd']);
                     $stmt3->execute();
