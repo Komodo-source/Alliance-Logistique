@@ -40,8 +40,19 @@ const detail_Commande = ({ route, navigation }) => {
     longitudeDelta: 0.822,
   });
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [prix, calculPrix] = useState(0);
+
+
+  const calcul = (itemProduit) => {
+    let prix = 0;
+    for (let i = 0; i < itemProduit.length; i++) {
+      prix += itemProduit[i].prix;
+    }
+    return prix;
+  };
 
   useEffect(() => {
+    calculPrix(calcul(item.produits));
     setSelectedLocation({
       latitude: parseFloat(item.localisation_dmd.split(';')[0]),
       longitude: parseFloat(item.localisation_dmd.split(';')[1]),
@@ -159,7 +170,7 @@ const detail_Commande = ({ route, navigation }) => {
                   <View style={styles.productMeta}>
                     <Text style={styles.productQuantity}>{produit.quantite}</Text>
                     <Text style={styles.productType}>{produit.type_vendu}</Text>
-                    <Text style={styles.productPrice}>{produit.prix_vendu} FCFA</Text>
+                    <Text style={styles.productPrice}>{produit.prix} FCFA</Text>
                   </View>
                 </View>
               </View>
@@ -169,7 +180,7 @@ const detail_Commande = ({ route, navigation }) => {
           {/* Total Price Section */}
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>Total:</Text>
-            <Text style={styles.totalPrice}>{item.prix_total} FCFA</Text>
+            <Text style={styles.totalPrice}>{prix} FCFA</Text>
           </View>
         </View>
       </ScrollView>

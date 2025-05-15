@@ -44,7 +44,7 @@ const DetailProduit = ({ route, navigation }) => {
         
 
         <Text style={styles.description}>Ceci est une description du produit le temps que l'on introduise la description du produit</Text>
-        <Text style={styles.price}>{item.prix_produit}Prix facturée: 3500 FCFA</Text>
+        <Text style={styles.price}>Prix facturée: {item.prix_produit} FCFA</Text>
         <TouchableOpacity
         style={styles.LoginButton}
         onPress={() => navigation.navigate('Formulaire')}
