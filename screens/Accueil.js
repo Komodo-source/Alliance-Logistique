@@ -72,10 +72,24 @@ const Accueil = ({ navigation }) => {
         style={styles.commandeCard}
         onPress={() => navigation.navigate('detail_Commande', {item})}
       >
-        <Text style={{fontSize : 18, fontWeight : "800", marginBottom : 5}}>{item.nom_dmd}</Text>
-        <Text style={{fontSize : 15, fontWeight : "300", marginLeft : 15, marginBottom : 5}}>Date de livraison: {item.date_fin}</Text>
-        <Text style={{fontSize : 15, fontWeight : "300", marginLeft : 15, marginBottom : 5}}>Temp restant: {item.temp_restant}</Text>
-        <Text style={{fontSize : 14, marginLeft : 15, marginBottom : 5}}>Description: {item.desc_dmd}</Text>
+        <Text style={{fontSize: 18, fontWeight: "800", marginBottom: 5}}>{item.nom_dmd}</Text>
+        <Text style={{fontSize: 15, fontWeight: "300", marginLeft: 15, marginBottom: 5}}>
+          Date de livraison: {new Date(item.date_fin).toLocaleDateString()}
+        </Text>
+        <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
+          Description: {item.desc_dmd}
+        </Text>
+        <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
+          Numéro de commande: {item.id_public_cmd}
+        </Text>
+        <View style={{marginLeft: 15, marginTop: 5}}>
+          <Text style={{fontSize: 14, fontWeight: "600", marginBottom: 3}}>Produits:</Text>
+          {item.produits && item.produits.map((produit, index) => (
+            <Text key={index} style={{fontSize: 13, marginLeft: 10}}>
+              • {produit.nom_produit} - {produit.quantite} {produit.type_vendu}
+            </Text>
+          ))}
+        </View>
       </TouchableOpacity>
     )
   }

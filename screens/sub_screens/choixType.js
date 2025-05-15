@@ -14,7 +14,7 @@ const choixType = ({ navigation }) => {
 
         <TouchableOpacity
         style={styles.CoursierBoutton}  
-        onPress={() => navigation.navigate('enregistrer', {data: "co"})}      
+        onPress={() => navigation.navigate('enregistrer', {a: "co"})}      
         >
             <Image
               style={{}}

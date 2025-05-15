@@ -15,6 +15,7 @@ while True:
   try:
     print("\n")
     print("Commande: ", sql_commande)
+    print("\n")
     #cursorObject.execute("SELECT  HUB.localisation_dmd, PRODUIT.nom_produit FROM HUB INNER JOIN CONTENANCE ON HUB.id_dmd = CONTENANCE.id_dmd INNER JOIN PRODUIT ON CONTENANCE.id_produit = PRODUIT.id_produit")
     #cursorObject.execute("INSERT INTO HUB(id_dmd, nom_dmd, desc_dmd, localisation_dmd, date_fin, id_client) VALUES ('6820d2695a262', 'testcommande2', 'Description dune commande','9.250705111191822;2.2698522359132767', '2025-05-21 00:00:00', 1) ")
     #cursorObject.execute("SELECT * FROM PRODUIT")
