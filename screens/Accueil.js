@@ -1,12 +1,36 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button,Image, FlatList} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import data from './../assets/data/auto.json'
 import * as FileSystem from 'expo-file-system';
+import CarouselCards from './sub_screens/CarouselCards';
 
+
+const defaultDataWith6Colors = [
+	"#B0604D",
+	"#899F9C",
+	"#B3C680",
+	"#5C6265",
+	"#F5D399",
+	"#F1F1F1",
+];
+
+//erreur
+// ReanimatedError: [Reanimated] Native part of Reanimated doesn't seem to be initialized (Worklets).
+//See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
+
+  const renderItem = ({ rounded }) => ({ item }) => (
+    <View style={{
+      backgroundColor: item.color,
+      height: 250,
+      borderRadius: rounded ? 20 : 0,
+      marginHorizontal: 10,
+    }} />
+  );
+
 
   const readProductFile = async () => {
     try {
@@ -53,12 +77,13 @@ const Accueil = ({ navigation }) => {
     })
     .then(response => response.json())
     .then(data => {
+      data = data.slice(0,2);
       console.log("Received data:", data);
       if (!data || data.length === 0) {
         console.log("No data received or empty array");
-        setCommande([]); // Explicitly set empty array if no data
+        setCommande([]); 
       } else {
-        setCommande(data); // Set the entire array of commands
+        setCommande(data); 
       }
     })
     .catch(error => {
@@ -72,23 +97,23 @@ const Accueil = ({ navigation }) => {
         style={styles.commandeCard}
         onPress={() => navigation.navigate('detail_Commande', {item})}
       >
-        <Text style={{fontSize: 18, fontWeight: "800", marginBottom: 5}}>{item.nom_dmd}</Text>
-        <Text style={{fontSize: 15, fontWeight: "300", marginLeft: 15, marginBottom: 5}}>
+        <Text style={{fontSize: 18, fontWeight: "800", marginBottom: 5, color: "#2c3e50"}}>{item.nom_dmd}</Text>
+        <Text style={{fontSize: 15, fontWeight: "300", marginLeft: 15, marginBottom: 5, color: "#2c3e50"}}>
           Date de livraison: {new Date(item.date_fin).toLocaleDateString()}
         </Text>
-        <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
+        {/*<Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
           Description: {item.desc_dmd}
-        </Text>
+        </Text>*/}
         <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
           Numéro de commande: {item.id_public_cmd}
         </Text>
         <View style={{marginLeft: 15, marginTop: 5}}>
-          <Text style={{fontSize: 14, fontWeight: "600", marginBottom: 3}}>Produits:</Text>
+          {/*<Text style={{fontSize: 14, fontWeight: "600", marginBottom: 3}}>Produits:</Text>
           {item.produits && item.produits.map((produit, index) => (
             <Text key={index} style={{fontSize: 13, marginLeft: 10}}>
               • {produit.nom_produit} - {produit.quantite} {produit.type_vendu}
             </Text>
-          ))}
+          ))}*/}
         </View>
       </TouchableOpacity>
     )
@@ -100,13 +125,54 @@ const Accueil = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.carouselContainer}>
+          <CarouselCards />
+        </View>
 
+        <View style={styles.commandeBox}>
+          {commande && commande.length > 0 ? (     
+            <View style={styles.commandeDiv}>     
+              <Text style={styles.commandeTitle}>Vos commandes</Text>    
+              <FlatList
+                data={commande}
+                renderItem={renderCommande}
+                keyExtractor={(item) => item.id_dmd.toString()}
+              />
+              <TouchableOpacity 
+                style={styles.viewAllButton}
+                onPress={() => navigation.navigate('Hub')}>
+                <Text style={styles.viewAllButtonText}>Voir toutes les commandes  {">"}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>
+                Vous n'avez passé aucune commande pour le moment
+              </Text>
+              <TouchableOpacity 
+                style={styles.newOrderButton}
+                onPress={() => navigation.navigate('Formulaire')}>
+                <Text style={styles.newOrderButtonText}>Passer une commande</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      <TouchableOpacity 
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('Formulaire')}>
+        <Image 
+          source={require('../assets/Icons/Light-commande.png')} 
+          style={styles.floatingButtonIcon}
+        />
+        <Text style={styles.floatingButtonText}>Passer une commande</Text>
+      </TouchableOpacity>
 
       <View style={styles.navbar}> 
         <TouchableOpacity 
           style={styles.navButton}
-          //onPress={() => console.log('Recherche pressé')}
-          //onPress={() => navigation.navigate('HomePage')}
           onPress={() => navigation.navigate('Produit')}
         >
           <Text style={styles.navButtonText}>Produit</Text>
@@ -116,131 +182,152 @@ const Accueil = ({ navigation }) => {
           />
         </TouchableOpacity>
 
-
         <TouchableOpacity 
           style={[styles.navButton, styles.activeButton]}
-          //onPress={() => console.log('Accueil pressé')}
           onPress={() => navigation.navigate('Accueil')}
         >
           <Text style={styles.navButtonText}>Accueil</Text>
-            <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-House.png')}
-            />
+          <Image
+            style={styles.logoNavBar}
+            source={require('../assets/Icons/Dark-House.png')}
+          />
         </TouchableOpacity>
         
-         
         <TouchableOpacity 
           style={styles.navButton}
-          //onPress={() => console.log('Hub pressé')}
           onPress={() => navigation.navigate('Hub')}
         >
           <Text style={styles.navButtonText}>Hub</Text>
           <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-Hub.png')}
-            />
+            style={styles.logoNavBar}
+            source={require('../assets/Icons/Dark-Hub.png')}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.navButton}
-          //onPress={() => console.log('Profil pressé')}
           onPress={() => navigation.navigate('Profil')}
         >
           <Text style={styles.navButtonText}>Profil</Text>
           <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-profile.png')}
-            />
+            style={styles.logoNavBar}
+            source={require('../assets/Icons/Dark-profile.png')}
+          />
         </TouchableOpacity>
       </View>
-
-      <View>
-
-        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop : 30}}>Vos commandes: </Text>
-        </View>
-              {/*ici qu'il ya la liste des commandes*/}
-         <View style={styles.commandeBox}>
-         <View>
-          
-          
-         {commande && commande.length > 0 ? (              
-              <FlatList
-                data={commande}
-                renderItem={renderCommande}
-                keyExtractor={(item) => item.id_dmd.toString()}
-              />
-            ) : (
-              <View>
-                <Text style={{fontSize: 18, fontWeight: "600", marginBottom: 5, textAlign: "center", marginTop: 20}}>
-                  Vous n'avez passé aucune commande pour le moment
-                </Text>
-                <TouchableOpacity 
-                  style={styles.NvCommande}
-                  onPress={() => navigation.navigate('Formulaire')}>
-                  <Text style={{color: "#fff", fontSize: 18, fontWeight: "600"}}>Passer une commande</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-          <TouchableOpacity 
-            style={styles.formButton}
-            //onPress={() => console.log('Hub pressé')}
-            onPress={() => navigation.navigate('Formulaire')}>
-              <Image source={require('../assets/Icons/Light-commande.png')} style={{width: 20, height: 20, marginLeft: 15, marginBottom: 5, color: "#FFF"}}/>
-                <Text style={{fontSize : 17, fontWeight : "500", marginLeft : 15, marginBottom : 5, color: "#FFF", textAlign: "center"}}>Passer une commande</Text>
-            </TouchableOpacity>
-
-        </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  formButton: {
+  container: {
+    flex: 1,
+    backgroundColor: '#F9F6EE',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  carouselContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  commandeBox: {
+    flex: 1,
+    marginBottom: 100,
+  },
+  commandeDiv: {
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    paddingBottom: 20,
+    paddingTop: 10,
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  commandeTitle: {
+    fontSize: 21,
+    fontWeight: "800",
+    marginLeft: 15,
+    marginBottom: 5,
+    marginTop: 15,
+    color: "#2c3e50"
+  },
+  commandeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    margin: 8,
+    shadowColor: '#000',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f1f1',
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  newOrderButton: {
     height: 40,
     borderRadius: 7,
     width: '80%',
     backgroundColor: '#000',
-    alignSelf: 'end',
-    width: "70%",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.5)",
-    position: "absolute",
-    bottom: 20,
-    left: 100,
-
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  commandeBox: {
-    height: 500, // Test with fixed height
-    marginBottom: 80,
+  newOrderButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600"
+  },
+  viewAllButton: {
+    height: 40,
+    borderRadius: 7,
+    width: '80%',
+    backgroundColor: "#2E3192",
+    alignSelf: 'center',
     marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  commandeCard: {
-    backgroundColor: 'lightblue', // Temporary bright color
-    height: 100, // Fixed height for testing
-    width: '100%', // Full width
-    marginTop: 20,
+  viewAllButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600"
   },
-  productGrid: {
-    padding: 10,
-    paddingBottom: 80, 
+  floatingButton: {
+    position: 'absolute',
+    bottom: 80,
+    right: 20,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  logoNavBar: {
-    width: 30,
-    height: 30,
+  floatingButtonIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
   },
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: 'center',
+  floatingButtonText: {
+    color: "#FFF",
+    fontSize: 17,
+    fontWeight: "500",
   },
   navbar: {
     flexDirection: 'row',
@@ -269,36 +356,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold"
   },
-  NvCommande: {
-    height: 40,
-    borderRadius: 7,
-    width: '80%',
-    backgroundColor: '#000',
-    alignSelf: 'center',
-    marginTop: 20,
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  commandeBox: {
-    flex: 1,
-    marginBottom: 80, // Add space for the navbar
-  },
-  commandeCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    margin: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    flex: 1,
-    minWidth: '45%',
+  logoNavBar: {
+    width: 30,
+    height: 30,
   },
 });
 

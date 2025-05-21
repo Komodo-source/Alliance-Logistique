@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, FlatList, Dimensions } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+//import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 
 
@@ -51,7 +51,8 @@ const Produit = ({ navigation }) => {
       console.error('Error checking file:', error);
       return true;
     }
-  }
+  };
+
 
   const readProductFile = async () => {
       try {

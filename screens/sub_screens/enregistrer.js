@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
 import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Platform, Alert} from 'react-native';
-
+import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+//import { response } from 'express';
 
 var headers = {
   'Accept' : 'application/json',
@@ -24,6 +25,7 @@ const enregistrer = ({route, navigation }) => {
   const id_choosen = Math.floor(Math.random() * 1000000);
   
   const AutoSave = async () => {
+    //Obsolète
     if(stayLoggedIn){
       try {
         await AsyncStorage.setItem('user_data', JSON.stringify({
@@ -35,6 +37,73 @@ const enregistrer = ({route, navigation }) => {
       }
     }
   };
+
+      const save_storage = async (data, file) => {          
+          //je peux écrire dans un fichier mais je ne sais pas ou il se trouve
+          //intéressant comme feature
+          //je peux aussi le lire donc on va faire comme ca pour l'instant
+          try {
+            const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
+            if (!dirInfo.exists) {
+              console.log("Document directory doesn't exist");
+              return;
+            }            
+            const fileUri = FileSystem.documentDirectory + file;
+            console.log('Data:', data);
+            const jsonString = JSON.stringify(data);
+            
+            console.log('Full file path:', fileUri);
+            await FileSystem.writeAsStringAsync(fileUri, jsonString, {
+              encoding: FileSystem.EncodingType.UTF8
+            });
+            const fileInfo = await FileSystem.getInfoAsync(fileUri);
+            if (fileInfo.exists) {
+              console.log('fichier ecris:', fileInfo.uri, 'Size:', fileInfo.size);
+    
+              const fileContents = await FileSystem.readAsStringAsync(fileUri);
+              console.log('File contents:', fileContents);
+            } else {
+              console.log('File write operation completed but file not found');
+            }
+          } catch (error) {
+            console.error('Error during file operation:', error);
+            if (error.message) console.error('Error message:', error.message);
+            if (error.stack) console.error('Error stack:', error.stack);
+          }
+          
+        };
+  const data_to_type = {
+    "cl": "client",
+    "fo": "fournisseur",
+    "co": "coursier",
+  } ;
+  
+  const get_key = (type) => {
+    fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: id_choosen,              
+      })
+    }.then(response => console.log(response.json()))
+    .then(data => {
+      console.log("data received : ", data); 
+      if(data.message === "OK"){
+        console.log("The key was created successfully"); 
+        const data_sent = {
+          type: data_to_type[type],
+          key: data.key,
+          id: id_choosen
+        } 
+        save_storage(data_sent);       
+      }else{
+        console.log("The key was not created");
+      }
+    })
+    )
+  }
 
 
   const validateForm = () => {
@@ -120,6 +189,7 @@ const enregistrer = ({route, navigation }) => {
           AutoSave();
           Alert.alert('Succès', data.message);
           navigation.navigate('Accueil');
+          get_key(id_choosen);
         } else {
           Alert.alert('Erreur', data.message || "Une erreur est survenue lors de l'inscription");
         }

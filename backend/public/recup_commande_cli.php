@@ -18,7 +18,7 @@ $data_commande = $conn->prepare(
             'id_produit', PRODUIT.id_produit,
             'nom_produit', PRODUIT.nom_produit,
             'quantite', CONTENANCE.nb_produit,
-            'prix', PRIX.prix_produit, --inutile à l'heure actuelle
+            'prix', PRIX.prix_produit,
             'type_vendu', PRODUIT.type_vendu
         )
     ) as produits
