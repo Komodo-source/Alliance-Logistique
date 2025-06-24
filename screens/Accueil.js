@@ -10,9 +10,9 @@ const defaultDataWith6Colors = [
 	"#B0604D",
 	"#899F9C",
 	"#B3C680",
-	"#5C6265",
+	"#5C6265", 
 	"#F5D399",
-	"#F1F1F1",
+	"#F1F1F1", 
 ];
 
 //erreur
@@ -125,11 +125,8 @@ const Accueil = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      
       <ScrollView style={styles.scrollView}>
-        <View style={styles.carouselContainer}>
-          <CarouselCards />
-        </View>
-
         <View style={styles.commandeBox}>
           {commande && commande.length > 0 ? (     
             <View style={styles.commandeDiv}>     
@@ -158,8 +155,20 @@ const Accueil = ({ navigation }) => {
             </View>
           )}
         </View>
+        <Text style={{fontSize: 21, fontWeight: "800",marginLeft: 15, color: "#2c3e50"}}>Panneaux de controle</Text>
+        <View style={styles.carouselContainer}>
+          <CarouselCards />
+        </View>
+        <Text style={{fontSize: 21, fontWeight: "800",marginLeft: 15, color: "#2c3e50"}}>Produit en vogue récemment</Text>
+        <Text style={{fontSize: 16, fontWeight: "400",marginLeft: 15, color: "#2c3e50"}}>Découvrez les produits les plus convoités en ce moment</Text>
+        <View style={styles.carouselContainer}>
+          <CarouselCards />
+        </View>
+        
       </ScrollView>
 
+
+          {/*}
       <TouchableOpacity 
         style={styles.floatingButton}
         onPress={() => navigation.navigate('Formulaire')}>
@@ -168,51 +177,57 @@ const Accueil = ({ navigation }) => {
           style={styles.floatingButtonIcon}
         />
         <Text style={styles.floatingButtonText}>Passer une commande</Text>
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
 
       <View style={styles.navbar}> 
         <TouchableOpacity 
           style={styles.navButton}
-          onPress={() => navigation.navigate('Produit')}
+          onPress={() => navigation.navigate('HomePage')}
         >
-          <Text style={styles.navButtonText}>Produit</Text>
+          
           <Image
             style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-Product.png')}
           />
+          <Text style={styles.navButtonText}>Produit</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={[styles.navButton, styles.activeButton]}
+          style={styles.navButton}
           onPress={() => navigation.navigate('Accueil')}
         >
+          <View style={styles.activeButton}>
+            <Image
+              style={{    width: 30,height: 30,}}
+              source={require('../assets/Icons/Dark-House.png')}
+            />
+          </View>
           <Text style={styles.navButtonText}>Accueil</Text>
-          <Image
-            style={styles.logoNavBar}
-            source={require('../assets/Icons/Dark-House.png')}
-          />
+          
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.navButton}
           onPress={() => navigation.navigate('Hub')}
         >
-          <Text style={styles.navButtonText}>Hub</Text>
+          
           <Image
             style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-Hub.png')}
           />
+          <Text style={styles.navButtonText}>Hub</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.navButton}
           onPress={() => navigation.navigate('Profil')}
         >
-          <Text style={styles.navButtonText}>Profil</Text>
+          
           <Image
             style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-profile.png')}
           />
+          <Text style={styles.navButtonText}>Profil</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -223,17 +238,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9F6EE',
+    
   },
   scrollView: {
     flex: 1,
+    marginBottom: 100,
+    paddingBottom: 100,
   },
   carouselContainer: {
-    marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 40,
   },
   commandeBox: {
     flex: 1,
-    marginBottom: 100,
+    marginTop: 40,
+    marginBottom: 50,
+    marginLeft: 15,
+    marginRight: 15,
   },
   commandeDiv: {
     borderRadius: 12,
@@ -281,6 +301,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   newOrderButtonText: {
     color: "#fff",
@@ -349,16 +370,21 @@ const styles = StyleSheet.create({
   },
   activeButton: {
     borderRadius: 40,
-    backgroundColor: '#7CC6FE',
-    width: 120
+    backgroundColor: '#7CC6FE',    
+    width: 90,
+    display: 'flex',
+    alignItems: 'center',
+    height: 35,
+    justifyContent: 'center',
   },
   navButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold"
   },
   logoNavBar: {
     width: 30,
     height: 30,
+    marginBottom: 5,
   },
 });
 

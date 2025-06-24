@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ScrollView, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { printToFileAsync } from 'expo-print';
+import { shareAsync } from 'expo-sharing';
 
 var headers = {
   'Accept': 'application/json',
@@ -31,7 +33,7 @@ export const loadImages = (id_produit) => {
   }
 }
 
-const detail_Commande = ({ route, navigation }) => {
+const DetailCommande = ({ route, navigation }) => {
   const { item } = route.params;
   const [region, setRegion] = useState({
     latitude: 9.3077,
@@ -42,22 +44,218 @@ const detail_Commande = ({ route, navigation }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [prix, calculPrix] = useState(0);
 
-
   const calcul = (itemProduit) => {
     let prix = 0;
-    for (let i = 0; i < itemProduit.length; i++) {
-      prix += itemProduit[i].prix;
+    if (itemProduit && Array.isArray(itemProduit)) {
+      for (let i = 0; i < itemProduit.length; i++) {
+        prix += itemProduit[i].prix || 0;
+      }
     }
     return prix;
   };
 
+  const createPDFWithExpoPrint = async () => {
+    console.log('Generating PDF with Expo Print...');
+    
+    const htmlContent = `
+    <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture n°</title>
+</head>
+
+<style>
+    *{
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .head{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 5rem;
+    }
+
+    .head > h1{
+        font-size: 50px;
+        margin-right: 5rem;
+    }
+
+    .head > img{
+        width: 100px;
+        height: 100px;
+        margin-left: 5rem;
+    }
+
+    .information{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 5rem;
+    }
+
+    .information > h2{
+        font-size: 25px;
+        margin-right: 5rem;
+    }
+    #date{
+        margin-left: 5rem;
+    }
+
+    .separator{
+        border-bottom: 1px solid black;
+        margin-top: 5rem;
+        margin-left: 5rem;
+        margin-right: 5rem;
+    }
+    .direction{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 5rem;
+    }
+    .emetteru{
+        margin-left: 5rem;
+    }
+    .Destinataire{
+        margin-right: 5rem;
+    }
+    .produit{
+        margin-top: 5rem;
+    }
+    .produit > h1{
+        margin-left: 5rem;
+    }
+    .produit > table{
+        margin-top: 2rem;
+        margin-left: 5rem;
+        border-collapse: collapse;
+        width: 70%;
+    }
+    .produit > table > thead > tr > th{
+        border: 1px solid black;
+        padding: 1rem;
+    }
+    .produit > table > tbody > tr > td{
+        border: 1px solid
+    }
+
+    .footer{
+        float: right;
+        margin-top: 5rem;
+        margin-right: 10rem;
+    }
+    .footer > h1{
+        margin-left: 5rem;
+    }
+    .footer > p{
+        margin-left: 5rem;
+    }
+</style>
+
+<body>
+    <div class="head">
+        <img src="logo.png" >
+        <h1>Facture</h1>
+    </div>
+
+    <div class="information">
+        <h2 id="date">date: ${item.date_debut}</h2>
+        <h2 >FACTURE N°: ${item.id_public_cmd}</h2>
+    </div>
+    <div class="separator"></div>
+
+    <div class="direction">
+        <div class="emetteru">
+            <h1>EMETTEUR: </h1>
+            <p>Alliance Logistique</p>
+            <p>22bis grande rue Bouray sur Juine</p>
+            <p>alliance-logistique@transport.com</p>        
+        </div>
+
+        <div class="Destinataire">
+            <h1>DESTINATAIRE: </h1>
+            <p>Alliance Logistique</p>
+            <p>22bis grande rue Bouray sur Juine</p>
+            <p>alliance-logistique@transport.com</p>        
+        </div>
+    </div>
+
+    <div class="produit">
+        <table>
+            <tr>
+                <th>Libellé</th>
+                <th>Prix Unitaire (TTC)</th>
+                <th>Quantité</th>
+                <th>Total</th>
+            </tr>
+            ${item.produit.map((produit, index) => (
+                <tr key={index}>
+                    <td>{produit.libelle}</td>
+                    <td>{produit.prix}</td>
+                    <td>{produit.quantite}</td>
+                    <td>{produit.prix * produit.quantite}</td>
+                </tr>
+                
+            ))}
+        </table>
+    </div>
+
+    <div class="footer">
+        <h2>Total TTC: </h2>
+        <h2>Total HT: </h2>
+        <h2>TVA: 18%</h2>
+        <h2>Remise: </h2>
+    </div>
+</body>
+</html>
+    `;
+
+    try {
+      const { uri } = await printToFileAsync({
+        html: htmlContent,
+        base64: false
+      });
+      
+      console.log('PDF generated successfully at:', uri);
+      
+      // Share the PDF
+      await shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      
+      Alert.alert('Succès', 'PDF généré avec succès!');
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      Alert.alert('Erreur', 'Erreur lors de la génération du PDF: ' + error.message);
+    }
+  };
+
   useEffect(() => {
-    calculPrix(calcul(item.produits));
-    setSelectedLocation({
-      latitude: parseFloat(item.localisation_dmd.split(';')[0]),
-      longitude: parseFloat(item.localisation_dmd.split(';')[1]),
-    });
-  }, []);
+    if (item.produits) {
+      calculPrix(calcul(item.produits));
+    }
+    
+    if (item.localisation_dmd && typeof item.localisation_dmd === 'string') {
+      const coords = item.localisation_dmd.split(';');
+      if (coords.length >= 2) {
+        const lat = parseFloat(coords[0]);
+        const lng = parseFloat(coords[1]);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setSelectedLocation({
+            latitude: lat,
+            longitude: lng,
+          });
+          // Update map region to center on the location
+          setRegion(prev => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng,
+          }));
+        }
+      }
+    }
+  }, [item]);
 
   const zoomOut = () => {
     setRegion(prev => ({
@@ -89,8 +287,8 @@ const detail_Commande = ({ route, navigation }) => {
         <View style={styles.main}>
           {/* Header Section */}
           <View style={styles.header}>
-            <Text style={styles.title}>{item.nom_dmd}</Text>
-            <Text style={styles.subtitle}>{item.desc_dmd}</Text>
+            <Text style={styles.title}>{item.nom_dmd || 'Commande'}</Text>
+            <Text style={styles.subtitle}>{item.desc_dmd || 'Description non disponible'}</Text>
             {renderStatusBadge()}
           </View>
 
@@ -98,11 +296,11 @@ const detail_Commande = ({ route, navigation }) => {
           <View style={styles.infoSection}>
             <View style={styles.infoRow}>
               <Ionicons name="calendar" size={20} color="#2E3192" />
-              <Text style={styles.infoText}>Date de livraison: <Text style={styles.infoValue}>{item.date_fin}</Text></Text>
+              <Text style={styles.infoText}>Date de livraison: <Text style={styles.infoValue}>{item.date_fin || 'N/A'}</Text></Text>
             </View>
             <View style={styles.infoRow}>
               <MaterialIcons name="receipt" size={20} color="#2E3192" />
-              <Text style={styles.infoText}>Bon de commande: <Text style={styles.infoValue}>{item.id_public_cmd}</Text></Text>
+              <Text style={styles.infoText}>Bon de commande: <Text style={styles.infoValue}>{item.id_public_cmd || 'N/A'}</Text></Text>
             </View>
             <View style={styles.infoRow}>
               <FontAwesome name="map-marker" size={20} color="#2E3192" />
@@ -121,7 +319,7 @@ const detail_Commande = ({ route, navigation }) => {
               {selectedLocation && (
                 <Marker
                   coordinate={selectedLocation}
-                  title="Localisation Séléctionné"
+                  title="Localisation Sélectionnée"
                 >
                   <View style={styles.customMarker}>
                     <FontAwesome name="map-pin" size={24} color="#E74C3C" />
@@ -139,7 +337,7 @@ const detail_Commande = ({ route, navigation }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.mapControlButton}
+                style={[styles.mapControlButton, styles.lastMapControlButton]}
                 onPress={zoomOut}
               >
                 <Text style={styles.mapControlText}>-</Text>
@@ -159,22 +357,26 @@ const detail_Commande = ({ route, navigation }) => {
           <View style={styles.productsSection}>
             <Text style={styles.sectionTitle}>Produits Achetés</Text>
             
-            {item.produits && item.produits.map((produit, index) => (
-              <View key={index} style={styles.productItem}>
-                <Image 
-                  source={loadImages(produit.id_produit.toString())} 
-                  style={styles.productImage} 
-                />
-                <View style={styles.productDetails}>
-                  <Text style={styles.productName}>{produit.nom_produit}</Text>
-                  <View style={styles.productMeta}>
-                    <Text style={styles.productQuantity}>{produit.quantite}</Text>
-                    <Text style={styles.productType}>{produit.type_vendu}</Text>
-                    <Text style={styles.productPrice}>{produit.prix} FCFA</Text>
+            {item.produits && Array.isArray(item.produits) && item.produits.length > 0 ? (
+              item.produits.map((produit, index) => (
+                <View key={index} style={styles.productItem}>
+                  <Image 
+                    source={loadImages(produit.id_produit?.toString() || '0')} 
+                    style={styles.productImage} 
+                  />
+                  <View style={styles.productDetails}>
+                    <Text style={styles.productName}>{produit.nom_produit || 'Produit inconnu'}</Text>
+                    <View style={styles.productMeta}>
+                      <Text style={styles.productQuantity}>{produit.quantite || 0}</Text>
+                      <Text style={styles.productType}>{produit.type_vendu || ''}</Text>
+                      <Text style={styles.productPrice}>{produit.prix || 0} FCFA</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
+              ))
+            ) : (
+              <Text style={styles.noProductsText}>Aucun produit trouvé</Text>
+            )}
           </View>
 
           {/* Total Price Section */}
@@ -187,7 +389,10 @@ const detail_Commande = ({ route, navigation }) => {
 
       {/* Footer Button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.invoiceButton}>
+        <TouchableOpacity 
+          style={styles.invoiceButton}
+          onPress={createPDFWithExpoPrint}
+        >
           <MaterialIcons name="receipt" size={24} color="white" />
           <Text style={styles.invoiceButtonText}>Générer une facture</Text>
         </TouchableOpacity>
@@ -306,6 +511,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  lastMapControlButton: {
+    borderBottomWidth: 0,
+  },
   mapControlText: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -392,6 +600,12 @@ const styles = StyleSheet.create({
     color: '#27ae60',
     marginLeft: 'auto',
   },
+  noProductsText: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
   totalSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -444,6 +658,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
+
+  iconWrapper: {
+  backgroundColor: 'transparent',
+  borderRadius: 20,
+  padding: 10,
+},
+
+activeIconWrapper: {
+  backgroundColor: '#007bff',
+  borderRadius: 20,
+  padding: 10,
+},
+
+activeNavButton: {
+  alignItems: 'center',
+},
+
+activeNavText: {
+  color: '#007bff',
+  fontWeight: '600',
+},
 });
 
-export default detail_Commande;
+export default DetailCommande;

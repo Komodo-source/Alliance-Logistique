@@ -1,8 +1,11 @@
 import React, {useState} from 'react';
 import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Platform, Alert} from 'react-native';
 import * as FileSystem from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+//import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { response } from 'express';
+import * as fileManager from '../util/file-manager';
+import id from 'dayjs/locale/id';
+
 
 var headers = {
   'Accept' : 'application/json',
@@ -28,10 +31,19 @@ const enregistrer = ({route, navigation }) => {
     //Obsolète
     if(stayLoggedIn){
       try {
-        await AsyncStorage.setItem('user_data', JSON.stringify({
+        // Nouvelle on utilise le fs de expo donc obsolète
+        //
+        //await AsyncStorage.setItem('user_data', JSON.stringify({
+        //  id: id_choosen,
+        //  type: data,
+        //}));
+        await fileManager.save_storage_local_storage_data({
           id: id_choosen,
           type: data,
-        }));
+          name: nom,
+          firstname: Prenom,
+        }, 'auto.json');
+
       } catch (error) {
         console.error('Erreur lors de la sauvegarde des données:', error);
       }
@@ -76,7 +88,24 @@ const enregistrer = ({route, navigation }) => {
     "cl": "client",
     "fo": "fournisseur",
     "co": "coursier",
-  } ;
+  };
+
+  const handle_user_log = (id) => {
+    const sha256 = new SHA256();    
+    fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: id,
+          device_num: sha256.computeHash(getDeviceId()),
+          ip_user:  sha256.computeHash(getIp()),
+        })
+      }
+    )
+  }
   
   const get_key = (type) => {
     fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
@@ -190,6 +219,12 @@ const enregistrer = ({route, navigation }) => {
           Alert.alert('Succès', data.message);
           navigation.navigate('Accueil');
           get_key(id_choosen);
+          try {
+            handle_user_log(id_choosen);
+          } catch (error) {
+            console.log("Error Log user:  ", error);
+          }
+          
         } else {
           Alert.alert('Erreur', data.message || "Une erreur est survenue lors de l'inscription");
         }

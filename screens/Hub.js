@@ -198,7 +198,7 @@ const Hub = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   formButton: {
-    height: 40,
+    height: 80,
     borderRadius: 7,
     width: '80%',
     backgroundColor: '#000',
@@ -212,7 +212,13 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     left: 100,
+    height: 50,
 
+    borderRadius: 40,
+
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   commandeBox: {
     height: 500, // Test with fixed height
@@ -274,11 +280,9 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     width: '80%',
     backgroundColor: '#000',
-    alignSelf: 'center',
-    marginTop: 20,
-    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    
   },
   commandeBox: {
     flex: 1,
