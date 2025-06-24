@@ -10,9 +10,17 @@ dataBase = mysql.connector.connect(
 )
  
 cursorObject = dataBase.cursor()
+
+print("Bienvenue Dans le console de debbug de la database")
+print("Accès: Root (ou lalala)")
+print("v.0.0.3")
+print("[👌] Connexion à la base de données réussie")
+print("\n")
+
 while True:
-  sql_commande = input("entrer commande sql: ") 
+  sql_commande = input("$") 
   try:
+    print("______________________________________")
     print("\n")
     print("Commande: ", sql_commande)
     print("\n")
@@ -29,7 +37,14 @@ while True:
     #cursorObject.execute("UPDATE COURSIER SET est_occupe = true WHERE est_occupe IS FALSE")
     if sql_commande == "exit":
       break
-  
+
+    if sql_commande == "multiple" or sql_commande == "m":
+      comm = ""
+      while sql_commande != "/":
+        comm += sql_commande + "\n"
+        sql_commande = input("(multiple ligne /) $")
+      cursorObject.execute(comm)
+
     cursorObject.execute(sql_commande)
     
     for x in cursorObject:

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture n°</title>
+</head>
+
+<style>
+    *{
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .head{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 5rem;
+    }
+
+    .head > h1{
+        font-size: 50px;
+        margin-right: 5rem;
+    }
+
+    .head > img{
+        width: 100px;
+        height: 100px;
+        margin-left: 5rem;
+    }
+
+    .information{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 5rem;
+    }
+
+    .information > h2{
+        font-size: 25px;
+        margin-right: 5rem;
+    }
+    #date{
+        margin-left: 5rem;
+    }
+
+    .separator{
+        border-bottom: 1px solid black;
+        margin-top: 5rem;
+        margin-left: 5rem;
+        margin-right: 5rem;
+    }
+    .direction{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-top: 5rem;
+    }
+    .emetteru{
+        margin-left: 5rem;
+    }
+    .Destinataire{
+        margin-right: 5rem;
+    }
+    .produit{
+        margin-top: 5rem;
+    }
+    .produit > h1{
+        margin-left: 5rem;
+    }
+    .produit > table{
+        margin-top: 2rem;
+        margin-left: 5rem;
+        border-collapse: collapse;
+        width: 70%;
+    }
+    .produit > table > thead > tr > th{
+        border: 1px solid black;
+        padding: 1rem;
+    }
+    .produit > table > tbody > tr > td{
+        border: 1px solid
+    }
+
+    .footer{
+        float: right;
+        margin-top: 5rem;
+        margin-right: 10rem;
+    }
+    .footer > h1{
+        margin-left: 5rem;
+    }
+    .footer > p{
+        margin-left: 5rem;
+    }
+</style>
+
+<body>
+    <div class="head">
+        <img src="logo.png" >
+        <h1>Facture</h1>
+    </div>
+
+    <div class="information">
+        <h2 id="date">date: 30/10/25</h2>
+        <h2 >FACTURE N°: 123-456</h2>
+    </div>
+    <div class="separator"></div>
+
+    <div class="direction">
+        <div class="emetteru">
+            <h1>EMETTEUR: </h1>
+            <p>Alliance Logistique</p>
+            <p>22bis grande rue Bouray sur Juine</p>
+            <p>alliance-logistique@transport.com</p>        
+        </div>
+
+        <div class="Destinataire">
+            <h1>DESTINATAIRE: </h1>
+            <p>Alliance Logistique</p>
+            <p>22bis grande rue Bouray sur Juine</p>
+            <p>alliance-logistique@transport.com</p>        
+        </div>
+    </div>
+
+    <div class="produit">
+        <table>
+            <tr>
+                <th>Libellé</th>
+                <th>Prix Unitaire (TTC)</th>
+                <th>Quantité</th>
+                <th>Total</th>
+            </tr>
+            
+        </table>
+    </div>
+
+    <div class="footer">
+        <h2>Total TTC: </h2>
+        <h2>Total HT: </h2>
+        <h2>TVA: 18%</h2>
+        <h2>Remise: </h2>
+    </div>
+
+
+</body>
+</html>

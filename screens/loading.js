@@ -2,9 +2,51 @@
   import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert, Platform } from 'react-native';
   import * as dataUser from '../assets/data/auto.json';
   import * as FileSystem from 'expo-file-system';
-
+import * as fileManager from './util/file-manager.js';
+import * as debbug_lib from './util/debbug.js';
 
   const Loading = ({ navigation }) => {
+
+    const stay_logged = async () => {
+      const key = fileManager.read_file('auto.json')
+      if(key.stay_loogged != true){
+        debbug_lib.debbug_log('stay_logged false -> delete credentials', 'blue');
+        fileManager.modify_value_local_storage(
+          "name", ""
+          ,'auto.json');
+
+          fileManager.modify_value_local_storage(
+            "firstname", ""
+            ,'auto.json');
+
+            fileManager.modify_value_local_storage(
+              "id", ""
+              ,'auto.json');
+      }
+    }
+
+    const measureFetchSpeed = async(url) => {
+      const start = Date.now();
+    
+      const response = await fetch(url);
+      const data = await response.arrayBuffer();
+    
+      const end = Date.now();
+      const durationSec = (end - start) / 1000;
+      const sizeBytes = data.byteLength;
+    
+      const speedBps = sizeBytes / durationSec;
+      const speedKbps = speedBps / 1024;
+      const speedMbps = speedKbps / 1024;
+      
+      debbug_lib.debbug_log("Delay of Connection from: "+ url+ " servers" , 'cyan');
+    
+      console.log(`Downloaded ${sizeBytes} bytes in ${durationSec.toFixed(2)}s`);
+      console.log(`Speed: ${speedBps.toFixed(2)} B/s`);
+      console.log(`Speed: ${speedKbps.toFixed(2)} KB/s`);
+      console.log(`Speed: ${speedMbps.toFixed(2)} MB/s`);
+      return response;
+    }
 
     const save_storage = async (response) => {
       //je peux écrire dans un fichier mais je ne sais pas ou il se trouve
@@ -38,48 +80,64 @@
         console.error('Error during file operation:', error);
         if (error.message) console.error('Error message:', error.message);
         if (error.stack) console.error('Error stack:', error.stack);
-      }
-      
+      }      
     };
 
+    const loading_check = async () => {
+      debbug_lib.debbug_log("INIT", "green");
+      debbug_lib.debbug_log("Academic Weapon", "green");
+      debbug_lib.debbug_log("Komodo", "green");
+      debbug_lib.debbug_log("v.0.4.1", "green");
+      debbug_lib.debbug_log("admin version", "green");
+      debbug_lib.debbug_log("loading main elements", "green");
+      try{  
+        debbug_lib.debbug_log("checking servers", "magenta");      
+        checkServer();
+        debbug_lib.debbug_log("checking if persistant logging", "magenta");  
+        stay_logged();
+      }catch(error){
+        debbug_lib.debbug_log("Error in the initialisation", "red");
+      }
+
+    }
 
     const checkServer = async () => {
       try {
-        const response = await fetch('https://google.com');
-        console.log(response);
+        const response = await measureFetchSpeed('https://google.com');
         if (response.ok) {
-          console.log('connecté a internet');
+          debbug_lib.debbug_log("Connecté a Internet", "green");
           //doit faire une requête pour savoir si le serveur est actif
-          const response_server = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
-          console.log(response_server);
-          ;
-          if(response_server.ok){
-            console.log('[OK] serveur actif'); 
-            save_storage(response_server);
+          const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/product.php');
+          if (response_server.ok) {
+            debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
+            //await save_storage(response_server);
             //meme si le fichier jsonn'est pas vide on envoie l'user vers la page de connexion
-            if(dataUser.id == "" && dataUser.type == ""){
-              //l'utilisateur n'est pas connecté
-              
-              avigation.navigate('HomePage');  
-            }else{
+            if (dataUser.id === "" && dataUser.type === "") {
+              navigation.navigate('HomePage');
+            } else {
               navigation.navigate('Accueil');
-              //l'utilisateur est connecté
             }
-          }else{
-            console.log('[NO] serveur inactif');
+          } else {
+            debbug_lib.debbug_log("BACKEND INACCESSIBLE", "red");
             Alert.alert('Erreur', 'Le serveur est actuellement inaccessible.');
           }
         } else {
-          console.log('pas connecté a internet');
+          Alert.alert(
+            'Erreur de connexion',
+            "Vous n'êtes pas connecté à Internet. Vérifiez votre connexion wifi ou vos données mobiles", 
+            [{ text: 'Réessayer', onPress: () => checkServer() }],
+            { cancelable: false },
+          );
         }
       } catch (error) {
-        console.log('Pas de connexion internet', error);
-        Alert.alert('Erreur', 'Vérifier votre connexion internet.');
+        debbug_lib.debbug_log("Pas d'internet", "red");
+        debbug_lib.debbug_log("Erreur: " + error, "red");
+        Alert.alert('Erreur', 'Vérifiez votre connexion internet.');
       }
     };
 
     useEffect(() => {  
-      checkServer();
+      loading_check();
     }, []);
 
     return (
@@ -103,7 +161,7 @@
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingVertical: 20,
-      backgroundColor : "#2E3192"
+      backgroundColor : "#  "
     },
     container: {
       alignItems: 'center',

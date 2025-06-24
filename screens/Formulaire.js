@@ -1,7 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, Alert, PermissionsAndroid} from 'react-native';
+import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, Alert, PermissionsAndroid, ActivityIndicator} from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import TomateImage from '../assets/Icons/Dark-tomato.png';
+import SaladeImage from '../assets/Icons/Dark-Salad.png';
+import CarotteImage from '../assets/Icons/Dark-Carrot.png';
+import ChickenImage from '../assets/Icons/Dark-Chicken.png';
+import LapinImage from '../assets/Icons/Rabbit.png';
+import OeufImage from '../assets/Icons/Dark-oeuf.png';
+import BoeufImage from '../assets/Icons/Dark-beef.png';
 //import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 
@@ -10,6 +16,7 @@ import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
 
 import * as dataUser from '../assets/data/auto.json';
+//import { text } from 'express';
 
 const Formulaire = ({ navigation }) => {
   const [date, setDate] = useState(dayjs());
@@ -31,6 +38,8 @@ const Formulaire = ({ navigation }) => {
   const [isDescFocused, setIsDescFocused] = useState(false);
   const [isNombreFocused, setIsNombreFocused] = useState(false);
   const [isPoidsFocused, setIsPoidsFocused] = useState(false);
+  const [produits, setProduits] = useState([]);
+  const [searchText, setSearchText] = useState('');
   const [region, setRegion] = useState({
     latitude: 9.3077,
     longitude: 2.3158,
@@ -42,7 +51,18 @@ const Formulaire = ({ navigation }) => {
 
 
   const dic_image_name = {
-    "tomate": TomateImage
+    "tomate": TomateImage,
+    "salade": SaladeImage,
+    "carotte": CarotteImage, 
+    "poulet léger": ChickenImage,
+    "poulet lourd": ChickenImage,
+    "pintade": ChickenImage,
+    "lapin": LapinImage,
+    "oeuf palette(20)": OeufImage,
+    "caille": ChickenImage,
+    "gigot agneau": BoeufImage,
+    "cote de porc": BoeufImage,
+    "boeuf morceau": BoeufImage,
   };
 
   // Request location permission and get current location
@@ -79,7 +99,7 @@ const Formulaire = ({ navigation }) => {
         console.log("Produits reçus du serveur:", data);
       }
       setProduit(data);
-      //setAllProduits(data);
+      setProduits(data); // Initialize filtered products
     } catch (error) {
       console.error("Erreur lors de la récupération des produits:", error);
     }
@@ -114,16 +134,18 @@ const Formulaire = ({ navigation }) => {
     }
   }
 
-/*
-  const getProduct = () => {
-    fetch('https://backend-logistique-api-latest.onrender.com/product.php')
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Produits reçus:", data); // Vérifiez la structure des données
-        setProduit(data);
-      })
-      .catch((error) => console.error(error));
-  }*/
+  // Fixed search function
+  const handleSearchTextChange = (text) => {
+    setSearchText(text);
+    if (text.trim() === "") {
+      setProduits(produit);
+    } else {
+      const filtered = produit.filter(item =>
+        item.nom_produit.toLowerCase().includes(text.toLowerCase())
+      );
+      setProduits(filtered);
+    }
+  };
 
   const transform_date = (date_value) => {
     const date = new Date(date_value);
@@ -184,6 +206,31 @@ const Formulaire = ({ navigation }) => {
     setSelectedLocation(coordinate);
   };
 
+  // Simplified product list rendering
+  const renderProductItem = ({ item }) => {
+    return (
+      <TouchableOpacity
+        style={styles.productItem}
+        onPress={() => {
+          setSelectedProduct({
+            id: item.id_produit,
+            key: item.nom_produit,
+            originalItem: item
+          });
+          setModalVisible(true);
+        }}
+      >
+        <View style={styles.productItemContent}>
+          <Image
+            style={styles.smallProductIcon}
+            source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
+          />
+          <Text style={styles.productName}>{item.nom_produit}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   const add_product = (name, poids, nombre, id) => {
     setModalVisible(false);
     const newProduct = {
@@ -197,22 +244,26 @@ const Formulaire = ({ navigation }) => {
     };
     
     setProducts([...products, newProduct]);
-    
-    const newView = (
-      <View style={styles.containerProduct} key={`${name}-${Date.now()}`}>
-        <Text style={{fontSize: 16, fontWeight: "500"}}>
-          {nombre}x {name} - {poids}g/pièce
-        </Text>
-        <Text style={styles.categoryText}>({selectedProduct.originalItem.nom_categorie})</Text>
-        <Image
-          style={styles.logoProduit}
-          source={dic_image_name[name.toLowerCase()] /*|| require('../assets/default.png')*/}
-        />
-      </View>
-    );
-    setChildViews([...childViews, newView]);
     setPoids('');
     setNombre('');
+  };
+
+  // New function to remove product
+  const removeProduct = (productId) => {
+    Alert.alert(
+      'Supprimer le produit',
+      'Voulez-vous vraiment supprimer ce produit de votre commande?',
+      [
+        {text: 'Annuler', style: 'cancel'},
+        {
+          text: 'Supprimer', 
+          style: 'destructive',
+          onPress: () => {
+            setProducts(products.filter(product => product.id !== productId));
+          }
+        },
+      ]
+    );
   };
 
   const handleConfirm = (selectedDate) => {
@@ -243,10 +294,24 @@ const Formulaire = ({ navigation }) => {
     }));
   };
 
+  const handleConfirmationCommand = () => {
+    Alert.alert(
+      'Validation de la commande',
+      'Voulez vous vraiment valider cette commande?', 
+      [
+        {text: 'Oui', onPress: () => handleSubmit()},
+        {text: 'Non', onPress: () => console.log('Annulation')},
+      ],
+      {cancelable: false},
+    );
+  }
+
   const handleSubmit = () => {
+    console.log("La commande a été soumise");
     setChargement(true);
     if (!selectedLocation) {
       Alert.alert('Error', 'Please select a location on the map');
+      setChargement(false);
       return;
     }
 
@@ -262,7 +327,7 @@ const Formulaire = ({ navigation }) => {
         poids_piece_produit: product.productDetails.poids
       }))
     };
-    
+
     console.log('sent:', formData);
     fetch('https://backend-logistique-api-latest.onrender.com/create_command.php', {
       method: 'POST',
@@ -289,11 +354,13 @@ const Formulaire = ({ navigation }) => {
       setProducts([]);
       setChildViews([]);
       setSelectedLocation(null);
+      setChargement(false);
       navigation.navigate('Accueil');
     })
     .catch(error => {
       console.error('Erreur:', error);
       alert('Une erreur est survenue lors de la création de la commande');
+      setChargement(false);
     });
   };
   
@@ -350,117 +417,136 @@ const Formulaire = ({ navigation }) => {
                   style={styles.calendarIcon}
                 />
               </TouchableOpacity>
-              
-              <Modal
-                  animationType="fade"
-                  transparent={true}
-                  visible={modalVisible}
-                  onRequestClose={() => setModalVisible(false)}
-                >
-                  <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                      <Text style={styles.modalTitle}>
-                        Produit sélectionné: 
-                      </Text>
-                      <Text style={styles.modalTextSelected}>
-                      {selectedProduct?.key}
-                    </Text>
+            </View>
 
-                      <Text style={styles.modalText}>
-                        Quantité (nombre de pièces):
-                      </Text>
-                      <TextInput
-                        style={styles.inputNB}
-                        placeholder="Ex: 10"
-                        keyboardType="numeric"
-                        value={nombre}
-                        onChangeText={setNombre}
-                      />
+            {/* Product Modal */}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>
+                    Produit sélectionné: 
+                  </Text>
+                  <Text style={styles.modalTextSelected}>
+                    {selectedProduct?.key}
+                  </Text>
 
-                      <Text style={styles.modalText}>
-                        Poids par pièce (en grammes):
-                      </Text>
-                      <TextInput
-                        style={[styles.inputNB, { marginBottom: 20 }]}
-                        placeholder="Ex: 150"
-                        keyboardType="numeric"
-                        value={poids}
-                        onChangeText={setPoids}
-                      />
+                  <Text style={styles.modalText}>
+                    Quantité (nombre de pièces):
+                  </Text>
+                  <TextInput
+                    style={styles.inputNB}
+                    placeholder="Ex: 10"
+                    keyboardType="numeric"
+                    value={nombre}
+                    onChangeText={setNombre}
+                  />
 
-                      <View style={styles.buttonModal}>
-                        <TouchableOpacity
-                          style={styles.modalButtonAnnul}
-                          onPress={() => setModalVisible(false)}
-                        >
-                          <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
-                        </TouchableOpacity>
+                  <Text style={styles.modalText}>
+                    Poids par pièce (en grammes):
+                  </Text>
+                  <TextInput
+                    style={[styles.inputNB, { marginBottom: 20 }]}
+                    placeholder="Ex: 150"
+                    keyboardType="numeric"
+                    value={poids}
+                    onChangeText={setPoids}
+                  />
 
-                        <TouchableOpacity
-                          style={styles.modalButtonOK}
-                          onPress={() => {
-                            if (nombre && poids) {
-                              add_product(
-                                selectedProduct.key,
-                                poids,
-                                nombre,
-                                selectedProduct.id
-                              );
-                            } else {
-                              Alert.alert('Erreur', 'Veuillez remplir tous les champs');
-                            }
-                          }}
-                        >
-                          <Text style={styles.modalButtonText}>Confirmer</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
+                  <View style={styles.buttonModal}>
+                    <TouchableOpacity
+                      style={styles.modalButtonAnnul}
+                      onPress={() => setModalVisible(false)}
+                    >
+                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.modalButtonOK}
+                      onPress={() => {
+                        if (nombre && poids) {
+                          add_product(
+                            selectedProduct.key,
+                            poids,
+                            nombre,
+                            selectedProduct.id
+                          );
+                        } else {
+                          Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+                        }
+                      }}
+                    >
+                      <Text style={styles.modalButtonText}>Confirmer</Text>
+                    </TouchableOpacity>
                   </View>
-                </Modal>
-
                 </View>
-              )}
-            
+              </View>
+            </Modal>
 
-            {/* Product Modal (keep existing modal code) */}
+            {/* Search Input - Fixed */}
+            <Text style={styles.inputLabel}>Rechercher vos produits</Text>
+            <View style={styles.SearchInputText}>
+              <TextInput
+                style={styles.inputTextSearch}
+                keyboardType="default"
+                placeholder="Rechercher un produit"
+                placeholderTextColor="#a2a2a9"
+                value={searchText}
+                onChangeText={handleSearchTextChange}
+              />      
+              <Image 
+                source={require('../assets/Icons/Dark-Search.png')}
+                style={styles.imageSearch}
+              />  
+            </View>
 
             {/* Products List Section */}
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>Produits à commander</Text>
               <FlatList
-                data={produit}
-                renderItem={({item}) => (
-                  <TouchableOpacity 
-                    style={styles.productItem}
-                    onPress={() => {                      
-                      setSelectedProduct({
-                        id: item.id_produit,
-                        key: item.nom_produit,
-                        originalItem: item
-                      });    
-                      setModalVisible(true);                  
-                    }}
-                  >
-                    <View style={styles.productItemContent}>
-                      <Image
-                        style={styles.smallProductIcon}
-                        source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
-                      />
-                      <Text style={styles.productName}>{item.nom_produit}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-                keyExtractor={item => item.id_produit}
+                data={produits}
+                keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
+                renderItem={renderProductItem}
                 scrollEnabled={false}
+                ListEmptyComponent={
+                  <Text style={styles.emptyListText}>Aucun produit trouvé</Text>
+                }
               />
             </View>
 
-            {/* Selected Products */}
-            {childViews.length > 0 && (
+            {/* Selected Products - Enhanced with delete functionality */}
+            {products.length > 0 && (
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
                 <View style={styles.selectedProductsContainer}>
-                  {childViews}
+                  {products.map((product, index) => (
+                    <View key={`${product.name}-${index}`} style={styles.containerProduct}>
+                      <View style={styles.productInfo}>
+                        <Text style={styles.productInfoText}>
+                          {product.productDetails.nombre}x {product.name} - {product.productDetails.poids}g/pièce
+                        </Text>
+                        <Text style={styles.categoryText}>
+                          ({product.productDetails.nom_categorie})
+                        </Text>
+                      </View>
+                      <View style={styles.productActions}>
+                        <Image
+                          style={styles.logoProduit}
+                          source={dic_image_name[product.name.toLowerCase()]}
+                        />
+                        <TouchableOpacity
+                          style={styles.deleteButton}
+                          onPress={() => removeProduct(product.id)}
+                        >
+                          <Text style={styles.deleteButtonText}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
                 </View>
               </View>
             )}
@@ -485,11 +571,11 @@ const Formulaire = ({ navigation }) => {
                   <Text style={styles.locationButtonText}>Utiliser ma position</Text>
                 </TouchableOpacity>
                 
-                <Text style={styles.orDivider}>
+                <View style={styles.orDivider}>
                   <View style={styles.dividerLine}></View>
                   <Text style={styles.orText}>OU</Text>
                   <View style={styles.dividerLine}></View>
-                </Text>
+                </View>
                 
                 <Text style={styles.tapInstruction}>
                   Touchez la carte pour choisir manuellement
@@ -498,56 +584,56 @@ const Formulaire = ({ navigation }) => {
               
               {/* Map Section */}
               <View style={styles.mapContainer}>
-            <MapView
-              style={styles.map}
-              region={region}
-              provider={PROVIDER_GOOGLE}
-              showsUserLocation={hasLocationPermission && userLocation !== null}
-              showsMyLocationButton={false}
-              onPress={handleMapPress}
-            >
-              {selectedLocation && (
-                <Marker
-                  coordinate={selectedLocation}
-                  title="Lieu de livraison"
-                />
-              )}
-            </MapView>
+                <MapView
+                  style={styles.map}
+                  region={region}
+                  provider={PROVIDER_GOOGLE}
+                  showsUserLocation={hasLocationPermission && userLocation !== null}
+                  showsMyLocationButton={false}
+                  onPress={handleMapPress}
+                >
+                  {selectedLocation && (
+                    <Marker
+                      coordinate={selectedLocation}
+                      title="Lieu de livraison"
+                    />
+                  )}
+                </MapView>
 
-            <View style={styles.mapControlsContainer}>
-              <TouchableOpacity 
-                style={styles.mapControlButton}
-                onPress={zoomIn}
-              >
-                <Text style={styles.mapControlText}>+</Text>  
-              </TouchableOpacity>
+                <View style={styles.mapControlsContainer}>
+                  <TouchableOpacity 
+                    style={styles.mapControlButton}
+                    onPress={zoomIn}
+                  >
+                    <Text style={styles.mapControlText}>+</Text>  
+                  </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.mapControlButton}
-                onPress={zoomOut}
-              >
-                <Text style={styles.mapControlText}>-</Text>  
-              </TouchableOpacity>
-            </View>
-            
-            {selectedLocation && (
-              <View style={styles.coordinatesContainer}>
-                <Image 
-                  source={require('../assets/Icons/marker-icon.png')} 
-                  style={styles.markerIcon}
-                />
-                <Text style={styles.coordinatesText}>
-                  {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-                </Text>
+                  <TouchableOpacity 
+                    style={styles.mapControlButton}
+                    onPress={zoomOut}
+                  >
+                    <Text style={styles.mapControlText}>-</Text>  
+                  </TouchableOpacity>
+                </View>
+                
+                {selectedLocation && (
+                  <View style={styles.coordinatesContainer}>
+                    <Image 
+                      source={require('../assets/Icons/marker-icon.png')} 
+                      style={styles.markerIcon}
+                    />
+                    <Text style={styles.coordinatesText}>
+                      {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+                    </Text>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
             </View>
           
             {/* Submit Button */}
             <TouchableOpacity
               style={[styles.submitButton, chargement && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
+              onPress={handleConfirmationCommand}
               disabled={chargement}
             >
               <Text style={styles.submitButtonText}>
@@ -631,7 +717,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderWidth: 2.5,
     borderRadius: 7,
-    width: '80%',
+    width: '100%',
     padding: 10,
     color: '#111',
     marginBottom: 20,
@@ -639,6 +725,29 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: '#f8f8f8',
     borderColor: '#666',
+  },
+
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    fontSize: 15,
+  },
+
+  inputTextSearch : {
+    height: 50,
+    width: '90%',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    fontSize: 15,
   },
 
   inputDesc: {  
@@ -906,16 +1015,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-  input: {
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    fontSize: 15,
-  },
+
   inputFocused: {
     borderColor: '#2E3192',
     borderWidth: 1.5,
@@ -1178,6 +1278,280 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2E3192',
+  },
+  SearchInputText : {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    justifyContent: 'space-around',
+    
+  },
+  productItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categoryText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic'
+  },
+  smallProductIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10
+  },
+  datePickerModal: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    alignItems: 'center',
+  },
+  datePickerCloseButton: {
+    marginTop: 15,
+    padding: 10,
+    backgroundColor: '#45b308',
+    borderRadius: 5,
+  },
+  datePickerCloseButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  form: {
+    marginTop: 20,
+  },
+  textH1: {
+    fontSize: 25,
+    marginTop: 20,
+    color: '#000',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  descInput: {
+    color: "#000",
+    marginBottom: 10,
+    marginLeft: '10%',
+    fontWeight: "500"
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    fontSize: 15,
+  },
+  inputTextSearch: {
+    height: 50,
+    width: '90%',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    fontSize: 15,
+  },
+  inputDesc: {  
+    verticalAlign: "top",  
+    height: 100,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 15,
+    color: '#333',
+    backgroundColor: '#fff',
+    borderColor: '#ddd',
+    textAlignVertical: 'top',
+    fontSize: 15,
+  },
+  datePickerContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  reponseCommande: {
+    backgroundColor: "#45b308",
+    padding: 15,
+    borderRadius: 7,
+    width: 180,
+    height: 60,
+    marginTop: 40,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  textButton: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  listProduit: {
+    minHeight: 140,
+    marginTop: 20,
+    marginBottom: 30,
+    color: "#000",
+    borderRadius: 15,
+    backgroundColor: "#B8E0FF",
+    padding: 15,
+  },
+  titleProd: {
+    fontSize: 18,
+    fontWeight: "500",
+    marginBottom: 10,
+    color: '#000',
+    textAlign: "center"
+  },
+  item: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: "500",
+    color: '#000',
+  },
+  localisationText: {
+    color: '#000',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#333',
+  },
+  modalTextSelected: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#555',
+    backgroundColor: "#f8f8f8",
+    padding: 10,
+    width: '80%',
+    textAlign: 'center',
+    fontWeight: "500",
+    borderRadius: 7,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 10,
+    color: '#555',
+  },
+  inputNB: {
+    height: 40,
+    borderWidth: 2.5,
+    borderRadius: 7,
+    width: '80%',
+    padding: 10,
+    color: '#111',
+    marginBottom: 20,
+    marginTop: 5,
+    alignSelf: 'center',
+    backgroundColor: '#f8f8f8',
+    borderColor: '#666',
+  },
+  buttonModal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+  },
+  modalButtonOK: {
+    backgroundColor: '#45b308',
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginLeft: 10,
+    alignItems: 'center',
+  },
+  modalButtonAnnul: {
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    marginRight: 10,
+    borderColor: "#c51b18",
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalButtonTextAnnul: {
+    color: '#c51b18',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  productText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#45b308',
+  },
+  txtInput: {
+    fontSize: 16,
+    fontWeight: "400",
+    marginTop: 15
+  },
+  InputModal: {
+    borderColor: "#111"
+  },
+  containerProduct: {
+    borderRadius: 8,
+    backgroundColor: "#f0f8ff",
+    marginTop: 8,
+    padding: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: '#45b308',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  productInfo: {
+    flex: 1,
+  },
+  productInfoText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: '#333',
+  },
+  productActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   
 });
