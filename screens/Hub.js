@@ -1,12 +1,13 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button,Image, FlatList} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-import data from './../assets/data/auto.json'
+//import data from './../assets/data/auto.json'
 import * as FileSystem from 'expo-file-system';
-
+import * as FileManager from './util/file-manager.js';
 
 const Hub = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
+  const data = FileManager.read_file("auto.json");
 
   const readProductFile = async () => {
     try {
@@ -156,6 +157,14 @@ const Hub = ({ navigation }) => {
       </View>
 
       <View>
+        <View>
+        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop : 30}}>Voir vos commandes réccurentes</Text>
+          <TouchableOpacity
+          style={styles.com_rec}
+          onPress={() => navigation.navigate('commande_reccurente')}>
+            <Text style={{textAlign: "center", color: "#fff",fontWeight: "600"}}>Commande récurrente > </Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop : 30}}>Vos commandes: </Text>
         </View>
@@ -304,6 +313,21 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
   },
+
+  com_rec : {
+    marginTop: 10,
+    marginBottom: 10,
+    shadowColor: '#20236f',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    backgroundColor: "#2E3192",
+    
+    height: 40,
+    borderRadius: 7,
+    padding: 10
+  }
 });
 
 export default Hub;

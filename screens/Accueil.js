@@ -1,36 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-import data from './../assets/data/auto.json'
+//import data from './../assets/data/auto.json'
 import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
-
-
-const defaultDataWith6Colors = [
-	"#B0604D",
-	"#899F9C",
-	"#B3C680",
-	"#5C6265", 
-	"#F5D399",
-	"#F1F1F1", 
-];
-
-//erreur
-// ReanimatedError: [Reanimated] Native part of Reanimated doesn't seem to be initialized (Worklets).
-//See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting#native-part-of-reanimated-doesnt-seem-to-be-initialized for more details.
+import * as FileManager from './util/file-manager.js';
+const { width } = Dimensions.get('window');
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
-
-  const renderItem = ({ rounded }) => ({ item }) => (
-    <View style={{
-      backgroundColor: item.color,
-      height: 250,
-      borderRadius: rounded ? 20 : 0,
-      marginHorizontal: 10,
-    }} />
-  );
-
+  const data = FileManager.read_file("auto.json")
 
   const readProductFile = async () => {
     try {
@@ -53,7 +32,6 @@ const Accueil = ({ navigation }) => {
     } catch (error) {
       console.error('Error reading product.json:', error);
       
-      // Enhanced error logging
       if (error instanceof SyntaxError) {
         console.error('Failed to parse JSON - file may be corrupted');
       } else if (error.code === 'ENOENT') {
@@ -77,7 +55,7 @@ const Accueil = ({ navigation }) => {
     })
     .then(response => response.json())
     .then(data => {
-      data = data.slice(0,2);
+      data = data.slice(0,3); // Show more orders on homepage
       console.log("Received data:", data);
       if (!data || data.length === 0) {
         console.log("No data received or empty array");
@@ -88,32 +66,85 @@ const Accueil = ({ navigation }) => {
     })
     .catch(error => {
       console.log("Error fetching data:", error);
-      setCommande([]); // Set empty array on error
+      setCommande([]);
     });
   }
+
+  // Quick action items for professional users
+  const quickActions = [
+    {
+      id: 1,
+      title: "Nouvelle Commande",
+      subtitle: "Passer une commande",
+      icon: "📋",
+      color: "#4CAF50",
+      action: () => navigation.navigate('Formulaire')
+    },
+    {
+      id: 2,
+      title: "Commandes Récurrentes",
+      subtitle: "Gérer vos commandes",
+      icon: "🔄",
+      color: "#2196F3",
+      action: () => navigation.navigate('Hub')
+    },
+    {
+      id: 3,
+      title: "Catalogue",
+      subtitle: "Parcourir les produits",
+      icon: "📚",
+      color: "#FF9800",
+      action: () => navigation.navigate('Produit')
+    },
+    {
+      id: 4,
+      title: "Factures",
+      subtitle: "Gérer la comptabilité",
+      icon: "💰",
+      color: "#9C27B0",
+      action: () => navigation.navigate('Profil')
+    }
+  ];
+
+  const renderQuickAction = ({ item }) => (
+    <TouchableOpacity 
+      style={[styles.quickActionCard, { backgroundColor: item.color }]}
+      onPress={item.action}
+    >
+      <Text style={styles.quickActionIcon}>{item.icon}</Text>
+      <Text style={styles.quickActionTitle}>{item.title}</Text>
+      <Text style={styles.quickActionSubtitle}>{item.subtitle}</Text>
+    </TouchableOpacity>
+  );
+
   const renderCommande = ({item}) => {
+    const getStatusColor = (status) => {
+      // Assuming status logic based on dates or status field
+      return "#4CAF50"; // Default green for active orders
+    };
+
     return (
       <TouchableOpacity
         style={styles.commandeCard}
         onPress={() => navigation.navigate('detail_Commande', {item})}
       >
-        <Text style={{fontSize: 18, fontWeight: "800", marginBottom: 5, color: "#2c3e50"}}>{item.nom_dmd}</Text>
-        <Text style={{fontSize: 15, fontWeight: "300", marginLeft: 15, marginBottom: 5, color: "#2c3e50"}}>
-          Date de livraison: {new Date(item.date_fin).toLocaleDateString()}
-        </Text>
-        {/*<Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
-          Description: {item.desc_dmd}
-        </Text>*/}
-        <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
-          Numéro de commande: {item.id_public_cmd}
-        </Text>
-        <View style={{marginLeft: 15, marginTop: 5}}>
-          {/*<Text style={{fontSize: 14, fontWeight: "600", marginBottom: 3}}>Produits:</Text>
-          {item.produits && item.produits.map((produit, index) => (
-            <Text key={index} style={{fontSize: 13, marginLeft: 10}}>
-              • {produit.nom_produit} - {produit.quantite} {produit.type_vendu}
+        <View style={styles.commandeHeader}>
+          <View style={styles.commandeInfo}>
+            <Text style={styles.commandeName}>{item.nom_dmd}</Text>
+            <Text style={styles.commandeNumber}>#{item.id_public_cmd}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
+            <Text style={styles.statusText}>En cours</Text>
+          </View>
+        </View>
+        
+        <View style={styles.commandeDetails}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>📅 Livraison:</Text>
+            <Text style={styles.detailValue}>
+              {new Date(item.date_fin).toLocaleDateString('fr-FR')}
             </Text>
-          ))}*/}
+          </View>
         </View>
       </TouchableOpacity>
     )
@@ -124,72 +155,109 @@ const Accueil = ({ navigation }) => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.commandeBox}>
-          {commande && commande.length > 0 ? (     
-            <View style={styles.commandeDiv}>     
-              <Text style={styles.commandeTitle}>Vos commandes</Text>    
-              <FlatList
-                data={commande}
-                renderItem={renderCommande}
-                keyExtractor={(item) => item.id_dmd.toString()}
-              />
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Text style={styles.welcomeText}>Bonjour!</Text>
+            <Text style={styles.businessName}>Votre Hub Professionnel</Text>
+          </View>
+          <TouchableOpacity style={styles.notificationButton}>
+            <Text style={styles.notificationIcon}>🔔</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick Actions Grid */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Actions Rapides</Text>
+          <View style={styles.quickActionsGrid}>
+            {quickActions.map((action, index) => (
               <TouchableOpacity 
-                style={styles.viewAllButton}
-                onPress={() => navigation.navigate('Hub')}>
-                <Text style={styles.viewAllButtonText}>Voir toutes les commandes  {">"}</Text>
+                key={action.id}
+                style={[styles.quickActionCard, { backgroundColor: action.color }]}
+                onPress={action.action}
+              >
+                <Text style={styles.quickActionIcon}>{action.icon}</Text>
+                <Text style={styles.quickActionTitle}>{action.title}</Text>
+                <Text style={styles.quickActionSubtitle}>{action.subtitle}</Text>
               </TouchableOpacity>
-            </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Recent Orders Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Commandes Récentes</Text>
+            {commande.length > 0 && (
+              <TouchableOpacity onPress={() => navigation.navigate('Hub')}>
+                <Text style={styles.seeAllText}>Voir tout →</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {commande && commande.length > 0 ? (
+            <FlatList
+              data={commande}
+              renderItem={renderCommande}
+              keyExtractor={(item) => item.id_dmd.toString()}
+              scrollEnabled={false}
+            />
           ) : (
-            <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>
-                Vous n'avez passé aucune commande pour le moment
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateIcon}>📋</Text>
+              <Text style={styles.emptyStateTitle}>Aucune commande récente</Text>
+              <Text style={styles.emptyStateDescription}>
+                Commencez par passer votre première commande
               </Text>
               <TouchableOpacity 
-                style={styles.newOrderButton}
-                onPress={() => navigation.navigate('Formulaire')}>
-                <Text style={styles.newOrderButtonText}>Passer une commande</Text>
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('Formulaire')}
+              >
+                <Text style={styles.primaryButtonText}>Passer une commande</Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
-        <Text style={{fontSize: 21, fontWeight: "800",marginLeft: 15, color: "#2c3e50"}}>Panneaux de controle</Text>
-        <View style={styles.carouselContainer}>
-          <CarouselCards />
+
+        {/* Control Panel Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tableau de Bord</Text>
+          <View style={styles.carouselContainer}>
+            <CarouselCards />
+          </View>
         </View>
-        <Text style={{fontSize: 21, fontWeight: "800",marginLeft: 15, color: "#2c3e50"}}>Produit en vogue récemment</Text>
-        <Text style={{fontSize: 16, fontWeight: "400",marginLeft: 15, color: "#2c3e50"}}>Découvrez les produits les plus convoités en ce moment</Text>
-        <View style={styles.carouselContainer}>
-          <CarouselCards />
+
+        {/* Business Stats or Promotions */}
+        <View style={styles.section}>
+          <View style={styles.promoCard}>
+            <Text style={styles.promoTitle}>💡 Conseil Pro</Text>
+            <Text style={styles.promoText}>
+              Programmez vos commandes récurrentes pour économiser jusqu'à 15% sur vos achats réguliers.
+            </Text>
+            <TouchableOpacity style={styles.promoButton}
+              onPress={() => navigation.navigate('commande_reccurente')}
+            >
+              <Text style={styles.promoButtonText}>En savoir plus</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        
+
       </ScrollView>
 
-
-          {/*}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={() => navigation.navigate('Formulaire')}>
-        <Image 
-          source={require('../assets/Icons/Light-commande.png')} 
-          style={styles.floatingButtonIcon}
-        />
-        <Text style={styles.floatingButtonText}>Passer une commande</Text>
-      </TouchableOpacity>*/}
-
+      {/* Bottom Navigation */}
       <View style={styles.navbar}> 
         <TouchableOpacity 
           style={styles.navButton}
           onPress={() => navigation.navigate('HomePage')}
         >
-          
           <Image
             style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-Product.png')}
           />
-          <Text style={styles.navButtonText}>Produit</Text>
+          <Text style={styles.navButtonText}>Produits</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -198,31 +266,28 @@ const Accueil = ({ navigation }) => {
         >
           <View style={styles.activeButton}>
             <Image
-              style={{    width: 30,height: 30,}}
+              style={{width: 24, height: 24}}
               source={require('../assets/Icons/Dark-House.png')}
             />
           </View>
-          <Text style={styles.navButtonText}>Accueil</Text>
-          
+          <Text style={[styles.navButtonText, styles.activeNavText]}>Accueil</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={styles.navButton}
           onPress={() => navigation.navigate('Hub')}
         >
-          
           <Image
             style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-Hub.png')}
           />
-          <Text style={styles.navButtonText}>Hub</Text>
+          <Text style={styles.navButtonText}>Commandes</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
           style={styles.navButton}
           onPress={() => navigation.navigate('Profil')}
         >
-          
           <Image
             style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-profile.png')}
@@ -230,126 +295,252 @@ const Accueil = ({ navigation }) => {
           <Text style={styles.navButtonText}>Profil</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F6EE',
-    
+    backgroundColor: '#F8F9FA',
   },
   scrollView: {
     flex: 1,
-    marginBottom: 100,
-    paddingBottom: 100,
+    marginBottom: 90,
   },
-  carouselContainer: {
-    marginBottom: 40,
+  
+  // Header Styles
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
   },
-  commandeBox: {
+  headerContent: {
     flex: 1,
-    marginTop: 40,
-    marginBottom: 50,
-    marginLeft: 15,
-    marginRight: 15,
   },
-  commandeDiv: {
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    paddingBottom: 20,
-    paddingTop: 10,
-    marginTop: 20,
+  welcomeText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '400',
+  },
+  businessName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginTop: 2,
+  },
+  notificationButton: {
+    padding: 8,
+  },
+  notificationIcon: {
+    fontSize: 24,
+  },
+
+  // Section Styles
+  section: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+  seeAllText: {
+    fontSize: 16,
+    color: '#2196F3',
+    fontWeight: '600',
+  },
+
+  // Quick Actions Grid
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  quickActionCard: {
+    width: (width - 60) / 2,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 15,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  commandeTitle: {
-    fontSize: 21,
-    fontWeight: "800",
-    marginLeft: 15,
-    marginBottom: 5,
-    marginTop: 15,
-    color: "#2c3e50"
+  quickActionIcon: {
+    fontSize: 32,
+    marginBottom: 8,
   },
+  quickActionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  quickActionSubtitle: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+
+  // Command Cards
   commandeCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    margin: 8,
-    shadowColor: '#000',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f1f1',
-  },
-  emptyStateContainer: {
-    alignItems: 'center',
-    padding: 20,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  newOrderButton: {
-    height: 40,
-    borderRadius: 7,
-    width: '80%',
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    
-  },
-  newOrderButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600"
-  },
-  viewAllButton: {
-    height: 40,
-    borderRadius: 7,
-    width: '80%',
-    backgroundColor: "#2E3192",
-    alignSelf: 'center',
-    marginTop: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  viewAllButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600"
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 80,
-    right: 20,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#000',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4CAF50',
   },
-  floatingButtonIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 10,
+  commandeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  floatingButtonText: {
-    color: "#FFF",
-    fontSize: 17,
-    fontWeight: "500",
+  commandeInfo: {
+    flex: 1,
   },
+  commandeName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  commandeNumber: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  statusText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  commandeDetails: {
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    paddingTop: 12,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+
+  // Empty State
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginTop: 10,
+  },
+  emptyStateIcon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 8,
+  },
+  emptyStateDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  primaryButton: {
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Carousel
+  carouselContainer: {
+    marginTop: 10,
+  },
+
+  // Promo Card
+  promoCard: {
+    backgroundColor: '#FFF8E1',
+    padding: 20,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFC107',
+    marginBottom: 30
+  },
+  promoTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 8,
+  },
+  promoText: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  promoButton: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#FFC107',
+    borderRadius: 6,
+  },
+  promoButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+
+  // Bottom Navigation
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -357,34 +548,43 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F9F6EE',
-    backgroundColor: '#F9F6EE',
+    borderTopColor: '#E5E5E5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 8,
   },
   navButton: {
-    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 8,
-    flexDirection: 'column',
-    alignItems: 'center'
+    paddingHorizontal: 12,
+    minWidth: 60,
   },
   activeButton: {
-    borderRadius: 40,
-    backgroundColor: '#7CC6FE',    
-    width: 90,
-    display: 'flex',
-    alignItems: 'center',
-    height: 35,
-    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 4,
   },
   navButtonText: {
-    fontSize: 16,
-    fontWeight: "bold"
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 4,
+  },
+  activeNavText: {
+    color: '#2196F3',
   },
   logoNavBar: {
-    width: 30,
-    height: 30,
-    marginBottom: 5,
+    width: 24,
+    height: 24,
   },
 });
 

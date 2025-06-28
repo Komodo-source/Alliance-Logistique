@@ -161,7 +161,7 @@ import * as debbug_lib from './util/debbug.js';
       justifyContent: 'space-between',
       alignItems: 'center',
       paddingVertical: 20,
-      backgroundColor : "#  "
+      backgroundColor : "#2E3192"
     },
     container: {
       alignItems: 'center',

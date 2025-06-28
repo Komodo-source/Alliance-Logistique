@@ -1,6 +1,18 @@
 import * as FileSystem from 'expo-file-system';
 import * as debbug_lib from './debbug.js';
 
+export const create_file = async (file_name, content = "") => {
+  try {
+    const fileUri = FileSystem.documentDirectory + file_name;
+    
+    await FileSystem.writeAsStringAsync(fileUri, content); // This creates or overwrites the file
+    
+    debbug_lib.debbug_log("[FM] File created: " + file_name, "green");
+  } catch (error) {
+    debbug_lib.debbug_log("[FM] Error in file creation: " + error.message, "red");
+  }
+};
+
 
 export const save_storage_local_storage_data = async (data, file_name) => {
   try {
@@ -155,7 +167,7 @@ export const add_value_to_local_storage = async (key, value, file_name) => {
   }
 };
 
-export const read_file = async (file_name) => {
+export const read_file = async (file_name, if_not_create=false) => {
   try {
     debbug_lib.debbug_log("[FM] read_file", "yellow");
     const fileUri = FileSystem.documentDirectory + file_name; 
@@ -164,7 +176,13 @@ export const read_file = async (file_name) => {
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
     if (!fileInfo.exists) {
       console.warn('Fichier inexistant:', fileUri);
-      return null;
+      if(if_not_create){
+        await create_file(file_name);
+        debbug_lib.debbug_log("[FM] created file", "yellow");
+      }else{
+        return null;
+      }
+      
     }
 
     const fileContents = await FileSystem.readAsStringAsync(fileUri);

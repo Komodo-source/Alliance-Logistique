@@ -17,6 +17,8 @@ import enregistrer from './screens/sub_screens/enregistrer';
 import Produit from './screens/Produit';
 import DetailProduit from './screens/sub_screens/DetailProduit';
 import detail_Commande from './screens/sub_screens/detail_Commande';
+import commande_reccurente from './screens/sub_screens/commande_recurrentes';
+import detail_commande_reccurente from './screens/sub_screens/detail_commande_reccurente';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,7 +40,9 @@ const App = () => {
           <Stack.Screen name="enregistrer" component={enregistrer} />
           <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
           <Stack.Screen name="DetailProduit" component={DetailProduit} options={{headerTitle : "Produit" }}/>
-          <Stack.Screen name="detail_Commande" component={detail_Commande} options={{headerTitle : "Commande" }}/>
+          <Stack.Screen name="detail_Commande" component={detail_Commande} options={{headerTitle : "Commande" }}/>          
+          <Stack.Screen name="commande_reccurente" component={commande_reccurente} />
+          <Stack.Screen name="detail_commande_reccurente" component={detail_commande_reccurente} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

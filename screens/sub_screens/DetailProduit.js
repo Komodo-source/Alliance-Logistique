@@ -54,6 +54,16 @@ const DetailProduit = ({ route, navigation }) => {
         </Text>
 
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.Panier}
+        onPress={() => navigation.navigate('commande_reccurente')}
+      >
+        <Text style={{color: "#fff", fontSize: 19, fontWeight: "500"}}>
+          Ajouter à une commande récurrente
+        </Text>
+
+      </TouchableOpacity>
     </View>
   );
 };
@@ -115,6 +125,18 @@ const styles = StyleSheet.create({
         borderRadius: 7,
         width: '80%',
         backgroundColor: '#2E7D32',
+        alignSelf: 'center',
+        marginTop: 20,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+
+      Panier : {
+        height: 40,
+        borderRadius: 7,
+        width: '80%',
+        backgroundColor: '#0141d2',
         alignSelf: 'center',
         marginTop: 20,
         display: 'flex',

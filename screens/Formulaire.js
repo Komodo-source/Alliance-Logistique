@@ -14,11 +14,18 @@ import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
-
+import * as debbug_lib from './util/debbug.js';
 import * as dataUser from '../assets/data/auto.json';
 //import { text } from 'express';
 
-const Formulaire = ({ navigation }) => {
+const Formulaire = ({ navigation, route}) => {
+  let pre_selected_item = null;
+  if (route != null) {
+    pre_selected_item = route.params.produits;
+    console.log("produit deja selec à partir d'un panier");
+    //console.log(pre_selected_item);
+    console.log(route.params.produits);
+  }
   const [date, setDate] = useState(dayjs());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -63,6 +70,7 @@ const Formulaire = ({ navigation }) => {
     "gigot agneau": BoeufImage,
     "cote de porc": BoeufImage,
     "boeuf morceau": BoeufImage,
+    "default": TomateImage, 
   };
 
   // Request location permission and get current location
@@ -141,6 +149,8 @@ const Formulaire = ({ navigation }) => {
       setProduits(produit);
     } else {
       const filtered = produit.filter(item =>
+        item.nom_produit && 
+        typeof item.nom_produit === 'string' && 
         item.nom_produit.toLowerCase().includes(text.toLowerCase())
       );
       setProduits(filtered);
@@ -199,6 +209,10 @@ const Formulaire = ({ navigation }) => {
   useEffect(() => {
     requestLocationPermission();
     getProduct();
+    debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");  
+    if( pre_selected_item != null){
+      set_product_rec();
+    }
   }, []);
 
   const handleMapPress = (e) => {
@@ -208,13 +222,19 @@ const Formulaire = ({ navigation }) => {
 
   // Simplified product list rendering
   const renderProductItem = ({ item }) => {
+    // Add safety check for nom_produit
+    const productName = item.nom_produit || 'Produit sans nom';
+    const imageKey = typeof item.nom_produit === 'string' 
+      ? item.nom_produit.toLowerCase() 
+      : 'default';
+    
     return (
       <TouchableOpacity
         style={styles.productItem}
         onPress={() => {
           setSelectedProduct({
             id: item.id_produit,
-            key: item.nom_produit,
+            key: productName,
             originalItem: item
           });
           setModalVisible(true);
@@ -223,30 +243,95 @@ const Formulaire = ({ navigation }) => {
         <View style={styles.productItemContent}>
           <Image
             style={styles.smallProductIcon}
-            source={dic_image_name[item.nom_produit.toLowerCase()] || dic_image_name.default}
+            source={dic_image_name[imageKey] || dic_image_name['tomate']} // fallback to a default image
           />
-          <Text style={styles.productName}>{item.nom_produit}</Text>
+          <Text style={styles.productName}>{productName}</Text>
         </View>
       </TouchableOpacity>
     );
   };
 
-  const add_product = (name, poids, nombre, id) => {
-    setModalVisible(false);
+  const set_product_rec = () => {
+    debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
+    
+    // Check if pre_selected_item is an array
+    if (Array.isArray(pre_selected_item)) {
+      // Collect all new products first
+      const newProducts = [];
+      
+      for(let i = 0; i < pre_selected_item.length; i++){
+        const item = pre_selected_item[i];
+        debbug_lib.debbug_log(item, "blue");
+        
+        const newProduct = {
+          id: item.id || item.id_produit,
+          name: item.nom || item.nom_produit || 'Produit',
+          productDetails: {
+            ...item,
+            nombre: item.quantite || item.nombre || 1,
+            poids: item.quantite || item.poids || 1
+          }
+        };
+        
+        newProducts.push(newProduct);
+      }
+      
+      // Set all products at once
+      setProducts(prevProducts => [...prevProducts, ...newProducts]);
+    }
+  }
+
+  const add_product = (name, poids, nombre, id, originalItem = null, shouldBatch = false) => {
+    if (!shouldBatch) {
+      setModalVisible(false);
+    }
+    
     const newProduct = {
       id,
       name,
       productDetails: {
-        ...selectedProduct.originalItem,
+        ...(originalItem || {}),
         nombre: nombre,
         poids: poids
       }
     };
     
-    setProducts([...products, newProduct]);
-    setPoids('');
-    setNombre('');
+    if (shouldBatch) {
+      // Return the product instead of setting state immediately
+      return newProduct;
+    } else {
+      setProducts(prevProducts => [...prevProducts, newProduct]);
+      setPoids('');
+      setNombre('');
+    }
   };
+
+  const set_product_rec_alternative = () => {
+    debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
+    
+    if (Array.isArray(pre_selected_item)) {
+      const newProducts = [];
+      
+      for(let i = 0; i < pre_selected_item.length; i++){
+        const item = pre_selected_item[i];
+        debbug_lib.debbug_log(item, "blue");
+        
+        const product = add_product(
+          item.nom || item.nom_produit || 'Produit',
+          item.quantite || item.poids || 1,
+          item.quantite || item.nombre || 1,
+          item.id || item.id_produit,
+          item,
+          true // shouldBatch = true
+        );
+        
+        newProducts.push(product);
+      }
+      
+      // Set all products at once
+      setProducts(prevProducts => [...prevProducts, ...newProducts]);
+    }
+  }
 
   // New function to remove product
   const removeProduct = (productId) => {
@@ -473,7 +558,8 @@ const Formulaire = ({ navigation }) => {
                             selectedProduct.key,
                             poids,
                             nombre,
-                            selectedProduct.id
+                            selectedProduct.id,
+                            selectedProduct.originalItem
                           );
                         } else {
                           Alert.alert('Erreur', 'Veuillez remplir tous les champs');
@@ -523,29 +609,29 @@ const Formulaire = ({ navigation }) => {
               <View style={styles.sectionContainer}>
                 <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
                 <View style={styles.selectedProductsContainer}>
-                  {products.map((product, index) => (
-                    <View key={`${product.name}-${index}`} style={styles.containerProduct}>
-                      <View style={styles.productInfo}>
-                        <Text style={styles.productInfoText}>
-                          {product.productDetails.nombre}x {product.name} - {product.productDetails.poids}g/pièce
-                        </Text>
-                        <Text style={styles.categoryText}>
-                          ({product.productDetails.nom_categorie})
-                        </Text>
-                      </View>
-                      <View style={styles.productActions}>
-                        <Image
-                          style={styles.logoProduit}
-                          source={dic_image_name[product.name.toLowerCase()]}
-                        />
-                        <TouchableOpacity
-                          style={styles.deleteButton}
-                          onPress={() => removeProduct(product.id)}
-                        >
-                          <Text style={styles.deleteButtonText}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
+                {products.map((product, index) => (
+                  <View key={`${product.name}-${index}`} style={styles.containerProduct}>
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productInfoText}>
+                        {product.productDetails.nombre}x {product.name} - {product.productDetails.poids}g/pièce
+                      </Text>
+                      <Text style={styles.categoryText}>
+                        ({product.productDetails.nom_categorie || 'Catégorie non définie'})
+                      </Text>
                     </View>
+                    <View style={styles.productActions}>
+                      <Image
+                        style={{marginRight: 25}}
+                        source={dic_image_name[typeof product.name === 'string' ? product.name.toLowerCase() : 'tomate']}
+                      />
+                      <TouchableOpacity
+                        style={styles.deleteButton}
+                        onPress={() => removeProduct(product.id)}
+                      >
+                        <Text style={{fontSize: 20, color: '#000'}}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                   ))}
                 </View>
               </View>

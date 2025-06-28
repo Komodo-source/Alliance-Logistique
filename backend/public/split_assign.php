@@ -134,8 +134,8 @@ foreach ($commande_regroupe as $commande) {
         if ($coursier_plus_proche) {
             // Créer la commande
             echo "Créer la commande";
-            $SQL = "INSERT INTO COMMANDE(id_cmd, id_public_cmd, id_fournisseur, id_client, id_dmd, id_coursier) 
-                    VALUES(?, ?, ?, ?, ?, ?)";
+            $SQL = "INSERT INTO COMMANDE(id_cmd, id_public_cmd, id_fournisseur, id_client, id_dmd, id_coursier, code_echange) 
+                    VALUES(?, ?, ?, ?, ?, ?, ?)";
             
             $stmt = $conn->prepare($SQL);
             $id_public = uniqid();
@@ -151,7 +151,8 @@ foreach ($commande_regroupe as $commande) {
                 $id_fournisseur_int,
                 $id_client_int,
                 $commande['id_dmd'],
-                $id_coursier_int
+                $id_coursier_int,
+                rand(10000,99999)
             );
             echo "Commande créée";
             
