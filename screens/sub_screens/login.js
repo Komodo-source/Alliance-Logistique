@@ -111,6 +111,8 @@ const Login = ({ navigation }) => {
           //name: data.user_data[`nom_${data.user_type}`],
           //firstname: data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
+        debbug_lib.debbug_log("data.user_data[`id_${data.user_type}`]: " + data.user_data[`id_${data.user_type}`], "magenta");
+        debbug_lib.debbug_log("data.user_data: " + data.user_data, "magenta");
         
         await fileManager.modify_value_local_storage(
           'type', data.user_type // Fixed: use actual ID from response          
@@ -120,10 +122,10 @@ const Login = ({ navigation }) => {
 
 
         if (isSelected){
-          debbug_lib.log_debug("Persistant login", "green");
-          await fileManager.add_value_to_local_storage({
-            stay_loogged: true
-          }, 'auto.json');
+          debbug_lib.debbug_log("Persistant login", "green");
+          await fileManager.add_value_to_local_storage(
+            'stay_loogged', true, 'auto.json'
+          );
         }
 
         // Fixed Alert.alert call - proper format with buttons array

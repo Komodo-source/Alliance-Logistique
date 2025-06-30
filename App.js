@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -19,10 +19,13 @@ import DetailProduit from './screens/sub_screens/DetailProduit';
 import detail_Commande from './screens/sub_screens/detail_Commande';
 import commande_reccurente from './screens/sub_screens/commande_recurrentes';
 import detail_commande_reccurente from './screens/sub_screens/detail_commande_reccurente';
-
+import first_page from './screens/first/first_page';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <NavigationContainer>
@@ -41,8 +44,9 @@ const App = () => {
           <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
           <Stack.Screen name="DetailProduit" component={DetailProduit} options={{headerTitle : "Produit" }}/>
           <Stack.Screen name="detail_Commande" component={detail_Commande} options={{headerTitle : "Commande" }}/>          
-          <Stack.Screen name="commande_reccurente" component={commande_reccurente} />
-          <Stack.Screen name="detail_commande_reccurente" component={detail_commande_reccurente} />
+          <Stack.Screen name="commande_reccurente" component={commande_reccurente} options={{ headerShown: false }}/>
+          <Stack.Screen name="detail_commande_reccurente" component={detail_commande_reccurente} options={{ headerShown: false }}/>
+          <Stack.Screen name="first_page" component={first_page} options={{ headerShown: false }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

@@ -9,7 +9,7 @@ const { width } = Dimensions.get('window');
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
-  const data = FileManager.read_file("auto.json")
+  const [userData, setUserData] = useState(null);
 
   const readProductFile = async () => {
     try {
@@ -42,32 +42,62 @@ const Accueil = ({ navigation }) => {
     }
   };
 
-  const fetch_commande = () => {
-    readProductFile();
-    const id_client = data.id;
-    console.log("id_client : ", id_client);
-    fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({id_client})
-    })
-    .then(response => response.json())
-    .then(data => {
-      data = data.slice(0,3); // Show more orders on homepage
-      console.log("Received data:", data);
-      if (!data || data.length === 0) {
-        console.log("No data received or empty array");
-        setCommande([]); 
-      } else {
-        setCommande(data); 
+  const fetch_commande = async () => {
+    try {
+      // Read user data from auto.json
+      const data = await FileManager.read_file("auto.json");
+      console.log("User data from auto.json:", data);
+      
+      if (!data || !data.id) {
+        console.error("No user data or user ID found in auto.json");
+        return;
       }
-    })
-    .catch(error => {
-      console.log("Error fetching data:", error);
-      setCommande([]);
-    });
+      
+      setUserData(data);
+      const id_client = data.id;
+      console.log("id_client : ", id_client);
+      
+      fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id_client})
+      })
+      .then(async response => {
+        if (!response.ok) {
+          throw new Error(`Erreur réseau: ${response.status}`);
+        }
+        
+        const responseText = await response.text();
+        console.log('Server response:', responseText);
+        
+        try {
+          return JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('JSON Parse Error:', parseError);
+          console.error('Response was:', responseText);
+          throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
+        }
+      })
+      
+      .then(data => {
+        data = data.slice(0,3); // Show more orders on homepage
+        console.log("Received data:", data);
+        if (!data || data.length === 0) {
+          console.log("No data received or empty array");
+          setCommande([]); 
+        } else {
+          setCommande(data); 
+        }
+      })
+      .catch(error => {
+        console.log("Error fetching data:", error);
+        setCommande([]);
+      });
+    } catch (error) {
+      console.error("Error reading auto.json:", error);
+    }
   }
 
   // Quick action items for professional users

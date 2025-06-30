@@ -174,6 +174,7 @@ export const read_file = async (file_name, if_not_create=false) => {
     console.log('lecture du fichier:', fileUri);
 
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
+    
     if (!fileInfo.exists) {
       console.warn('Fichier inexistant:', fileUri);
       if(if_not_create){

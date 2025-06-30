@@ -117,7 +117,7 @@ const Profile = ({ navigation }) => {
     }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
     Alert.alert(
       "Déconnexion",
       "Voulez-vous vraiment vous déconnecter ?",
@@ -129,9 +129,23 @@ const Profile = ({ navigation }) => {
         { 
           text: "Déconnecter", 
           style: "destructive",
-          onPress: () => {
-            // Logique de déconnexion
-            navigation.navigate('Login');
+          onPress: async () => {
+            try {
+              // Clear all user data
+              await fileManager.modify_value_local_storage("id", "", 'auto.json');
+              await fileManager.modify_value_local_storage("name", "", 'auto.json');
+              await fileManager.modify_value_local_storage("firstname", "", 'auto.json');
+              await fileManager.modify_value_local_storage("type", "", 'auto.json');
+              await fileManager.modify_value_local_storage("stay_loogged", false, 'auto.json');
+              
+              debbug_lib.debbug_log('User logged out successfully', 'green');
+              navigation.navigate('HomePage');
+            } catch (error) {
+              console.error('Error during logout:', error);
+              debbug_lib.debbug_log('Error during logout: ' + error.message, 'red');
+              // Still navigate even if there's an error
+              navigation.navigate('HomePage');
+            }
           }
         }
       ]

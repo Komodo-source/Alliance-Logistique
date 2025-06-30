@@ -25,7 +25,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
     const getProduct = async () => {
         let data = {};
         try {
-          const fileData = fileManager.read_file("product.json");
+          const fileData = await fileManager.read_file("product.json");
           if (fileData && Object.keys(fileData).length > 0) {
             console.log("Lecture depuis le fichier local");
             data = fileData;
@@ -72,7 +72,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         );
     };
 
-    const addProductToCommand = () => {
+    const addProductToCommand = async () => {
         if (!selectedProduct || !quantity || parseInt(quantity) <= 0) {
             Alert.alert("Erreur", "Veuillez saisir une quantité valide");
             return;
@@ -108,7 +108,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         };
 
         setCommande(updatedCommande);
-        updateCommandeInFile(updatedCommande);
+        await updateCommandeInFile(updatedCommande);
         
         setQuantityModalVisible(false);
         setModalVisible(false);
@@ -129,7 +129,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                 {
                     text: "Supprimer",
                     style: "destructive",
-                    onPress: () => {
+                    onPress: async () => {
                         const updatedProducts = [...(commande.produits || [])];
                         updatedProducts.splice(index, 1);
                         
@@ -140,16 +140,27 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                         };
                         
                         setCommande(updatedCommande);
-                        updateCommandeInFile(updatedCommande);
+                        await updateCommandeInFile(updatedCommande);
                     }
                 }
             ]
         );
     };
 
-    const updateProductQuantity = (index, newQuantity) => {
+    const updateProductQuantity = async (index, newQuantity) => {
         if (newQuantity <= 0) {
-            removeProductFromCommand(index);
+            // Call removeProductFromCommand but handle it properly
+            const updatedProducts = [...(commande.produits || [])];
+            updatedProducts.splice(index, 1);
+            
+            const updatedCommande = {
+                ...commande,
+                produits: updatedProducts,
+                nb_produit: updatedProducts.length
+            };
+            
+            setCommande(updatedCommande);
+            await updateCommandeInFile(updatedCommande);
             return;
         }
 
@@ -165,10 +176,10 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         };
 
         setCommande(updatedCommande);
-        updateCommandeInFile(updatedCommande);
+        await updateCommandeInFile(updatedCommande);
     };
 
-    const saveCommandName = () => {
+    const saveCommandName = async () => {
         if (!newCommandName.trim()) {
             Alert.alert("Erreur", "Le nom de la commande ne peut pas être vide");
             return;
@@ -180,7 +191,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         };
 
         setCommande(updatedCommande);
-        updateCommandeInFile(updatedCommande);
+        await updateCommandeInFile(updatedCommande);
         setEditingName(false);
         Alert.alert("Succès", "Nom de la commande modifié");
     };
@@ -212,9 +223,9 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                 {
                     text: "Supprimer",
                     style: "destructive",
-                    onPress: () => {
+                    onPress: async () => {
                         try {
-                            deleteCommandeFromFile(commande.id);
+                            await deleteCommandeFromFile(commande.id);
                             navigation.goBack();
                         } catch (error) {
                             Alert.alert("Erreur", "Impossible de supprimer la commande");
@@ -259,13 +270,13 @@ const detail_commande_reccurente = ({ route, navigation }) => {
             totalPrice: getTotalPrice()
         });
     };
-    const updateCommandeInFile = (updatedCommande) => {
+    const updateCommandeInFile = async (updatedCommande) => {
         try {
-            let commandes = fileManager.read_file("reccurente.json") || [];
+            let commandes = await fileManager.read_file("reccurente.json") || [];
             const index = commandes.findIndex(c => c.id === updatedCommande.id);
             if (index !== -1) {
                 commandes[index] = updatedCommande;
-                fileManager.save_storage_local_storage_data(
+                await fileManager.save_storage_local_storage_data(
                     commandes, 
                     "commande_recurrente", 
                     "reccurente.json"
@@ -276,11 +287,11 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         }
     };
 
-    const deleteCommandeFromFile = (commandeId) => {
+    const deleteCommandeFromFile = async (commandeId) => {
         try {
-            let commandes = fileManager.read_file("reccurente.json") || [];
+            let commandes = await fileManager.read_file("reccurente.json") || [];
             commandes = commandes.filter(c => c.id !== commandeId);
-            fileManager.save_storage_local_storage_data(
+            await fileManager.save_storage_local_storage_data(
                 commandes, 
                 "commande_recurrente", 
                 "reccurente.json"

@@ -13,7 +13,7 @@ $data_commande = $conn->prepare(
     COMMANDE.id_public_cmd,
     COMMANDE.id_fournisseur,
     COMMANDE.id_coursier,
-    COMMANDE.code_echange
+    COMMANDE.code_echange,
     GROUP_CONCAT(
         JSON_OBJECT(
             'id_produit', PRODUIT.id_produit,

@@ -4,6 +4,10 @@ import * as FileSystem from 'expo-file-system';
 //import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { response } from 'express';
 import * as fileManager from '../util/file-manager';
+import { SHA256 } from 'react-native-sha';
+import { NetworkInfo } from 'react-native-network-info';
+import * as Device from 'expo-device';
+import * as debbug_lib from '../util/debbug.js';
 import id from 'dayjs/locale/id';
 
 
@@ -26,6 +30,21 @@ const enregistrer = ({route, navigation }) => {
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const id_choosen = Math.floor(Math.random() * 1000000);
+  
+  const getDeviceId = async () => {
+    const uniqueId = Device.osInternalBuildId || Device.modelId || Device.modelName;
+    console.log("Identifiant unique :", uniqueId);
+    return uniqueId;
+  };
+
+  const getIp = () => {
+    return new Promise((resolve, reject) => {
+      NetworkInfo.getIPAddress(ip => {
+        console.log("IP:", ip);
+        resolve(ip);
+      });
+    });
+  }
   
   const AutoSave = async () => {
     //Obsolète
@@ -90,35 +109,47 @@ const enregistrer = ({route, navigation }) => {
     "co": "coursier",
   };
 
-  const handle_user_log = (id) => {
-    const sha256 = new SHA256();    
-    fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
-      {
+  const handle_user_log = async (id) => {
+    try {
+      const sha256 = new SHA256();
+      const deviceId = await getDeviceId();
+      const ip = await getIp();
+      
+      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: id,
+            device_num: deviceId ? sha256.computeHash(deviceId) : null,
+            ip_user: ip ? sha256.computeHash(ip) : null,
+          })
+        }
+      );
+      
+      console.log("User log response:", await response.json());
+    } catch (error) {
+      debbug_lib.debbug_log("Erreur lors de l'enregistrement de l'utilisateur dans log", 'red');
+    }
+  }
+  
+  const get_key = async (type) => {
+    try {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: id,
-          device_num: sha256.computeHash(getDeviceId()),
-          ip_user:  sha256.computeHash(getIp()),
+          id: id_choosen,              
         })
-      }
-    )
-  }
-  
-  const get_key = (type) => {
-    fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        id: id_choosen,              
-      })
-    }.then(response => console.log(response.json()))
-    .then(data => {
+      });
+      
+      const data = await response.json();
       console.log("data received : ", data); 
+      
       if(data.message === "OK"){
         console.log("The key was created successfully"); 
         const data_sent = {
@@ -126,12 +157,13 @@ const enregistrer = ({route, navigation }) => {
           key: data.key,
           id: id_choosen
         } 
-        save_storage(data_sent);       
+        await save_storage(data_sent, 'key.json');       
       }else{
         console.log("The key was not created");
       }
-    })
-    )
+    } catch (error) {
+      console.error("Error creating key:", error);
+    }
   }
 
 
@@ -218,11 +250,11 @@ const enregistrer = ({route, navigation }) => {
           AutoSave();
           Alert.alert('Succès', data.message);
           navigation.navigate('Accueil');
-          get_key(id_choosen);
           try {
-            handle_user_log(id_choosen);
+             get_key(data);
+             handle_user_log(id_choosen);
           } catch (error) {
-            console.log("Error Log user:  ", error);
+            console.log("Error in post-registration tasks: ", error);
           }
           
         } else {
@@ -299,8 +331,8 @@ const enregistrer = ({route, navigation }) => {
             value={stayLoggedIn}
             onValueChange={setStayLoggedIn}
             style={styles.checkbox}
-          />*/}
-          <Text style={styles.descInput}>Me laisser connecté</Text>
+          />
+          <Text style={styles.descInput}>Me laisser connecté</Text>*/}
         </View>
 
         <TouchableOpacity 

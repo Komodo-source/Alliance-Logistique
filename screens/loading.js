@@ -1,25 +1,25 @@
   import React, { useEffect} from 'react';
   import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert, Platform } from 'react-native';
-  import * as dataUser from '../assets/data/auto.json';
+  //import * as dataUser from '../assets/data/auto.json';
   import * as FileSystem from 'expo-file-system';
 import * as fileManager from './util/file-manager.js';
 import * as debbug_lib from './util/debbug.js';
 
   const Loading = ({ navigation }) => {
-
     const stay_logged = async () => {
-      const key = fileManager.read_file('auto.json')
-      if(key.stay_loogged != true){
+      const key = await fileManager.read_file('auto.json');
+      console.log('key : ', key);
+      if(key && key.stay_loogged !== true){
         debbug_lib.debbug_log('stay_logged false -> delete credentials', 'blue');
-        fileManager.modify_value_local_storage(
+        await fileManager.modify_value_local_storage(
           "name", ""
           ,'auto.json');
 
-          fileManager.modify_value_local_storage(
+          await fileManager.modify_value_local_storage(
             "firstname", ""
             ,'auto.json');
 
-            fileManager.modify_value_local_storage(
+            await fileManager.modify_value_local_storage(
               "id", ""
               ,'auto.json');
       }
@@ -48,41 +48,6 @@ import * as debbug_lib from './util/debbug.js';
       return response;
     }
 
-    const save_storage = async (response) => {
-      //je peux écrire dans un fichier mais je ne sais pas ou il se trouve
-      //intéressant comme feature
-      //je peux aussi le lire donc on va faire comme ca pour l'instant
-      try {
-        const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
-        if (!dirInfo.exists) {
-          console.log("Document directory doesn't exist");
-          return;
-        }
-        const data = await response.json();
-        const fileUri = FileSystem.documentDirectory + 'product.json';
-        console.log('Data:', data);
-        const jsonString = JSON.stringify(data);
-        
-        console.log('Full file path:', fileUri);
-        await FileSystem.writeAsStringAsync(fileUri, jsonString, {
-          encoding: FileSystem.EncodingType.UTF8
-        });
-        const fileInfo = await FileSystem.getInfoAsync(fileUri);
-        if (fileInfo.exists) {
-          console.log('fichier ecris:', fileInfo.uri, 'Size:', fileInfo.size);
-
-          const fileContents = await FileSystem.readAsStringAsync(fileUri);
-          console.log('File contents:', fileContents);
-        } else {
-          console.log('File write operation completed but file not found');
-        }
-      } catch (error) {
-        console.error('Error during file operation:', error);
-        if (error.message) console.error('Error message:', error.message);
-        if (error.stack) console.error('Error stack:', error.stack);
-      }      
-    };
-
     const loading_check = async () => {
       debbug_lib.debbug_log("INIT", "green");
       debbug_lib.debbug_log("Academic Weapon", "green");
@@ -90,11 +55,12 @@ import * as debbug_lib from './util/debbug.js';
       debbug_lib.debbug_log("v.0.4.1", "green");
       debbug_lib.debbug_log("admin version", "green");
       debbug_lib.debbug_log("loading main elements", "green");
+      //fileManager.add_value_to_local_storage("first_conn", true, "auto.json");
       try{  
-        debbug_lib.debbug_log("checking servers", "magenta");      
-        checkServer();
         debbug_lib.debbug_log("checking if persistant logging", "magenta");  
-        stay_logged();
+        await stay_logged();
+        debbug_lib.debbug_log("checking servers", "magenta");      
+        await checkServer();
       }catch(error){
         debbug_lib.debbug_log("Error in the initialisation", "red");
       }
@@ -112,9 +78,16 @@ import * as debbug_lib from './util/debbug.js';
             debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
             //await save_storage(response_server);
             //meme si le fichier jsonn'est pas vide on envoie l'user vers la page de connexion
-            if (dataUser.id === "" && dataUser.type === "") {
+            // Read fresh data after stay_logged() has potentially modified it
+            const dataUser = await fileManager.read_file("auto.json");
+            debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
+            if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
               navigation.navigate('HomePage');
-            } else {
+            }else if(dataUser.first_conn == true || dataUser.first_conn == undefined){
+              await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
+              navigation.navigate('first_page');
+            } 
+            else {
               navigation.navigate('Accueil');
             }
           } else {

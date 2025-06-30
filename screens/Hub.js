@@ -7,7 +7,7 @@ import * as FileManager from './util/file-manager.js';
 
 const Hub = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
-  const data = FileManager.read_file("auto.json");
+  const [userData, setUserData] = useState(null);
 
   const readProductFile = async () => {
     try {
@@ -41,32 +41,47 @@ const Hub = ({ navigation }) => {
     }
   };
 
-  const fetch_commande = () => {
-    readProductFile();
-    const id_client = data.id;
-    console.log("id_client : ", id_client);
-    fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({id_client})
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log("Received data:", data);
-      if (!data || data.length === 0) {
-        console.log("No data received or empty array");
-        setCommande([]); // Explicitly set empty array if no data
-      } else {
-        setCommande(data); // Set the entire array of commands
+  const fetch_commande = async () => {
+    try {
+      // Read user data from auto.json
+      const data = await FileManager.read_file("auto.json");
+      console.log("User data from auto.json:", data);
+      
+      if (!data || !data.id) {
+        console.error("No user data or user ID found in auto.json");
+        return;
       }
-    })
-    .catch(error => {
-      console.log("Error fetching data:", error);
-      setCommande([]); // Set empty array on error
-    });
+      
+      setUserData(data);
+      const id_client = data.id;
+      console.log("id_client : ", id_client);
+      
+      fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id_client})
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Received data:", data);
+        if (!data || data.length === 0) {
+          console.log("No data received or empty array");
+          setCommande([]); // Explicitly set empty array if no data
+        } else {
+          setCommande(data); // Set the entire array of commands
+        }
+      })
+      .catch(error => {
+        console.log("Error fetching data:", error);
+        setCommande([]); // Set empty array on error
+      });
+    } catch (error) {
+      console.error("Error reading auto.json:", error);
+    }
   }
+
   const renderCommande = ({item}) => {
     return (
       <TouchableOpacity
@@ -162,7 +177,7 @@ const Hub = ({ navigation }) => {
           <TouchableOpacity
           style={styles.com_rec}
           onPress={() => navigation.navigate('commande_reccurente')}>
-            <Text style={{textAlign: "center", color: "#fff",fontWeight: "600"}}>Commande récurrente > </Text>
+            <Text style={{textAlign: "center", color: "#fff",fontWeight: "600"}}>Commande récurrente {'>'}</Text>
           </TouchableOpacity>
         </View>
 

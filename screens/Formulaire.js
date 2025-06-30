@@ -15,12 +15,15 @@ import * as Location from 'expo-location';
 import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
 import * as debbug_lib from './util/debbug.js';
-import * as dataUser from '../assets/data/auto.json';
+//import * as dataUser from '../assets/data/auto.json';
+import * as fileManager from './util/file-manager.js';
 //import { text } from 'express';
 
 const Formulaire = ({ navigation, route}) => {
+  
   let pre_selected_item = null;
-  if (route != null) {
+  console.log(route);
+  if (route.params != undefined) {
     pre_selected_item = route.params.produits;
     console.log("produit deja selec à partir d'un panier");
     //console.log(pre_selected_item);
@@ -55,7 +58,11 @@ const Formulaire = ({ navigation, route}) => {
   });
   const [produit, setProduit] = useState([]);
   const fileUri = FileSystem.documentDirectory + 'product.json';
-
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [dataUser, setDataUser] = useState(null);
+  const [userDataLoading, setUserDataLoading] = useState(true);
+  debbug_lib.debbug_log("dataUser"+ dataUser, "magenta");
 
   const dic_image_name = {
     "tomate": TomateImage,
@@ -171,11 +178,11 @@ const Formulaire = ({ navigation, route}) => {
   const normaliseDate = (date_value) => {
     const date = new Date(date_value);
     const year = date.getFullYear();
-    const month = date.getMonth();
-    const day = date.getDate();
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
@@ -207,6 +214,22 @@ const Formulaire = ({ navigation, route}) => {
   };
 
   useEffect(() => {
+    const initializeData = async () => {
+      try {
+        setUserDataLoading(true);
+        // Read user data asynchronously
+        const userData = await fileManager.read_file("auto.json");
+        setDataUser(userData);
+        debbug_lib.debbug_log("User data loaded: " + JSON.stringify(userData), "green");
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        setDataUser(null);
+      } finally {
+        setUserDataLoading(false);
+      }
+    };
+
+    initializeData();
     requestLocationPermission();
     getProduct();
     debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");  
@@ -352,9 +375,27 @@ const Formulaire = ({ navigation, route}) => {
   };
 
   const handleConfirm = (selectedDate) => {
-    setOpen(false);
+    setShowDatePicker(false);
     if (selectedDate) {
-      setDate(selectedDate);
+      // Combine the selected date with the current time
+      const currentTime = new Date();
+      const combinedDate = new Date(selectedDate);
+      combinedDate.setHours(currentTime.getHours());
+      combinedDate.setMinutes(currentTime.getMinutes());
+      combinedDate.setSeconds(currentTime.getSeconds());
+      setDate(dayjs(combinedDate));
+    }
+  };
+
+  const handleTimeConfirm = (selectedTime) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      // Combine the current date with the selected time
+      const currentDate = new Date(date.toISOString());
+      const combinedDateTime = new Date(currentDate);
+      combinedDateTime.setHours(selectedTime.getHours());
+      combinedDateTime.setMinutes(selectedTime.getMinutes());
+      setDate(dayjs(combinedDateTime));
     }
   };
 
@@ -391,25 +432,87 @@ const Formulaire = ({ navigation, route}) => {
     );
   }
 
+  const testServerConnection = async () => {
+    try {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/test.php');
+      const responseText = await response.text();
+      console.log('Test server response:', responseText);
+      
+      try {
+        const data = JSON.parse(responseText);
+        console.log('Server test successful:', data);
+        return true;
+      } catch (parseError) {
+        console.error('Server test JSON parse error:', parseError);
+        console.error('Server test response was:', responseText);
+        return false;
+      }
+    } catch (error) {
+      console.error('Server test failed:', error);
+      return false;
+    }
+  };
+
   const handleSubmit = () => {
     console.log("La commande a été soumise");
     setChargement(true);
+    
+    // Test server connection first
+    testServerConnection().then(isConnected => {
+      if (!isConnected) {
+        Alert.alert('Erreur', 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.');
+        setChargement(false);
+        return;
+      }
+      
+      // Continue with form submission
+      submitForm();
+    });
+  };
+
+  const submitForm = () => {
+    // Validation checks
+    if (userDataLoading) {
+      Alert.alert('Erreur', 'Veuillez attendre le chargement des données utilisateur');
+      setChargement(false);
+      return;
+    }
+
     if (!selectedLocation) {
-      Alert.alert('Error', 'Please select a location on the map');
+      Alert.alert('Erreur', 'Veuillez sélectionner un lieu de livraison sur la carte');
+      setChargement(false);
+      return;
+    }
+
+    if (!commandeName.trim()) {
+      Alert.alert('Erreur', 'Veuillez saisir un nom pour la commande');
+      setChargement(false);
+      return;
+    }
+
+    if (products.length === 0) {
+      Alert.alert('Erreur', 'Veuillez ajouter au moins un produit à votre commande');
+      setChargement(false);
+      return;
+    }
+
+    // Check if dataUser exists and has an id
+    if (!dataUser || !dataUser.id) {
+      Alert.alert('Erreur', 'Erreur de connexion utilisateur. Veuillez vous reconnecter.');
       setChargement(false);
       return;
     }
 
     const formData = {
-      nom_dmd: `${commandeName.replace("'", "''")}`, //pour éviter les erreurs sql
-      desc_dmd: `${description.replace("'", "''")}`,
+      nom_dmd: commandeName.trim(),
+      desc_dmd: description.trim(),
       date_fin: transform_date(date.toISOString()),
       id_client: dataUser.id, 
       localisation_dmd: `${selectedLocation.latitude};${selectedLocation.longitude}`,
       produit_contenu: products.map(product => ({
         id_produit: product.id,
-        nb_produit: product.productDetails.nombre,
-        poids_piece_produit: product.productDetails.poids
+        nb_produit: parseInt(product.productDetails.nombre) || 1,
+        poids_piece_produit: parseFloat(product.productDetails.poids) || 0
       }))
     };
 
@@ -421,21 +524,54 @@ const Formulaire = ({ navigation, route}) => {
       },
       body: JSON.stringify(formData)
     })
-    .then(response => {
+    .then(async response => {
       if (!response.ok) {
-        throw new Error('Erreur réseau');
+        throw new Error(`Erreur réseau: ${response.status}`);
       }
-      return response.json();
+      
+      // Get the response text first to debug
+      const responseText = await response.text();
+      console.log('Server response:', responseText);
+      
+      // Try to parse as JSON
+      try {
+        return JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        console.error('Response was:', responseText);
+        throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
+      }
     })
     .then(data => {      
-      const appel_split = fetch('https://backend-logistique-api-latest.onrender.com/split_assign.php');
-      //on appel split assign pour assigner les produits aux fournisseurs
+      console.log('Succès commande:', data);
       
-      console.log('Succès:', data);
-      alert('Commande créée avec succès!');
+      // Call split_assign.php and wait for it to complete
+      return fetch('https://backend-logistique-api-latest.onrender.com/split_assign.php');
+    })
+    .then(async response => {
+      if (!response.ok) {
+        console.warn('Erreur lors de l\'assignation des commandes:', response.status);
+        return null;
+      } else {
+        const responseText = await response.text();
+        console.log('Split assign response:', responseText);
+        try {
+          return JSON.parse(responseText);
+        } catch (parseError) {
+          console.error('Split assign JSON Parse Error:', parseError);
+          console.error('Split assign response was:', responseText);
+          return null;
+        }
+      }
+    })
+    .then(splitData => {
+      console.log('Split assign result:', splitData);
+      Alert.alert('Succès', 'Commande créée avec succès!');
+      
+      // Reset form
       setCommandeName('');
       setDescription('');
-      setDate(new Date());
+      setDate(dayjs());
       setProducts([]);
       setChildViews([]);
       setSelectedLocation(null);
@@ -444,7 +580,7 @@ const Formulaire = ({ navigation, route}) => {
     })
     .catch(error => {
       console.error('Erreur:', error);
-      alert('Une erreur est survenue lors de la création de la commande');
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la création de la commande: ' + error.message);
       setChargement(false);
     });
   };
@@ -503,6 +639,77 @@ const Formulaire = ({ navigation, route}) => {
                 />
               </TouchableOpacity>
             </View>
+
+            {/* Date Picker Modal */}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={showDatePicker}
+              onRequestClose={() => setShowDatePicker(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.datePickerModal}>
+                  <Text style={styles.modalTitle}>Sélectionner la date</Text>
+                  <DatePicker
+                    value={date}
+                    onValueChange={(date) => setDate(date)}
+                    mode="single"
+                    style={styles.datePicker}
+                  />
+                  <View style={styles.buttonModal}>
+                    <TouchableOpacity
+                      style={styles.modalButtonAnnul}
+                      onPress={() => setShowDatePicker(false)}
+                    >
+                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalButtonOK}
+                      onPress={() => {
+                        setShowDatePicker(false);
+                        setShowTimePicker(true);
+                      }}
+                    >
+                      <Text style={styles.modalButtonText}>Suivant</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+            {/* Time Picker Modal */}
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={showTimePicker}
+              onRequestClose={() => setShowTimePicker(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.datePickerModal}>
+                  <Text style={styles.modalTitle}>Sélectionner l'heure</Text>
+                  <DatePicker
+                    value={date}
+                    onValueChange={(date) => setDate(date)}
+                    mode="time"
+                    style={styles.datePicker}
+                  />
+                  <View style={styles.buttonModal}>
+                    <TouchableOpacity
+                      style={styles.modalButtonAnnul}
+                      onPress={() => setShowTimePicker(false)}
+                    >
+                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.modalButtonOK}
+                      onPress={() => setShowTimePicker(false)}
+                    >
+                      <Text style={styles.modalButtonText}>Confirmer</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
 
             {/* Product Modal */}
             <Modal
@@ -718,16 +925,30 @@ const Formulaire = ({ navigation, route}) => {
           
             {/* Submit Button */}
             <TouchableOpacity
-              style={[styles.submitButton, chargement && styles.submitButtonDisabled]}
+              style={[styles.submitButton, (chargement || userDataLoading) && styles.submitButtonDisabled]}
               onPress={handleConfirmationCommand}
-              disabled={chargement}
+              disabled={chargement || userDataLoading}
             >
               <Text style={styles.submitButtonText}>
-                {chargement ? "Envoi en cours..." : "Valider la commande"}
+                {userDataLoading ? "Chargement..." : chargement ? "Envoi en cours..." : "Valider la commande"}
               </Text>
-              {chargement && (
+              {(chargement || userDataLoading) && (
                 <ActivityIndicator color="#fff" style={styles.loadingIndicator} />
               )}
+            </TouchableOpacity>
+
+            {/* Test Server Button - For debugging */}
+            <TouchableOpacity
+              style={[styles.testButton]}
+              onPress={async () => {
+                const isConnected = await testServerConnection();
+                Alert.alert(
+                  'Test Serveur', 
+                  isConnected ? 'Serveur accessible' : 'Erreur de connexion au serveur'
+                );
+              }}
+            >
+              <Text style={styles.testButtonText}>Tester la connexion serveur</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -762,6 +983,16 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '90%',
     alignItems: 'center',
+  },
+  datePicker: {
+    width: '100%',
+    marginVertical: 20,
+  },
+  emptyListText: {
+    textAlign: 'center',
+    color: '#666',
+    fontStyle: 'italic',
+    marginVertical: 20,
   },
   datePickerCloseButton: {
     marginTop: 15,
@@ -1368,10 +1599,8 @@ const styles = StyleSheet.create({
   SearchInputText : {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
     justifyContent: 'space-around',
-    
+    marginBottom: 10,
   },
   productItem: {
     padding: 10,
@@ -1639,7 +1868,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  
+  deleteButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#ffebee',
+    borderWidth: 1,
+    borderColor: '#ffcdd2',
+  },
+  imageSearch: {
+    width: 20,
+    height: 20,
+    tintColor: '#666',
+  },
+  testButton: {
+    backgroundColor: '#2E3192',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 25,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#2E3192',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  testButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default Formulaire;  
