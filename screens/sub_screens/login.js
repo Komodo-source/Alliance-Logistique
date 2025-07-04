@@ -19,6 +19,7 @@ const Login = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setSelection] = useState(false);
+  const sha256 = new SHA256();
 
   const validateForm = () => {
     if (!username.trim()) {
@@ -52,8 +53,7 @@ const Login = ({ navigation }) => {
   }
 
   const handle_user_log = async (id) => {
-    try {
-      const sha256 = new SHA256();
+    try {      
       const deviceId = await getDeviceId();
       const ip = await getIp();
       
@@ -82,8 +82,8 @@ const Login = ({ navigation }) => {
     setIsLoading(true);
     
     const formData = {
-      username,
-      password
+      username: sha256.computeHash(username),
+      password: sha256.computeHash(password)
     }
 
     console.log("sent data : ", formData);

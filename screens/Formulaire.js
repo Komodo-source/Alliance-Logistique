@@ -8,16 +8,13 @@ import ChickenImage from '../assets/Icons/Dark-Chicken.png';
 import LapinImage from '../assets/Icons/Rabbit.png';
 import OeufImage from '../assets/Icons/Dark-oeuf.png';
 import BoeufImage from '../assets/Icons/Dark-beef.png';
-//import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
 import * as debbug_lib from './util/debbug.js';
-//import * as dataUser from '../assets/data/auto.json';
 import * as fileManager from './util/file-manager.js';
-//import { text } from 'express';
 
 const Formulaire = ({ navigation, route}) => {
   
@@ -26,10 +23,12 @@ const Formulaire = ({ navigation, route}) => {
   if (route.params != undefined) {
     pre_selected_item = route.params.produits;
     console.log("produit deja selec à partir d'un panier");
-    //console.log(pre_selected_item);
     console.log(route.params.produits);
   }
+  
+  // Fixed date state management
   const [date, setDate] = useState(dayjs());
+  const [tempDate, setTempDate] = useState(dayjs()); // Temporary date for modal
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -164,27 +163,17 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
-  const transform_date = (date_value) => {
-    const date = new Date(date_value);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0'); 
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  }
+  // Fixed date formatting function
+  const formatDate = (dateValue) => {
+    const date = dayjs(dateValue);
+    return date.format('YYYY-MM-DD HH:mm:ss');
+  };
 
-  const normaliseDate = (date_value) => {
-    const date = new Date(date_value);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  }
+  // Fixed date normalization function
+  const normaliseDate = (dateValue) => {
+    const date = dayjs(dateValue);
+    return date.format('DD/MM/YYYY HH:mm');
+  };
 
   const getCurrentLocation = async () => {
     if (!hasLocationPermission) {
@@ -374,29 +363,31 @@ const Formulaire = ({ navigation, route}) => {
     );
   };
 
-  const handleConfirm = (selectedDate) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      // Combine the selected date with the current time
-      const currentTime = new Date();
-      const combinedDate = new Date(selectedDate);
-      combinedDate.setHours(currentTime.getHours());
-      combinedDate.setMinutes(currentTime.getMinutes());
-      combinedDate.setSeconds(currentTime.getSeconds());
-      setDate(dayjs(combinedDate));
-    }
+  // Fixed date picker handlers
+  const handleDatePickerOpen = () => {
+    setTempDate(date); // Set temporary date to current date
+    setShowDatePicker(true);
   };
 
-  const handleTimeConfirm = (selectedTime) => {
+  const handleDateConfirm = () => {
+    setDate(tempDate); // Apply the temporary date
+    setShowDatePicker(false);
+    setShowTimePicker(true); // Show time picker next
+  };
+
+  const handleDateCancel = () => {
+    setTempDate(date); // Reset temporary date
+    setShowDatePicker(false);
+  };
+
+  const handleTimeConfirm = () => {
+    setDate(tempDate); // Apply the temporary date with time
     setShowTimePicker(false);
-    if (selectedTime) {
-      // Combine the current date with the selected time
-      const currentDate = new Date(date.toISOString());
-      const combinedDateTime = new Date(currentDate);
-      combinedDateTime.setHours(selectedTime.getHours());
-      combinedDateTime.setMinutes(selectedTime.getMinutes());
-      setDate(dayjs(combinedDateTime));
-    }
+  };
+
+  const handleTimeCancel = () => {
+    setTempDate(date); // Reset temporary date
+    setShowTimePicker(false);
   };
 
   const handleProductPress = (item) => {
@@ -506,13 +497,13 @@ const Formulaire = ({ navigation, route}) => {
     const formData = {
       nom_dmd: commandeName.trim(),
       desc_dmd: description.trim(),
-      date_fin: transform_date(date.toISOString()),
+      date_fin: formatDate(date), // Using the fixed formatDate function
       id_client: dataUser.id, 
       localisation_dmd: `${selectedLocation.latitude};${selectedLocation.longitude}`,
       produit_contenu: products.map(product => ({
         id_produit: product.id,
         nb_produit: parseInt(product.productDetails.nombre) || 1,
-        poids_piece_produit: parseFloat(product.productDetails.poids) || 0
+        //ids_piece_produit: parseFloat(product.productDetails.poids) || 0
       }))
     };
 
@@ -546,7 +537,7 @@ const Formulaire = ({ navigation, route}) => {
       console.log('Succès commande:', data);
       
       // Call split_assign.php and wait for it to complete
-      return fetch('https://backend-logistique-api-latest.onrender.com/split_assign.php');
+      return fetch('https://backend-logistique-api-latest.onrender.com/assign.php');
     })
     .then(async response => {
       if (!response.ok) {
@@ -628,10 +619,10 @@ const Formulaire = ({ navigation, route}) => {
               <Text style={styles.inputLabel}>Date de livraison</Text>
               <TouchableOpacity 
                 style={styles.datePickerButton}
-                onPress={() => setShowDatePicker(true)}
+                onPress={handleDatePickerOpen}
               >
                 <Text style={styles.datePickerButtonText}>
-                  {normaliseDate(date.toISOString())}
+                  {normaliseDate(date)}
                 </Text>
                 <Image 
                   source={require('../assets/Icons/calendar-icon.png')} 
@@ -645,30 +636,27 @@ const Formulaire = ({ navigation, route}) => {
               animationType="fade"
               transparent={true}
               visible={showDatePicker}
-              onRequestClose={() => setShowDatePicker(false)}
+              onRequestClose={handleDateCancel}
             >
               <View style={styles.modalOverlay}>
                 <View style={styles.datePickerModal}>
                   <Text style={styles.modalTitle}>Sélectionner la date</Text>
                   <DatePicker
-                    value={date}
-                    onValueChange={(date) => setDate(date)}
+                    value={tempDate}
+                    onValueChange={(selectedDate) => setTempDate(selectedDate)}
                     mode="single"
                     style={styles.datePicker}
                   />
                   <View style={styles.buttonModal}>
                     <TouchableOpacity
                       style={styles.modalButtonAnnul}
-                      onPress={() => setShowDatePicker(false)}
+                      onPress={handleDateCancel}
                     >
                       <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.modalButtonOK}
-                      onPress={() => {
-                        setShowDatePicker(false);
-                        setShowTimePicker(true);
-                      }}
+                      onPress={handleDateConfirm}
                     >
                       <Text style={styles.modalButtonText}>Suivant</Text>
                     </TouchableOpacity>
@@ -682,27 +670,27 @@ const Formulaire = ({ navigation, route}) => {
               animationType="fade"
               transparent={true}
               visible={showTimePicker}
-              onRequestClose={() => setShowTimePicker(false)}
+              onRequestClose={handleTimeCancel}
             >
               <View style={styles.modalOverlay}>
                 <View style={styles.datePickerModal}>
                   <Text style={styles.modalTitle}>Sélectionner l'heure</Text>
                   <DatePicker
-                    value={date}
-                    onValueChange={(date) => setDate(date)}
+                    value={tempDate}
+                    onValueChange={(selectedDateTime) => setTempDate(selectedDateTime)}
                     mode="time"
                     style={styles.datePicker}
                   />
                   <View style={styles.buttonModal}>
                     <TouchableOpacity
                       style={styles.modalButtonAnnul}
-                      onPress={() => setShowTimePicker(false)}
+                      onPress={handleTimeCancel}
                     >
                       <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={styles.modalButtonOK}
-                      onPress={() => setShowTimePicker(false)}
+                      onPress={handleTimeConfirm}
                     >
                       <Text style={styles.modalButtonText}>Confirmer</Text>
                     </TouchableOpacity>
@@ -738,6 +726,7 @@ const Formulaire = ({ navigation, route}) => {
                     onChangeText={setNombre}
                   />
 
+                  {/*
                   <Text style={styles.modalText}>
                     Poids par pièce (en grammes):
                   </Text>
@@ -747,7 +736,7 @@ const Formulaire = ({ navigation, route}) => {
                     keyboardType="numeric"
                     value={poids}
                     onChangeText={setPoids}
-                  />
+                  />*/}
 
                   <View style={styles.buttonModal}>
                     <TouchableOpacity
@@ -760,10 +749,11 @@ const Formulaire = ({ navigation, route}) => {
                     <TouchableOpacity
                       style={styles.modalButtonOK}
                       onPress={() => {
-                        if (nombre && poids) {
+                        if (nombre ) {
                           add_product(
                             selectedProduct.key,
-                            poids,
+                            //poids,
+                            1,
                             nombre,
                             selectedProduct.id,
                             selectedProduct.originalItem
@@ -820,7 +810,7 @@ const Formulaire = ({ navigation, route}) => {
                   <View key={`${product.name}-${index}`} style={styles.containerProduct}>
                     <View style={styles.productInfo}>
                       <Text style={styles.productInfoText}>
-                        {product.productDetails.nombre}x {product.name} - {product.productDetails.poids}g/pièce
+                        {product.productDetails.nombre}x {product.name} - {/*{product.productDetails.poids}g/pièce*/}
                       </Text>
                       <Text style={styles.categoryText}>
                         ({product.productDetails.nom_categorie || 'Catégorie non définie'})

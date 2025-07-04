@@ -9,7 +9,7 @@ import { NetworkInfo } from 'react-native-network-info';
 import * as Device from 'expo-device';
 import * as debbug_lib from '../util/debbug.js';
 import id from 'dayjs/locale/id';
-
+import { SHA256 } from 'react-native-sha';
 
 var headers = {
   'Accept' : 'application/json',
@@ -30,6 +30,7 @@ const enregistrer = ({route, navigation }) => {
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const id_choosen = Math.floor(Math.random() * 1000000);
+  const sha256 = new SHA256();
   
   const getDeviceId = async () => {
     const uniqueId = Device.osInternalBuildId || Device.modelId || Device.modelName;
@@ -207,9 +208,9 @@ const enregistrer = ({route, navigation }) => {
       id: id_choosen,
       nom,
       Prenom,
-      Email,
-      Tel,
-      Password,
+      Email: sha256.computeHash(Email),
+      Tel:  sha256.computeHash(Tel),
+      Password:  sha256.computeHash(Password),
       data // pour savoir dans quelle table on l'insert
     }
     console.log("sent data : ", formData);

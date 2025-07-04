@@ -116,233 +116,235 @@ const Hub = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-
-
+      <Text style={styles.headerTitle}>Mes Commandes</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Commandes récurrentes</Text>
+        <TouchableOpacity
+          style={styles.comRecButton}
+          onPress={() => navigation.navigate('commande_reccurente')}>
+          <Text style={styles.comRecButtonText}>Voir mes commandes récurrentes {'>'}</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Vos commandes</Text>
+        <View style={styles.commandeBox}>
+          {commande && commande.length > 0 ? (
+            <FlatList
+              data={commande}
+              renderItem={renderCommande}
+              keyExtractor={(item) => item.id_dmd.toString()}
+              contentContainerStyle={{paddingBottom: 100}}
+            />
+          ) : (
+            <View style={styles.emptyStateBox}>
+              <Text style={styles.emptyStateText}>
+                Vous n'avez passé aucune commande pour le moment
+              </Text>
+              <TouchableOpacity 
+                style={styles.primaryButton}
+                onPress={() => navigation.navigate('Formulaire')}>
+                <Text style={styles.primaryButtonText}>Passer une commande</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+      <TouchableOpacity 
+        style={styles.fab}
+        onPress={() => navigation.navigate('Formulaire')}>
+        <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
+      </TouchableOpacity>
       <View style={styles.navbar}> 
         <TouchableOpacity 
           style={styles.navButton}
-          //onPress={() => console.log('Recherche pressé')}
-          //onPress={() => navigation.navigate('HomePage')}
           onPress={() => navigation.navigate('Produit')}
         >
+          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Product.png')} />
           <Text style={styles.navButtonText}>Produit</Text>
-          <Image
-            style={styles.logoNavBar}
-            source={require('../assets/Icons/Dark-Product.png')}
-          />
         </TouchableOpacity>
-
-
-        <TouchableOpacity 
-          style={styles.navButton }
-          //onPress={() => console.log('Accueil pressé')}
-          onPress={() => navigation.navigate('Accueil')}
-        >
-          <Text style={styles.navButtonText}>Accueil</Text>
-            <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-House.png')}
-            />
-        </TouchableOpacity>
-        
-         
-        <TouchableOpacity 
-          style={[styles.navButton, styles.activeButton]}
-          //onPress={() => console.log('Hub pressé')}
-          onPress={() => navigation.navigate('Hub')}
-        >
-          <Text style={styles.navButtonText}>Hub</Text>
-          <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-Hub.png')}
-            />
-        </TouchableOpacity>
-
         <TouchableOpacity 
           style={styles.navButton}
-          //onPress={() => console.log('Profil pressé')}
+          onPress={() => navigation.navigate('Accueil')}
+        >
+          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-House.png')} />
+          <Text style={styles.navButtonText}>Accueil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.navButton, styles.activeButton]}
+          onPress={() => navigation.navigate('Hub')}
+        >
+          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Hub.png')} />
+          <Text style={styles.navButtonText}>Hub</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.navButton}
           onPress={() => navigation.navigate('Profil')}
         >
+          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-profile.png')} />
           <Text style={styles.navButtonText}>Profil</Text>
-          <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-profile.png')}
-            />
         </TouchableOpacity>
       </View>
-
-      <View>
-        <View>
-        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop : 30}}>Voir vos commandes réccurentes</Text>
-          <TouchableOpacity
-          style={styles.com_rec}
-          onPress={() => navigation.navigate('commande_reccurente')}>
-            <Text style={{textAlign: "center", color: "#fff",fontWeight: "600"}}>Commande récurrente {'>'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={{fontSize : 21, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop : 30}}>Vos commandes: </Text>
-        </View>
-              {/*ici qu'il ya la liste des commandes*/}
-         <View style={styles.commandeBox}>
-         <View>
-          
-          
-         {commande && commande.length > 0 ? (              
-              <FlatList
-                data={commande}
-                renderItem={renderCommande}
-                keyExtractor={(item) => item.id_dmd.toString()}
-              />
-            ) : (
-              <View>
-                <Text style={{fontSize: 18, fontWeight: "600", marginBottom: 5, textAlign: "center", marginTop: 20}}>
-                  Vous n'avez passé aucune commande pour le moment
-                </Text>
-                <TouchableOpacity 
-                  style={styles.NvCommande}
-                  onPress={() => navigation.navigate('Formulaire')}>
-                  <Text style={{color: "#fff", fontSize: 18, fontWeight: "600"}}>Passer une commande</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-          <TouchableOpacity 
-            style={styles.formButton}
-            //onPress={() => console.log('Hub pressé')}
-            onPress={() => navigation.navigate('Formulaire')}>
-              <Image source={require('../assets/Icons/Light-commande.png')} style={{width: 20, height: 20, marginLeft: 15, marginBottom: 5, color: "#FFF"}}/>
-                <Text style={{fontSize : 17, fontWeight : "500", marginLeft : 15, marginBottom : 5, color: "#FFF", textAlign: "center"}}>Passer une commande</Text>
-            </TouchableOpacity>
-
-        </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  formButton: {
-    height: 80,
-    borderRadius: 7,
-    width: '80%',
-    backgroundColor: '#000',
-    alignSelf: 'end',
-    width: "70%",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.5)",
-    position: "absolute",
-    bottom: 20,
-    left: 100,
-    height: 50,
-
-    borderRadius: 40,
-
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  commandeBox: {
-    height: 500, // Test with fixed height
-    marginBottom: 80,
-    marginTop: 20,
-  },
-  commandeCard: {
-    backgroundColor: 'lightblue', // Temporary bright color
-    height: 100, // Fixed height for testing
-    width: '100%', // Full width
-    marginTop: 20,
-  },
-  productGrid: {
-    padding: 10,
-    paddingBottom: 80, 
-  },
-  logoNavBar: {
-    width: 30,
-    height: 30,
-  },
   container: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#F4F7FA',
+    paddingTop: 50,
+    paddingHorizontal: 16,
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2E3192',
+    marginBottom: 10,
     textAlign: 'center',
+    letterSpacing: 1,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  commandeBox: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 8,
+    minHeight: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 10,
+  },
+  commandeCard: {
+    backgroundColor: '#EAF1FB',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.10,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  emptyStateBox: {
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  emptyStateText: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#888',
+    marginBottom: 18,
+    textAlign: 'center',
+  },
+  primaryButton: {
+    backgroundColor: '#2E3192',
+    borderRadius: 25,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    marginTop: 8,
+    shadowColor: '#2E3192',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  fab: {
+    position: 'absolute',
+    right: 24,
+    bottom: 90,
+    backgroundColor: '#2E3192',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2E3192',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+    zIndex: 10,
+  },
+  fabIcon: {
+    width: 28,
+    height: 28,
+    tintColor: '#fff',
+  },
+  comRecButton: {
+    backgroundColor: '#7CC6FE',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+    shadowColor: '#7CC6FE',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  comRecButtonText: {
+    color: '#2E3192',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  logoNavBar: {
+    width: 28,
+    height: 28,
+    marginBottom: 2,
   },
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center',
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    paddingVertical: 10,
+    height: 70,
+    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#F9F6EE',
-    backgroundColor: '#F9F6EE',
+    borderTopColor: '#EAF1FB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 8,
+    zIndex: 20,
   },
   navButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    flexDirection: 'column',
-    alignItems: 'center'
+    borderRadius: 20,
   },
   activeButton: {
-    borderRadius: 40,
-    backgroundColor: '#7CC6FE',
-    width: 120
+    backgroundColor: '#EAF1FB',
   },
   navButtonText: {
-    fontSize: 18,
-    fontWeight: "bold"
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2E3192',
+    marginTop: 2,
   },
-  NvCommande: {
-    height: 40,
-    borderRadius: 7,
-    width: '80%',
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-    
-  },
-  commandeBox: {
-    flex: 1,
-    marginBottom: 80, // Add space for the navbar
-  },
-  commandeCard: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    margin: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    flex: 1,
-    minWidth: '45%',
-  },
-
-  com_rec : {
-    marginTop: 10,
-    marginBottom: 10,
-    shadowColor: '#20236f',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    backgroundColor: "#2E3192",
-    
-    height: 40,
-    borderRadius: 7,
-    padding: 10
-  }
 });
 
 export default Hub;

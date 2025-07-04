@@ -10,8 +10,11 @@ if (!isset($data['username']) || !isset($data['password'])) {
     exit;
 }
 
-$identifiant = hash('sha256',$data['username']);
-$mdp = hash('sha256', $data['password']);
+//$identifiant = hash('sha256',$data['username']);
+//$mdp = hash('sha256', $data['password']);
+
+$identifiant = $data['username'];
+$mdp = $data['password'];
 
 // Requêtes pour vérifier les identifiants dans chaque table
 $stmt = $conn->prepare("SELECT id_client, nom_client, prenom_client FROM CLIENT WHERE email_client = ? AND mdp_client = ?");

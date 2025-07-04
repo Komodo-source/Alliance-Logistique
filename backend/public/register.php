@@ -26,9 +26,12 @@ try {
     $id = $data['id'];
     $nom = $data['nom'];
     $Prenom = $data['Prenom'];
-    $Email = hash('sha256', $data['Email']);
-    $Tel = hash('sha256', $data['Tel']);
-    $Password = hash('sha256', $data['Password']);
+    //$Email = hash('sha256', $data['Email']);
+    $Email = $data['Email'];
+    //Tel = hash('sha256', $data['Tel']);
+    $Tel = data['Tel'];
+    //$Password = hash('sha256', $data['Password']);
+    $Password = $data['Password'];
     $flag = $data['data'];
     
     // Validate user type

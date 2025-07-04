@@ -56,7 +56,11 @@
     "react-native-ui-datepicker": "^3.1.2",
     "write-json-file": "^6.0.0",
     "expo-checkbox": "~4.0.1",
-    "expo-media-library": "~17.0.6"
+    "expo-media-library": "~17.0.6",
+    "react-dom": "18.3.1",
+    "react-native-web": "~0.19.13",
+    "@expo/metro-runtime": "~4.0.1",
+    "expo-notifications": "~0.29.14"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
