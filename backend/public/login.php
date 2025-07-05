@@ -13,18 +13,23 @@ if (!isset($data['username']) || !isset($data['password'])) {
 //$identifiant = hash('sha256',$data['username']);
 //$mdp = hash('sha256', $data['password']);
 
-$identifiant = $data['username'];
+$identifiant = $data['username']; //l'identifiant peut etre un numéro ou une email
 $mdp = $data['password'];
 
 // Requêtes pour vérifier les identifiants dans chaque table
-$stmt = $conn->prepare("SELECT id_client, nom_client, prenom_client FROM CLIENT WHERE email_client = ? AND mdp_client = ?");
+$stmt = $conn->prepare("SELECT id_client, nom_client, prenom_client FROM CLIENT WHERE email_client = ? AND mdp_client = ?
+UNION
+SELECT id_client, nom_client, prenom_client FROM CLIENT WHERE telephone_client = ? AND mdp_client = ?,
+");
 $stmt->bind_param("ss", $identifiant, $mdp);
 $stmt->execute();
 $result_client = $stmt->get_result();
 $client_data = $result_client->fetch_assoc();
 $stmt->close();
 
-$stmt2 = $conn->prepare("SELECT id_fournisseur, nom_fournisseur, prenom_fournisseur FROM FOURNISSEUR WHERE email_fournisseur = ? AND mdp_fournisseur = ?");
+$stmt2 = $conn->prepare("SELECT id_fournisseur, nom_fournisseur, prenom_fournisseur FROM FOURNISSEUR WHERE email_fournisseur = ? AND mdp_fournisseur = ?
+UNION
+SELECT id_fournisseur, nom_fournisseur, prenom_fournisseur FROM FOURNISSEUR WHERE telephone_fournisseur = ? AND mdp_fournisseur = ?");
 $stmt2->bind_param("ss", $identifiant, $mdp);
 $stmt2->execute();
 $result_fournisseur = $stmt2->get_result();

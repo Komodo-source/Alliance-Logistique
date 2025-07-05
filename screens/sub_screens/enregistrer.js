@@ -1,15 +1,17 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Platform, Alert} from 'react-native';
 import * as FileSystem from 'expo-file-system';
 //import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { response } from 'express';
 import * as fileManager from '../util/file-manager';
-import { SHA256 } from 'react-native-sha';
+//import { SHA256 } from 'react-native-sha';
+import * as Crypto from 'expo-crypto';
 import { NetworkInfo } from 'react-native-network-info';
 import * as Device from 'expo-device';
 import * as debbug_lib from '../util/debbug.js';
-import id from 'dayjs/locale/id';
-import { SHA256 } from 'react-native-sha';
+//import id from 'dayjs/locale/id';
+import { has } from 'lodash-es';
+import axios from 'axios';
 
 var headers = {
   'Accept' : 'application/json',
@@ -30,7 +32,8 @@ const enregistrer = ({route, navigation }) => {
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const id_choosen = Math.floor(Math.random() * 1000000);
-  const sha256 = new SHA256();
+  
+  //const sha256 = new SHA256();
   
   const getDeviceId = async () => {
     const uniqueId = Device.osInternalBuildId || Device.modelId || Device.modelName;
@@ -70,11 +73,11 @@ const enregistrer = ({route, navigation }) => {
     }
   };
 
-      const save_storage = async (data, file) => {          
+  const save_storage = async (data, file) => {          
+        try {
           //je peux écrire dans un fichier mais je ne sais pas ou il se trouve
           //intéressant comme feature
           //je peux aussi le lire donc on va faire comme ca pour l'instant
-          try {
             const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
             if (!dirInfo.exists) {
               console.log("Document directory doesn't exist");
@@ -110,13 +113,20 @@ const enregistrer = ({route, navigation }) => {
     "co": "coursier",
   };
 
+  const hash_256 = async(message) => {
+    return await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      message
+    );
+  };
+
   const handle_user_log = async (id) => {
     try {
-      const sha256 = new SHA256();
+      //const sha256 = new SHA256();
       const deviceId = await getDeviceId();
       const ip = await getIp();
       
-      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
+      const response = await axios.get("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
         {
           method: 'POST',
           headers: {
@@ -124,8 +134,8 @@ const enregistrer = ({route, navigation }) => {
           },
           body: JSON.stringify({
             id: id,
-            device_num: deviceId ? sha256.computeHash(deviceId) : null,
-            ip_user: ip ? sha256.computeHash(ip) : null,
+            device_num: deviceId ? await hash_256(deviceId) : null,
+            ip_user: ip ? await hash_256(ip) : null,
           })
         }
       );
@@ -138,7 +148,7 @@ const enregistrer = ({route, navigation }) => {
   
   const get_key = async (type) => {
     try {
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
+      const response = await axios.get('https://backend-logistique-api-latest.onrender.com/create_key.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -199,76 +209,81 @@ const enregistrer = ({route, navigation }) => {
     }
     return true;
   };
-  const register = () => {
-    if (!validateForm()) return;
-    
-    setIsLoading(true);
-    
+
+  const buildFormData = async () => {
     const formData = {
       id: id_choosen,
       nom,
       Prenom,
-      Email: sha256.computeHash(Email),
-      Tel:  sha256.computeHash(Tel),
-      Password:  sha256.computeHash(Password),
+      Email: await hash_256(Email),
+      Tel: await hash_256(Tel),
+      Password: await hash_256(Password),
       data // pour savoir dans quelle table on l'insert
-    }
-    console.log("sent data : ", formData);
+    };
+    return formData;
+  };
+
+
+
+  const register = async () => {
+    if (!validateForm()) return;
     
-    fetch('https://backend-logistique-api-latest.onrender.com/register.php', {
+    setIsLoading(true);
+  
+    try {
+      // Build formData here, right when we need it
+      const formData = await buildFormData();
+      console.log("sent data : ", formData);
+  
+      const response = await axios.get('https://backend-logistique-api-latest.onrender.com/register.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData)
-      })
-      .then(async response => {
-        console.log('Response status:', response.status);
-        
-        // First get the raw text
-        const text = await response.text();
-        console.log('Raw response:', text);
-        
-        try {
-          // Try to parse as JSON
-          const data = text ? JSON.parse(text) : {};
-          
-          if (!response.ok) {
-            // Handle HTTP errors (4xx, 5xx)
-            throw new Error(data.message || `HTTP error! status: ${response.status}`);
-          }
-          
-          return data;
-        } catch (e) {
-          console.error('JSON parse error:', e);
-          // If JSON parsing fails but we got text, include it in the error
-          throw new Error(text || 'Invalid JSON response');
-        }
-      })
-      .then(data => {
-        console.log('Parsed response:', data);
-        if (data.status === 'success') {
-          AutoSave();
-          Alert.alert('Succès', data.message);
-          navigation.navigate('Accueil');
-          try {
-             get_key(data);
-             handle_user_log(id_choosen);
-          } catch (error) {
-            console.log("Error in post-registration tasks: ", error);
-          }
-          
-        } else {
-          Alert.alert('Erreur', data.message || "Une erreur est survenue lors de l'inscription");
-        }
-      })
-      .catch(error => {
-        console.error('Error details:', error);
-        Alert.alert('Erreur', error.message || "Une erreur est survenue lors de la création de l'enregistrement");
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
+  
+      console.log('Response status:', response.status);
+      
+      // First get the raw text
+      const text = await response.text();
+      console.log('Raw response:', text);
+      
+      let data;
+      try {
+        // Try to parse as JSON
+        data = text ? JSON.parse(text) : {};
+        
+        if (!response.ok) {
+          // Handle HTTP errors (4xx, 5xx)
+          throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+      } catch (e) {
+        console.error('JSON parse error:', e);
+        // If JSON parsing fails but we got text, include it in the error
+        throw new Error(text || 'Invalid JSON response');
+      }
+  
+      console.log('Parsed response:', data);
+      if (data.status === 'success') {
+        AutoSave();
+        Alert.alert('Succès', data.message);
+        navigation.navigate('Accueil');
+        try {
+          await get_key(data);
+          await handle_user_log(id_choosen);
+        } catch (error) {
+          console.log("Error in post-registration tasks: ", error);
+        }
+      } else {
+        Alert.alert('Erreur', data.message || "Une erreur est survenue lors de l'inscription");
+      }
+    } catch (error) {
+      console.error('Error details:', error);
+      Alert.alert('Erreur', error.message || "Une erreur est survenue lors de la création de l'enregistrement");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

@@ -2,9 +2,11 @@
   import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert, Platform } from 'react-native';
   //import * as dataUser from '../assets/data/auto.json';
   import * as FileSystem from 'expo-file-system';
-import * as fileManager from './util/file-manager.js';
-import * as debbug_lib from './util/debbug.js';
+  import * as fileManager from './util/file-manager.js';
+  import * as debbug_lib from './util/debbug.js';
+  import axios from 'axios';
 
+  
   const Loading = ({ navigation }) => {
     const stay_logged = async () => {
       const key = await fileManager.read_file('auto.json');
@@ -28,7 +30,7 @@ import * as debbug_lib from './util/debbug.js';
     const measureFetchSpeed = async(url) => {
       const start = Date.now();
     
-      const response = await fetch(url);
+      const response = await axios.get(url);
       const data = await response.arrayBuffer();
     
       const end = Date.now();

@@ -6,6 +6,7 @@ import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
 import * as FileManager from './util/file-manager.js';
 const { width } = Dimensions.get('window');
+import axios from 'axios';
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -57,7 +58,7 @@ const Accueil = ({ navigation }) => {
       const id_client = data.id;
       console.log("id_client : ", id_client);
       
-      fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
+      await axios.get('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

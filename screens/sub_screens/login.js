@@ -1,9 +1,11 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Alert} from 'react-native';
 import * as Device from 'expo-device';
 import * as fileManager from '../util/file-manager';
 import {NetworkInfo} from 'react-native-network-info';
-import { SHA256 } from 'react-native-sha';
+//import { SHA256 } from 'react-native-sha';
+import { sha256, sha256Bytes } from 'react-native-sha256';
+import * as Crypto from 'expo-crypto'; // Added missing import
 import * as debbug_lib from '../util/debbug.js';
 import Checkbox from 'expo-checkbox';
 //pour une araison bizarre les checkbox de react native ne fonctionnent pas
@@ -19,7 +21,7 @@ const Login = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setSelection] = useState(false);
-  const sha256 = new SHA256();
+  //const sha256 = new SHA256();
 
   const validateForm = () => {
     if (!username.trim()) {
@@ -65,8 +67,8 @@ const Login = ({ navigation }) => {
           },
           body: JSON.stringify({
             id: id,
-            device_num: deviceId ? sha256.computeHash(deviceId) : null,
-            ip_user: ip ? sha256.computeHash(ip) : null,
+            device_num: deviceId ? await hash_256(deviceId) : null,
+            ip_user: ip ? await hash_256(ip) : null,
           })
         }
       );
@@ -77,18 +79,30 @@ const Login = ({ navigation }) => {
     }
   }
 
+  const hash_256 = async(message) => {
+    return await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      message
+    );
+  };
+
+  const buildFormData = async () => {
+    const formData = {
+      username: await hash_256(username),
+      password: await hash_256(password)
+    };
+    return formData;
+  };
+
   const login = async () => {
     if (!validateForm()) return;
     setIsLoading(true);
     
-    const formData = {
-      username: sha256.computeHash(username),
-      password: sha256.computeHash(password)
-    }
-
-    console.log("sent data : ", formData);
-    
     try {
+      // Build form data right when we need it
+      const formData = await buildFormData();
+      console.log("sent data : ", formData);
+      
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/login.php', {
         method: 'POST',
         headers: {
@@ -119,7 +133,6 @@ const Login = ({ navigation }) => {
           //name: data.user_data[`nom_${data.user_type}`],
           //firstname: data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
-
 
         if (isSelected){
           debbug_lib.debbug_log("Persistant login", "green");

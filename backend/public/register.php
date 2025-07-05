@@ -29,7 +29,7 @@ try {
     //$Email = hash('sha256', $data['Email']);
     $Email = $data['Email'];
     //Tel = hash('sha256', $data['Tel']);
-    $Tel = data['Tel'];
+    $Tel = $data['Tel'];
     //$Password = hash('sha256', $data['Password']);
     $Password = $data['Password'];
     $flag = $data['data'];

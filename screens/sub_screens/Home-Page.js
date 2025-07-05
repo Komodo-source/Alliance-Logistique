@@ -11,12 +11,13 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { Ionicons } from '@expo/vector-icons';
+import * as Crypto from 'expo-crypto';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const HomePage = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState(null);
-
+  
   // Remplace les IDs par les tiens depuis la console Google Cloud
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: '670788533243-fshmj1g5nd7v43o3b0idptpq05lb7ri1.apps.googleusercontent.com',
@@ -24,6 +25,7 @@ const HomePage = ({ navigation }) => {
     iosClientId: '670788533243-VOTRE_VRAI_CLIENT_ID_IOS.apps.googleusercontent.com', // Remplacez ça !
     scopes: ['profile', 'email'],
   });
+
   useEffect(() => {
     if (response?.type === 'success') {
       const { authentication } = response;

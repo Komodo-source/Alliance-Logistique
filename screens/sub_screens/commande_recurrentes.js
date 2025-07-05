@@ -70,17 +70,99 @@ const commande_reccurente = ({ navigation }) => {
         }
     };
 
-    const renderItem = ({ item }) => {
-        return (
-            <TouchableOpacity 
-                style={styles.item_list}
-                onPress={() => navigation.navigate('detail_commande_reccurente', { item })}
-            >
-                <Text style={styles.item_list_text}>{item.nom}</Text>
-                <Text style={styles.item_list_text}>Nombre de Produits: {item.nb_produit || 0}</Text>
-            </TouchableOpacity>
+// Updated renderItem with delete and rename options
+const renderItem = ({ item }) => {
+    return (
+        <TouchableOpacity 
+            style={styles.item_list}
+            onPress={() => navigation.navigate('detail_commande_reccurente', { item })}
+            onLongPress={() => {
+                Alert.alert(
+                    "Options",
+                    "Que voulez-vous faire ?",
+                    [
+                        { text: "Annuler", style: "cancel" },
+                        { text: "Renommer", onPress: () => demander_nouveau_nom(item) },
+                        { text: "Supprimer", style: "destructive", onPress: () => supprimer_commande(item.id) }
+                    ]
+                );
+            }}
+        >
+            <Text style={styles.item_list_text}>{item.nom}</Text>
+            <Text style={styles.item_list_text}>Nombre de Produits: {item.nb_produit || 0}</Text>
+        </TouchableOpacity>
+    );
+};
+    // Add these functions to your commande_reccurente.js component
+
+// Delete function
+const supprimer_commande = async (commandeId) => {
+    try {
+        Alert.alert(
+            "Confirmer la suppression",
+            "Êtes-vous sûr de vouloir supprimer cette commande récurrente ?",
+            [
+                { text: "Annuler", style: "cancel" },
+                { 
+                    text: "Supprimer", 
+                    style: "destructive",
+                    onPress: async () => {
+                        let existingCommands = await fileManager.read_file("reccurente.json", true);
+                        if (Array.isArray(existingCommands)) {
+                            const updatedCommands = existingCommands.filter(cmd => cmd.id !== commandeId);
+                            await fileManager.save_storage_local_storage_data(updatedCommands, "reccurente.json");
+                            actualiser_commande();
+                        }
+                    }
+                }
+            ]
         );
-    };
+    } catch (error) {
+        Alert.alert("Erreur", "Impossible de supprimer la commande");
+        debbug_lib.log("Erreur suppression commande:", error);
+    }
+};
+
+// Rename function
+const renommer_commande = async (commandeId, nouveauNom) => {
+    try {
+        if (!nouveauNom || nouveauNom.trim() === "") {
+            Alert.alert("Erreur", "Le nom ne peut pas être vide");
+            return;
+        }
+
+        let existingCommands = await fileManager.read_file("reccurente.json", true);
+        if (Array.isArray(existingCommands)) {
+            const updatedCommands = existingCommands.map(cmd => 
+                cmd.id === commandeId ? { ...cmd, nom: nouveauNom.trim() } : cmd
+            );
+            await fileManager.save_storage_local_storage_data(updatedCommands, "reccurente.json");
+            actualiser_commande();
+        }
+    } catch (error) {
+        Alert.alert("Erreur", "Impossible de renommer la commande");
+        debbug_lib.log("Erreur renommage commande:", error);
+    }
+};
+
+// Function to show rename dialog
+const demander_nouveau_nom = (item) => {
+    Alert.prompt(
+        "Renommer la commande",
+        "Entrez le nouveau nom:",
+        [
+            { text: "Annuler", style: "cancel" },
+            { 
+                text: "Renommer", 
+                onPress: (nouveauNom) => renommer_commande(item.id, nouveauNom)
+            }
+        ],
+        "plain-text",
+        item.nom
+    );
+};
+
+
 
     return (
         <View style={styles.container}>

@@ -15,6 +15,7 @@ import dayjs from 'dayjs';
 import DatePicker from 'react-native-ui-datepicker';
 import * as debbug_lib from './util/debbug.js';
 import * as fileManager from './util/file-manager.js';
+import axios from 'axios';
 
 const Formulaire = ({ navigation, route}) => {
   
@@ -108,7 +109,7 @@ const Formulaire = ({ navigation, route}) => {
         data = fileData;
       } else {
         console.log("Fichier vide ou inexistant, récupération depuis le serveur");
-        const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
+        const response = await axios.get('https://backend-logistique-api-latest.onrender.com/product.php');
         data = await response.json();
         console.log("Produits reçus du serveur:", data);
       }
@@ -425,7 +426,7 @@ const Formulaire = ({ navigation, route}) => {
 
   const testServerConnection = async () => {
     try {
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/test.php');
+      const response = await axios.get('https://backend-logistique-api-latest.onrender.com/test.php');
       const responseText = await response.text();
       console.log('Test server response:', responseText);
       
@@ -508,7 +509,7 @@ const Formulaire = ({ navigation, route}) => {
     };
 
     console.log('sent:', formData);
-    fetch('https://backend-logistique-api-latest.onrender.com/create_command.php', {
+    axios.get('https://backend-logistique-api-latest.onrender.com/create_command.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -537,7 +538,7 @@ const Formulaire = ({ navigation, route}) => {
       console.log('Succès commande:', data);
       
       // Call split_assign.php and wait for it to complete
-      return fetch('https://backend-logistique-api-latest.onrender.com/assign.php');
+      return axios.get('https://backend-logistique-api-latest.onrender.com/assign.php');
     })
     .then(async response => {
       if (!response.ok) {
