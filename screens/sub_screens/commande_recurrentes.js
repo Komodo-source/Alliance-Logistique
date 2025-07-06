@@ -111,6 +111,7 @@ const supprimer_commande = async (commandeId) => {
                         if (Array.isArray(existingCommands)) {
                             const updatedCommands = existingCommands.filter(cmd => cmd.id !== commandeId);
                             await fileManager.save_storage_local_storage_data(updatedCommands, "reccurente.json");
+                            debbug_lib.debbug_log("commande deleted: " + JSON.stringify(updatedCommands), "cyan");
                             actualiser_commande();
                         }
                     }

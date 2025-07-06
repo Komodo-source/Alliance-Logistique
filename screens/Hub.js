@@ -173,8 +173,8 @@ const Hub = ({ navigation }) => {
           style={[styles.navButton, styles.activeButton]}
           onPress={() => navigation.navigate('Hub')}
         >
-          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Hub.png')} />
-          <Text style={styles.navButtonText}>Hub</Text>
+          <Image style={[styles.logoNavBar, styles.activeIcon]} source={require('../assets/Icons/Dark-Hub.png')} />
+          <Text style={[styles.navButtonText, styles.activeText]}>Hub</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navButton}
@@ -318,32 +318,65 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 70,
-    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#EAF1FB',
+    borderTopColor: '#F1F5F9',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 8,
-    zIndex: 20,
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  activeText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   navButton: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+    minHeight: 60,
   },
+  
   activeButton: {
-    backgroundColor: '#EAF1FB',
+    backgroundColor: '#7CC6FE',
+    shadowColor: '#7CC6FE',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
+  
+  iconContainer: {
+    marginBottom: 4,
+    padding: 2,
+  },
+  
+  logoNavBar: {
+    width: 24,
+    height: 24,
+    tintColor: '#666666',
+  },
+  
+  activeIcon: {
+    tintColor: '#FFFFFF',
+    width: 26,
+    height: 26,
+  },
+  
   navButtonText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#2E3192',
-    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666666',
+    textAlign: 'center',
   },
 });
 

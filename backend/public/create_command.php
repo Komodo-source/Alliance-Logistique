@@ -57,13 +57,13 @@ try {
 
     // Insertion des produits
     foreach ($data['produit_contenu'] as $produit) {
-        $stmt2 = $conn->prepare("INSERT INTO CONTENANCE(id_produit, id_dmd, nb_produit, poids_piece_produit) VALUES (?, ?, ?, ?)");
+        $stmt2 = $conn->prepare("INSERT INTO CONTENANCE(id_produit, id_dmd, nb_produit) VALUES (?, ?, ?)");
         if (!$stmt2) {
             echo json_encode(['error' => 'Erreur de préparation CONTENANCE: ' . $conn->error]);
             exit;
         }
         
-        $stmt2->bind_param("isis", $produit['id_produit'], $id, $produit['nb_produit'], $produit['poids_piece_produit']);
+        $stmt2->bind_param("isi", $produit['id_produit'], $id, $produit['nb_produit']);
         if (!$stmt2->execute()) {
             $all_inserted = false;
             echo json_encode(['error' => "Erreur CONTENANCE: " . $conn->error]);

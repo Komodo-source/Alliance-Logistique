@@ -35,7 +35,7 @@ const choixType = ({ navigation }) => {
             <Text style={{fontSize : 16, color : "#000", textAlign : "center", fontWeight : "600"}}>Fournisseur</Text>  
         </TouchableOpacity>
 
-{/*
+
         <TouchableOpacity
         style={styles.CoursierBoutton}        
         onPress={() => navigation.navigate('enregistrer', {data: "cl"})}
@@ -46,7 +46,7 @@ const choixType = ({ navigation }) => {
             />  
             <Text style={{fontSize : 16, color : "#000", textAlign : "center", fontWeight : "600"}}>Client</Text>  
         </TouchableOpacity>
-*/}
+
     </View>
   );
 };

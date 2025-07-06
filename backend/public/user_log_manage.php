@@ -13,8 +13,9 @@ try{
     $get_id = $conn->prepare("SELECT MAX(id_log) FROM LOG_USER");
     $get_id->execute();
     $last_id = $get_id->get_result();
-}catch(Exception $e)
-    ;
+}catch(Exception $e) {
+    echo json_encode(['error' => $e->getMessage()]);
+}
 
 try{
     $stmt = $conn->prepare("INSERT INTO LOG_USER (id_log, ip_log, device_num_client, id_user) VALUES (?, ?, ?, ?)");
@@ -27,5 +28,5 @@ try{
 }
 
 
-echo jon encode(clé log)
+echo json_encode(['status' => 'log_created']);
 ?>

@@ -93,7 +93,7 @@ const Produit = ({ navigation }) => {
         data = fileData;
       } else {
         console.log("Fichier vide ou inexistant, récupération depuis le serveur");
-        const response = await axios.get('https://backend-logistique-api-latest.onrender.com/product.php');
+        const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
         data = await response.json();
         console.log("as reçus du serveur:", data);
       }

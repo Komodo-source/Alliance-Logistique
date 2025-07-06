@@ -665,7 +665,7 @@ const DetailCommande = ({ route, navigation }) => {
             {isGenerating ? 'Génération en cours...' : 'Générer Facture PDF'}
           </Text>
         </TouchableOpacity>
-
+        {/*
         <TouchableOpacity 
           style={[styles.invoiceButton, styles.secondaryButton]}
           onPress={showSavedPDFs}
@@ -674,7 +674,7 @@ const DetailCommande = ({ route, navigation }) => {
           <Text style={[styles.invoiceButtonText, { color: '#2E3192' }]}>
             Voir PDFs Sauvegardés
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity>*/}
       </View>
     </View>
   );

@@ -112,7 +112,7 @@ const Login = ({ navigation }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Erreur réseau');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -134,12 +134,23 @@ const Login = ({ navigation }) => {
           //firstname: data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
 
+        await fileManager.modify_value_local_storage(     
+          'name', data.user_data[`nom_${data.user_type}`]
+          //firstname: data.user_data[`prenom_${data.user_type}`]
+        , 'auto.json');
+
+        await fileManager.modify_value_local_storage(     
+          //'name', data.user_data[`nom_${data.user_type}`]
+          'firstname', data.user_data[`prenom_${data.user_type}`]
+        , 'auto.json');
+
         if (isSelected){
           debbug_lib.debbug_log("Persistant login", "green");
-          await fileManager.add_value_to_local_storage(
+          await fileManager.modify_value_local_storage(
             'stay_loogged', true, 'auto.json'
           );
         }
+        await fileManager.read_file('auto.json');
 
         // Fixed Alert.alert call - proper format with buttons array
         Alert.alert('Succès', `Connecté en tant que: ${username}`, [
@@ -157,10 +168,10 @@ const Login = ({ navigation }) => {
         }
         
       } else {
-        Alert.alert('Erreur', data.message || 'Identifiants incorrects', [{ text: 'OK' }]);
+        Alert.alert('err', data.message || 'Identifiants incorrects', [{ text: 'OK' }]);
       }
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('err:', error);
       Alert.alert('Erreur', 'Une erreur est survenue lors de la connexion', [{ text: 'OK' }]);
     } finally {
       setIsLoading(false);

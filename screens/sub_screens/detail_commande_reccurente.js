@@ -138,9 +138,10 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                             produits: updatedProducts,
                             nb_produit: updatedProducts.length
                         };
-                        
+                        debbug_lib.debbug_log("Deleted commande: " + JSON.stringify(updatedCommande), "cyan");
                         setCommande(updatedCommande);
                         await updateCommandeInFile(updatedCommande);
+                        navigation.goBack();
                     }
                 }
             ]
@@ -283,7 +284,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                 );
             }
         } catch (error) {
-            debbug_lib.log("Erreur mise à jour commande:", error);
+            debbug_lib.debbug_log("Erreur mise à jour commande:"+ error, "red");
         }
     };
 
@@ -409,6 +410,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                         <View style={styles.sectionContainer}>
                             <Text style={styles.sectionTitle}>Produits disponibles</Text>
                             <FlatList
+                                style={styles.list_items}
                                 data={produits}
                                 keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
                                 renderItem={renderProductItem}
@@ -488,7 +490,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                 
                 <TouchableOpacity 
                     style={[styles.button, styles.deleteButton]} 
-                    onPress={supprimer_commande}
+                    onPress={removeProductFromCommand}
                 >
                     <Text style={styles.buttonText}>Supprimer Commande</Text>
                 </TouchableOpacity>
@@ -520,6 +522,9 @@ const detail_commande_reccurente = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+    list_items : {
+        height: 200,
+    },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -633,7 +638,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 15,
         marginBottom: 20,
-        flex: 1,
+        
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,

@@ -126,7 +126,7 @@ const enregistrer = ({route, navigation }) => {
       const deviceId = await getDeviceId();
       const ip = await getIp();
       
-      const response = await axios.get("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
+      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
         {
           method: 'POST',
           headers: {
@@ -148,7 +148,7 @@ const enregistrer = ({route, navigation }) => {
   
   const get_key = async (type) => {
     try {
-      const response = await axios.get('https://backend-logistique-api-latest.onrender.com/create_key.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -235,7 +235,7 @@ const enregistrer = ({route, navigation }) => {
       const formData = await buildFormData();
       console.log("sent data : ", formData);
   
-      const response = await axios.get('https://backend-logistique-api-latest.onrender.com/register.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/register.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -30,7 +30,7 @@
     const measureFetchSpeed = async(url) => {
       const start = Date.now();
     
-      const response = await axios.get(url);
+      const response = await fetch(url);
       const data = await response.arrayBuffer();
     
       const end = Date.now();
@@ -52,7 +52,7 @@
 
     const loading_check = async () => {
       debbug_lib.debbug_log("INIT", "green");
-      debbug_lib.debbug_log("Academic Weapon", "green");
+      debbug_lib.debbug_log("Alliance Logistique", "green");
       debbug_lib.debbug_log("Komodo", "green");
       debbug_lib.debbug_log("v.0.4.1", "green");
       debbug_lib.debbug_log("admin version", "green");
@@ -71,6 +71,7 @@
 
     const checkServer = async () => {
       try {
+        //await fileManager.modify_value_local_storage("first_conn", true, "auto.json");
         const response = await measureFetchSpeed('https://google.com');
         if (response.ok) {
           debbug_lib.debbug_log("Connecté a Internet", "green");

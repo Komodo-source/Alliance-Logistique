@@ -62,7 +62,7 @@ const Formulaire = ({ navigation, route}) => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [dataUser, setDataUser] = useState(null);
   const [userDataLoading, setUserDataLoading] = useState(true);
-  debbug_lib.debbug_log("dataUser"+ dataUser, "magenta");
+  //debbug_lib.debbug_log("dataUser"+ dataUser, "magenta");
 
   const dic_image_name = {
     "tomate": TomateImage,
@@ -109,7 +109,7 @@ const Formulaire = ({ navigation, route}) => {
         data = fileData;
       } else {
         console.log("Fichier vide ou inexistant, récupération depuis le serveur");
-        const response = await axios.get('https://backend-logistique-api-latest.onrender.com/product.php');
+        const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
         data = await response.json();
         console.log("Produits reçus du serveur:", data);
       }
@@ -426,14 +426,23 @@ const Formulaire = ({ navigation, route}) => {
 
   const testServerConnection = async () => {
     try {
-      const response = await axios.get('https://backend-logistique-api-latest.onrender.com/test.php');
+      // Create a timeout promise for the connection test
+      const testTimeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Connection test timeout')), 10000); // 10 second timeout
+      });
+
+      const response = await Promise.race([
+        fetch('https://backend-logistique-api-latest.onrender.com/check_conn.php'),
+        testTimeoutPromise
+      ]);
+      
       const responseText = await response.text();
       console.log('Test server response:', responseText);
       
       try {
         const data = JSON.parse(responseText);
         console.log('Server test successful:', data);
-        return true;
+        return data.success ? true : false;
       } catch (parseError) {
         console.error('Server test JSON parse error:', parseError);
         console.error('Server test response was:', responseText);
@@ -449,15 +458,18 @@ const Formulaire = ({ navigation, route}) => {
     console.log("La commande a été soumise");
     setChargement(true);
     
-    // Test server connection first
+    // Test server connection first, but don't block if it fails
     testServerConnection().then(isConnected => {
       if (!isConnected) {
-        Alert.alert('Erreur', 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.');
-        setChargement(false);
-        return;
+        console.warn('Server connection test failed, but continuing with form submission...');
+        // Don't block the form submission, just log the warning
       }
       
-      // Continue with form submission
+      // Continue with form submission regardless
+      submitForm();
+    }).catch(error => {
+      console.warn('Server connection test error:', error);
+      // Continue with form submission even if test fails
       submitForm();
     });
   };
@@ -495,30 +507,61 @@ const Formulaire = ({ navigation, route}) => {
       return;
     }
 
+    // Validate and prepare form data
     const formData = {
       nom_dmd: commandeName.trim(),
       desc_dmd: description.trim(),
       date_fin: formatDate(date), // Using the fixed formatDate function
-      id_client: dataUser.id, 
+      id_client: parseInt(dataUser.id) || 1, // Ensure it's an integer
       localisation_dmd: `${selectedLocation.latitude};${selectedLocation.longitude}`,
       produit_contenu: products.map(product => ({
-        id_produit: product.id,
+        id_produit: parseInt(product.id) || 1, // Ensure it's an integer
         nb_produit: parseInt(product.productDetails.nombre) || 1,
         //ids_piece_produit: parseFloat(product.productDetails.poids) || 0
       }))
     };
 
-    console.log('sent:', formData);
-    axios.get('https://backend-logistique-api-latest.onrender.com/create_command.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData)
-    })
-    .then(async response => {
+    // Additional validation
+    if (!formData.nom_dmd) {
+      Alert.alert('Erreur', 'Le nom de la commande ne peut pas être vide');
+      setChargement(false);
+      return;
+    }
+
+    if (formData.produit_contenu.length === 0) {
+      Alert.alert('Erreur', 'Aucun produit sélectionné');
+      setChargement(false);
+      return;
+    }
+
+    console.log('Form data to send:', JSON.stringify(formData, null, 2));
+    console.log('Sending request to:', 'https://backend-logistique-api-latest.onrender.com/create_command.php');
+    
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
+    });
+
+    // Race between the fetch and timeout
+    Promise.race([
+      fetch('https://backend-logistique-api-latest.onrender.com/create_command.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      }),
+      timeoutPromise
+    ])
+    .then(async response => { 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (!response.ok) {
-        throw new Error(`Erreur réseau: ${response.status}`);
+        const errorText = await response.text();
+        console.error('HTTP Error Response:', errorText);
+        throw new Error(`Erreur réseau: ${response.status} - ${errorText.substring(0, 200)}`);
       }
       
       // Get the response text first to debug
@@ -537,12 +580,30 @@ const Formulaire = ({ navigation, route}) => {
     .then(data => {      
       console.log('Succès commande:', data);
       
-      // Call split_assign.php and wait for it to complete
-      return axios.get('https://backend-logistique-api-latest.onrender.com/assign.php');
+      // Call assign.php and wait for it to complete
+      console.log('Calling assign.php...');
+      
+      // Create a timeout promise for assign.php
+      const assignTimeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Assign request timeout')), 15000); // 15 second timeout
+      });
+
+      return Promise.race([
+        fetch('https://backend-logistique-api-latest.onrender.com/assign.php', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          }
+        }),
+        assignTimeoutPromise
+      ]);
     })
     .then(async response => {
+      console.log('Assign response status:', response.status);
+      
       if (!response.ok) {
-        console.warn('Erreur lors de l\'assignation des commandes:', response.status);
+        const errorText = await response.text();
+        console.warn('Erreur lors de l\'assignation des commandes:', response.status, errorText);
         return null;
       } else {
         const responseText = await response.text();
@@ -642,12 +703,19 @@ const Formulaire = ({ navigation, route}) => {
               <View style={styles.modalOverlay}>
                 <View style={styles.datePickerModal}>
                   <Text style={styles.modalTitle}>Sélectionner la date</Text>
-                  <DatePicker
-                    value={tempDate}
-                    onValueChange={(selectedDate) => setTempDate(selectedDate)}
-                    mode="single"
-                    style={styles.datePicker}
-                  />
+                  <View style={styles.datePickerContainer}>
+                    <DatePicker
+                      value={tempDate}
+                      onValueChange={(selectedDate) => setTempDate(selectedDate)}
+                      mode="single"
+                      style={styles.datePicker}
+                    />
+                  </View>
+                  <View style={styles.dateDisplayContainer}>
+                    <Text style={styles.dateDisplayText}>
+                      Date sélectionnée: {tempDate.format('DD/MM/YYYY')}
+                    </Text>
+                  </View>
                   <View style={styles.buttonModal}>
                     <TouchableOpacity
                       style={styles.modalButtonAnnul}
@@ -674,14 +742,22 @@ const Formulaire = ({ navigation, route}) => {
               onRequestClose={handleTimeCancel}
             >
               <View style={styles.modalOverlay}>
-                <View style={styles.datePickerModal}>
+                <View style={styles.timePickerModal}>
                   <Text style={styles.modalTitle}>Sélectionner l'heure</Text>
-                  <DatePicker
-                    value={tempDate}
-                    onValueChange={(selectedDateTime) => setTempDate(selectedDateTime)}
-                    mode="time"
-                    style={styles.datePicker}
-                  />
+                  <View style={styles.timePickerContainer}>
+                    <DatePicker
+                      value={tempDate}
+                      onValueChange={(selectedDateTime) => setTempDate(selectedDateTime)}
+                      mode="time"
+                      style={styles.timePicker}
+                      minuteInterval={15}
+                    />
+                  </View>
+                  <View style={styles.timeDisplayContainer}>
+                    <Text style={styles.timeDisplayText}>
+                      Heure sélectionnée: {tempDate.format('HH:mm')}
+                    </Text>
+                  </View>
                   <View style={styles.buttonModal}>
                     <TouchableOpacity
                       style={styles.modalButtonAnnul}
@@ -929,7 +1005,7 @@ const Formulaire = ({ navigation, route}) => {
             </TouchableOpacity>
 
             {/* Test Server Button - For debugging */}
-            <TouchableOpacity
+            {/*<TouchableOpacity
               style={[styles.testButton]}
               onPress={async () => {
                 const isConnected = await testServerConnection();
@@ -938,9 +1014,9 @@ const Formulaire = ({ navigation, route}) => {
                   isConnected ? 'Serveur accessible' : 'Erreur de connexion au serveur'
                 );
               }}
-            >
+            > 
               <Text style={styles.testButtonText}>Tester la connexion serveur</Text>
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
           </View>
         </View>
       </ScrollView>
@@ -975,9 +1051,48 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
   },
+  timePickerModal: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 25,
+    width: '85%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
   datePicker: {
     width: '100%',
     marginVertical: 20,
+  },
+  timePicker: {
+    width: '100%',
+    marginVertical: 15,
+  },
+  timePickerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  timeDisplayContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 15,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  timeDisplayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E3192',
   },
   emptyListText: {
     textAlign: 'center',
@@ -1889,6 +2004,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  dateDisplayContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 15,
+    width: '100%',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  dateDisplayText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2E3192',
   },
 });
 

@@ -303,57 +303,59 @@ const Profile = ({ navigation }) => {
       </ScrollView>
 
       {/* Navigation Bar */}
-      <View style={styles.navbar}>
-        <TouchableOpacity 
+      <View style={styles.navbar}> 
+      <TouchableOpacity 
           style={styles.navButton}
           onPress={() => navigation.navigate('Produit')}
-          activeOpacity={0.7}
         >
-          <Image
-            style={styles.navIcon}
-            source={require('../assets/Icons/Dark-Product.png')}
-          />
+          <View style={styles.iconContainer}>
+            <Image
+              style={styles.logoNavBar}
+              source={require('../assets/Icons/Dark-Product.png')}
+            />
+          </View>
           <Text style={styles.navButtonText}>Produit</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Accueil')}
-          activeOpacity={0.7}
-        >
+      <TouchableOpacity 
+        style={styles.navButton}
+        onPress={() => navigation.navigate('Accueil')}
+      >
+        <View style={styles.iconContainer}>
           <Image
-            style={styles.navIcon}
+            style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-House.png')}
           />
-          <Text style={styles.navButtonText}>Accueil</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Hub')}
-          activeOpacity={0.7}
-        >
+        </View>
+        <Text style={styles.navButtonText}>Accueil</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.navButton}
+        onPress={() => navigation.navigate('Hub')}
+      >
+        <View style={styles.iconContainer}>
           <Image
-            style={styles.navIcon}
+            style={styles.logoNavBar}
             source={require('../assets/Icons/Dark-Hub.png')}
           />
-          <Text style={styles.navButtonText}>Hub</Text>
-        </TouchableOpacity>
+        </View>
+        <Text style={styles.navButtonText}>Hub</Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.navButton, styles.activeNavButton]}
-          onPress={() => navigation.navigate('Profil')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.activeButtonIndicator}>
-            <Image
-              style={styles.navIcon}
-              source={require('../assets/Icons/Dark-profile.png')}
-            />
-          </View>
-          <Text style={[styles.navButtonText, styles.activeNavText]}>Profil</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity 
+        style={[styles.navButton, styles.activeButton]}
+        onPress={() => navigation.navigate('Profil')}
+      >
+        <View style={[styles.logoNavBar, styles.activeIcon]}>
+          <Image
+            style={[styles.logoNavBar, styles.activeIcon]}
+            source={require('../assets/Icons/Dark-profile.png')}
+          />
+        </View>
+        <Text style={[styles.navButtonText, styles.activeText]}>Profil</Text>
+      </TouchableOpacity>
+    </View>
     </SafeAreaView>
   );
 };
@@ -535,46 +537,64 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
     paddingVertical: 12,
     paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
+    borderTopColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowRadius: 12,
+    elevation: 10,
   },
   navButton: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 12,
+    minHeight: 60,
   },
-  activeNavButton: {},
-  navIcon: {
-    width: 28,
-    height: 28,
+  
+  activeButton: {
+    backgroundColor: '#7CC6FE',
+    shadowColor: '#7CC6FE',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  
+  iconContainer: {
     marginBottom: 4,
-    tintColor: '#6c757d',
+    padding: 2,
   },
-  activeButtonIndicator: {
-    backgroundColor: '#007bff',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 4,
+  
+  logoNavBar: {
+    width: 24,
+    height: 24,
+    tintColor: '#666666',
   },
+  
+  activeIcon: {
+    tintColor: '#FFFFFF',
+    width: 26,
+    height: 26,
+  },
+  
   navButtonText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#6c757d',
+    color: '#666666',
+    textAlign: 'center',
   },
-  activeNavText: {
-    color: '#007bff',
+  activeText: {
+    color: '#FFFFFF',
     fontWeight: '600',
   },
 

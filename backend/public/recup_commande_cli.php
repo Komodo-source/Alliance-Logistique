@@ -14,6 +14,7 @@ $data_commande = $conn->prepare(
     COMMANDE.id_fournisseur,
     COMMANDE.id_coursier,
     COMMANDE.code_echange,
+    COMMANDE.id_status
     GROUP_CONCAT(
         JSON_OBJECT(
             'id_produit', PRODUIT.id_produit,
