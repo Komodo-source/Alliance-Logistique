@@ -29,31 +29,46 @@ const first_page = ({ navigation }) => {
         }
     ];
 
-    useEffect(() => {
-        let timer;
-        let timeoutId;
-        
-        timer = setInterval(() => {
-            setCurrentSlide(prev => {
-                if (prev < slides.length - 1) {
-                    return prev + 1;
-                } else {
-                    timeoutId = setTimeout(() => {
-                        console.log("Navigating to HomePage after 50 seconds");
-                        navigation.navigate('HomePage');
-                    }, 50000);
-                    return prev;
+    // Use useFocusEffect to handle page focus/blur events
+    useFocusEffect(
+        useCallback(() => {
+            let timer;
+            let finalTimeout;
+            
+            // Reset slide to 0 when page is focused
+            setCurrentSlide(0);
+            
+            // Start the slide timer
+            timer = setInterval(() => {
+                setCurrentSlide(prev => {
+                    if (prev < slides.length - 1) {
+                        return prev + 1;
+                    } else {
+                        // Clear the interval when we reach the last slide
+                        clearInterval(timer);
+                        
+                        // Set timeout for final navigation
+                        finalTimeout = setTimeout(() => {
+                            console.log("Navigating to HomePage after completing slides");
+                            navigation.navigate('HomePage');
+                        }, 7000); // 5 seconds after last slide
+                        
+                        return prev;
+                    }
+                });
+            }, 7000); // 3 seconds per slide
+            
+            // Cleanup function - runs when page loses focus or component unmounts
+            return () => {
+                if (timer) {
+                    clearInterval(timer);
                 }
-            });
-        }, 20500);
-    
-        return () => {
-            clearInterval(timer);
-            if (timeoutId) {
-                clearTimeout(timeoutId); // Nettoyer aussi le setTimeout
-            }
-        };
-    }, [navigation]);
+                if (finalTimeout) {
+                    clearTimeout(finalTimeout);
+                }
+            };
+        }, [navigation, slides.length])
+    );
 
     const goToNextSlide = () => {
         if (currentSlide < slides.length - 1) {

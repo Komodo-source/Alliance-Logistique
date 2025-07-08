@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Alert} from 'react-native';
 import * as Device from 'expo-device';
 import * as fileManager from '../util/file-manager';
-import {NetworkInfo} from 'react-native-network-info';
+//import {NetworkInfo} from 'react-native-network-info';
 //import { SHA256 } from 'react-native-sha';
 import { sha256, sha256Bytes } from 'react-native-sha256';
 import * as Crypto from 'expo-crypto'; // Added missing import
@@ -46,18 +46,13 @@ const Login = ({ navigation }) => {
   };
 
   const getIp = () => {
-    return new Promise((resolve, reject) => {
-      NetworkInfo.getIPAddress(ip => {
-        console.log("IP:", ip);
-        resolve(ip);
-      });
-    });
+    return "127.0.0.1";
   }
 
   const handle_user_log = async (id) => {
     try {      
       const deviceId = await getDeviceId();
-      const ip = await getIp();
+      const ip =  getIp();
       
       const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
         {

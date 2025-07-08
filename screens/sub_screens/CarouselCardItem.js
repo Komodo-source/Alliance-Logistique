@@ -5,8 +5,8 @@ const SLIDER_WIDTH = Dimensions.get('window').width;
 const ITEM_WIDTH = SLIDER_WIDTH * 0.8;
 
 const CarouselCardItem = ({ item }) => {
-  console.log('CarouselCardItem item:', item);
-  console.log("Image Carousel: ",  item.image);
+  //console.log('CarouselCardItem item:', item);
+  //console.log("Image Carousel: ",  item.image);
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>

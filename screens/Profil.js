@@ -137,6 +137,7 @@ const Profile = ({ navigation }) => {
               await fileManager.modify_value_local_storage("firstname", "", 'auto.json');
               await fileManager.modify_value_local_storage("type", "", 'auto.json');
               await fileManager.modify_value_local_storage("stay_loogged", false, 'auto.json');
+              //await fileManager.modify_value_local_storage("first_conn", true, 'auto.json');
               
               debbug_lib.debbug_log('User logged out successfully', 'green');
               navigation.navigate('HomePage');

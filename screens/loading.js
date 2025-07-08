@@ -1,4 +1,4 @@
-  import React, { useEffect} from 'react';
+  import React, { useEffect, useState} from 'react';
   import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert, Platform } from 'react-native';
   //import * as dataUser from '../assets/data/auto.json';
   import * as FileSystem from 'expo-file-system';
@@ -8,6 +8,8 @@
 
   
   const Loading = ({ navigation }) => {
+    //const [file_message, setFileMessage] = useState("");
+
     const stay_logged = async () => {
       const key = await fileManager.read_file('auto.json');
       console.log('key : ', key);
@@ -50,6 +52,20 @@
       return response;
     }
 
+    const check_first_time = async () => {      
+      if(!fileManager.is_file_existing("auto.json")){
+        debbug_lib.debbug_log("not the first time", "blue");
+        return;
+      }else{
+        debbug_lib.debbug_log("first time ever", "red");
+        fileManager.read_file("auto.json");
+        const nv_data = {
+          id: "", name: "", firstname: "", type: "", stay_logged: false, first_conn: true
+        };
+        fileManager.save_storage_local_storage_data(nv_data, "auto.json");
+      }
+    }
+
     const loading_check = async () => {
       debbug_lib.debbug_log("INIT", "green");
       debbug_lib.debbug_log("Alliance Logistique", "green");
@@ -65,6 +81,7 @@
         await checkServer();
       }catch(error){
         debbug_lib.debbug_log("Error in the initialisation", "red");
+        loading_check();
       }
 
     }
@@ -84,12 +101,14 @@
             // Read fresh data after stay_logged() has potentially modified it
             const dataUser = await fileManager.read_file("auto.json");
             debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
-            if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
-              navigation.navigate('HomePage');
-            }else if(dataUser.first_conn == true || dataUser.first_conn == undefined){
+            if(dataUser.first_conn == true){
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
+
               navigation.navigate('first_page');
-            } 
+            }
+            else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
+              navigation.navigate('HomePage');            
+            }
             else {
               navigation.navigate('Accueil');
             }
@@ -105,20 +124,32 @@
             { cancelable: false },
           );
         }
-      } catch (error) {
-        debbug_lib.debbug_log("Pas d'internet", "red");
-        debbug_lib.debbug_log("Erreur: " + error, "red");
-        Alert.alert('Erreur', 'Vérifiez votre connexion internet.');
+      }catch (error) {
+        if (error instanceof TypeError) {
+          const data = {
+            id: "", name: "", firstname: "", type: "", stay_logged: "", first_conn: true
+          };
+          fileManager.save_storage_local_storage_data(data, "auto.json");
+        } else {
+          debbug_lib.debbug_log("Pas d'internet", "red");
+          debbug_lib.debbug_log("Erreur: " + error, "red");
+          Alert.alert('Erreur', 'Vérifiez votre connexion internet. ' + error);
+          loading_check();
+        }
       }
     };
 
     useEffect(() => {  
+      //fileManager.modify_value_local_storage("first_conn", false, "auto.json");
+      //fileManager.delete_file("auto.json");
+      check_first_time();
       loading_check();
     }, []);
 
     return (
       <View style={styles.wrapper}>
         <View style={styles.container}>
+        
           <Text style={styles.title}>Chargement...</Text>
           <Image
             style={styles.image}

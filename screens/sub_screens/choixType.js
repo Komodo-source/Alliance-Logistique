@@ -1,69 +1,94 @@
 import React from 'react';
-import { View, Text, Button,TouchableOpacity, Image, StyleSheet} from 'react-native';
-
-var headers = {
-  'Accept' : 'application/json',
-  'Content-Type' : 'application/json'
-};
-
+import { View, Text, TouchableOpacity, Image, StyleSheet, SafeAreaView } from 'react-native';
 
 const choixType = ({ navigation }) => {
   return (
-    <View>
-      <Text style={{fontSize : 21, color : "#000", fontWeight : "600", marginTop: 25, marginLeft : 25}}>Je suis: </Text>
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Je suis:</Text>
 
+      <View style={styles.buttonWrapper}>
         <TouchableOpacity
-        style={styles.CoursierBoutton}  
-        onPress={() => navigation.navigate('enregistrer', {a: "co"})}      
+          style={styles.roleButton}
+          onPress={() => navigation.navigate('enregistrer', { data: 'fo' })}
         >
-            <Image
-              style={{}}
-              source={require('../../assets/Icons/White-Signup.png')}
-            />  
-            <Text style={{fontSize : 16, color : "#000", textAlign : "center", fontWeight : "600"}}>Coursier</Text>  
+          <Image
+            style={styles.icon}
+            source={require('../../assets/Icons/White-Signup.png')}
+          />
+          <Text style={styles.roleText}>Fournisseur</Text>
         </TouchableOpacity>
 
-
         <TouchableOpacity
-        style={styles.CoursierBoutton} 
-        onPress={() => navigation.navigate('enregistrer', {data: "fo"})}        
+          style={styles.roleButton}
+          onPress={() => navigation.navigate('enregistrer', { data: 'cl' })}
         >
-            <Image
-              style={{}}
-              source={require('../../assets/Icons/White-Signup.png')}
-            />  
-            <Text style={{fontSize : 16, color : "#000", textAlign : "center", fontWeight : "600"}}>Fournisseur</Text>  
+          <Image
+            style={styles.icon}
+            source={require('../../assets/Icons/White-Signup.png')}
+          />
+          <Text style={styles.roleText}>Client</Text>
         </TouchableOpacity>
 
-
+        {/* You can uncomment and use this if needed */}
+        {/* 
         <TouchableOpacity
-        style={styles.CoursierBoutton}        
-        onPress={() => navigation.navigate('enregistrer', {data: "cl"})}
+          style={styles.roleButton}
+          onPress={() => navigation.navigate('enregistrer', { data: 'co' })}
         >
-            <Image
-              style={{}}
-              source={require('../../assets/Icons/White-Signup.png')}
-            />  
-            <Text style={{fontSize : 16, color : "#000", textAlign : "center", fontWeight : "600"}}>Client</Text>  
+          <Image
+            style={styles.icon}
+            source={require('../../assets/Icons/White-Signup.png')}
+          />
+          <Text style={styles.roleText}>Coursier</Text>
         </TouchableOpacity>
-
-    </View>
+        */}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-    CoursierBoutton : {
-        marginTop: 35,
-        backgroundColor : "#B8E0FF",
-        borderRadius : 35,
-        marginLeft : 15,
-        marginRight : 15,
-        display : "flex",
-        flexDirection : "row",
-        height : 60,
-        alignItems : "center",
-        justifyContent : "center"
-      },
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F9FC',
+    paddingHorizontal: 20,
+    paddingTop: 40,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1E1E1E',
+    marginBottom: 30,
+    marginLeft: 5,
+  },
+  buttonWrapper: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    gap: 20,
+  },
+  roleButton: {
+    flexDirection: 'row',
+    backgroundColor: '#B8E0FF',
+    borderRadius: 20,
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  icon: {
+    width: 28,
+    height: 28,
+    marginRight: 15,
+    resizeMode: 'contain',
+  },
+  roleText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1E1E1E',
+  },
 });
 
 export default choixType;

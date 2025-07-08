@@ -6,11 +6,11 @@ import * as FileSystem from 'expo-file-system';
 import * as fileManager from '../util/file-manager';
 //import { SHA256 } from 'react-native-sha';
 import * as Crypto from 'expo-crypto';
-import { NetworkInfo } from 'react-native-network-info';
+//import NetInfo from "@react-native-community/netinfo";
 import * as Device from 'expo-device';
 import * as debbug_lib from '../util/debbug.js';
 //import id from 'dayjs/locale/id';
-import { has } from 'lodash-es';
+//Limport { has } from 'lodash-es';
 import axios from 'axios';
 
 var headers = {
@@ -41,14 +41,19 @@ const enregistrer = ({route, navigation }) => {
     return uniqueId;
   };
 
+  const getIP = () => {
+    return "192.128.0.1";
+  }
+/*}
   const getIp = () => {
     return new Promise((resolve, reject) => {
+      
       NetworkInfo.getIPAddress(ip => {
         console.log("IP:", ip);
         resolve(ip);
       });
     });
-  }
+  } */
   
   const AutoSave = async () => {
     //Obsolète
@@ -124,7 +129,7 @@ const enregistrer = ({route, navigation }) => {
     try {
       //const sha256 = new SHA256();
       const deviceId = await getDeviceId();
-      const ip = await getIp();
+      const ip =  getIp();
       
       const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
         {

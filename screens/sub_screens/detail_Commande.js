@@ -524,10 +524,49 @@ const DetailCommande = ({ route, navigation }) => {
     }));
   };
 
+  const dic_status = {
+    1: "En préparation",
+    2: "En cours de livraison",
+    3: "Livré"
+  }
+  
+  const dic_status_color = {
+    1: "#FFA726",
+    2: "#0a75d3",
+    3: "#06bd09"
+  }
+
+  const renderStatusBadgeWithFallback = () => {
+    const statusColor = dic_status_color[item.id_status] || "#666666"; // Default gray color
+    
+    return (
+      <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+        <Text style={styles.statusText}>{dic_status[item.id_status] || "Unknown"}</Text>
+      </View>
+    );
+  };
+  
+  // If you want to handle the case where item.id_status might be undefined
+  const renderStatusBadgeSafe = () => {
+    if (!item || !item.id_status) {
+      return (
+        <View style={[styles.statusBadge, { backgroundColor: "#666666" }]}>
+          <Text style={styles.statusText}>N/A</Text>
+        </View>
+      );
+    }
+  
+    return (
+      <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
+        <Text style={styles.statusText}>{dic_status[item.id_status]}</Text>
+      </View>
+    );
+  };
+
   const renderStatusBadge = () => {
     return (
-      <View style={styles.statusBadge}>
-        <Text style={styles.statusText}>Livraison en cours</Text>
+      <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
+        <Text style={styles.statusText}>{dic_status[item.id_status]}</Text>
       </View>
     );
   };
@@ -631,9 +670,11 @@ const DetailCommande = ({ route, navigation }) => {
                     <Text style={styles.productName}>{produit.nom_produit || 'Produit inconnu'}</Text>
                     <View style={styles.productMeta}>
                       <Text style={styles.productQuantity}>Qté: {produit.quantite || 1}</Text>
-                      <Text style={styles.productType}>{produit.type_vendu || ''}</Text>
+                      
                       <Text style={styles.productPrice}>{((produit.prix || 0) * (produit.quantite || 1)).toLocaleString('fr-FR')} FCFA</Text>
                     </View>
+                    <Text style={styles.productType}>{produit.prix || 0} FCFA/{produit.type_vendu || ''}</Text>
+                    
                   </View>
                 </View>
               ))
@@ -681,6 +722,7 @@ const DetailCommande = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
@@ -711,7 +753,7 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FFA726',
+    
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 15,
@@ -879,6 +921,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#7f8c8d',
     marginRight: 10,
+    marginTop: 10
   },
   productPrice: {
     fontSize: 14,

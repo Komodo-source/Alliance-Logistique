@@ -14,7 +14,7 @@ $data_commande = $conn->prepare(
     COMMANDE.id_fournisseur,
     COMMANDE.id_coursier,
     COMMANDE.code_echange,
-    COMMANDE.id_status
+    COMMANDE.id_status,
     GROUP_CONCAT(
         JSON_OBJECT(
             'id_produit', PRODUIT.id_produit,
@@ -23,7 +23,7 @@ $data_commande = $conn->prepare(
             'prix', PRIX.prix_produit,
             'type_vendu', PRODUIT.type_vendu
         )
-    ) as produits
+    ) AS produits
 FROM COMMANDE 
 INNER JOIN HUB ON HUB.id_dmd = COMMANDE.id_dmd        
 INNER JOIN COMMANDE_PRODUIT ON COMMANDE_PRODUIT.id_cmd = COMMANDE.id_cmd

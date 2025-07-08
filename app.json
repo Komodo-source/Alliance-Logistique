@@ -2,16 +2,16 @@
   "expo": {
     "name": "Alliance Logistique",
     "slug": "alliance_logistique",
-    "version": "1.0.0",
+    "version": "0.8.2",
     "orientation": "portrait",
-    "icon": "./assets/Icons/logo.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/icon_light.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
-    },
+    }, 
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

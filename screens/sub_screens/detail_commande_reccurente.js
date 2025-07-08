@@ -120,7 +120,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         Alert.alert("Succès", existingProductIndex !== -1 ? "Quantité mise à jour" : "Produit ajouté à la commande");
     };
 
-    const removeProductFromCommand = (index) => {
+    const removeProductFromCommand = async (index) => {
         Alert.alert(
             "Supprimer le produit",
             "Voulez-vous supprimer ce produit de la commande ?",
@@ -130,18 +130,29 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                     text: "Supprimer",
                     style: "destructive",
                     onPress: async () => {
-                        const updatedProducts = [...(commande.produits || [])];
-                        updatedProducts.splice(index, 1);
-                        
-                        const updatedCommande = {
-                            ...commande,
-                            produits: updatedProducts,
-                            nb_produit: updatedProducts.length
-                        };
-                        debbug_lib.debbug_log("Deleted commande: " + JSON.stringify(updatedCommande), "cyan");
-                        setCommande(updatedCommande);
-                        await updateCommandeInFile(updatedCommande);
-                        navigation.goBack();
+                        try {
+                            // Remove the product from the current command's product list
+                            const updatedProducts = [...(commande.produits || [])];
+                            updatedProducts.splice(index, 1);
+                            
+                            // Update the command with the new product list
+                            const updatedCommande = {
+                                ...commande,
+                                produits: updatedProducts,
+                                nb_produit: updatedProducts.length
+                            };
+                            
+                            // Update local state
+                            setCommande(updatedCommande);
+                            
+                            // Save the updated command to file
+                            await updateCommandeInFile(updatedCommande);
+                            
+                            Alert.alert("Succès", "Produit supprimé de la commande");
+                        } catch (error) {
+                            console.error("Erreur lors de la suppression du produit:", error);
+                            Alert.alert("Erreur", "Impossible de supprimer le produit");
+                        }
                     }
                 }
             ]
@@ -212,7 +223,7 @@ const detail_commande_reccurente = ({ route, navigation }) => {
         getProduct();
     }, []);
 
-    const supprimer_commande = () => {
+    const supprimer_commande = async () => {
         Alert.alert(
             "Confirmer la suppression",
             "Êtes-vous sûr de vouloir supprimer cette commande récurrente ?",
@@ -227,8 +238,14 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                     onPress: async () => {
                         try {
                             await deleteCommandeFromFile(commande.id);
-                            navigation.goBack();
+                            Alert.alert("Succès", "Commande supprimée", [
+                                {
+                                    text: "OK",
+                                    onPress: () => navigation.goBack()
+                                }
+                            ]);
                         } catch (error) {
+                            console.error("Erreur lors de la suppression:", error);
                             Alert.alert("Erreur", "Impossible de supprimer la commande");
                         }
                     }
@@ -271,34 +288,56 @@ const detail_commande_reccurente = ({ route, navigation }) => {
             totalPrice: getTotalPrice()
         });
     };
+
     const updateCommandeInFile = async (updatedCommande) => {
         try {
+            // Read existing commands
             let commandes = await fileManager.read_file("reccurente.json") || [];
+            
+            // Find and update the specific command
             const index = commandes.findIndex(c => c.id === updatedCommande.id);
             if (index !== -1) {
                 commandes[index] = updatedCommande;
+                
+                // Save back to file
                 await fileManager.save_storage_local_storage_data(
                     commandes, 
-                    "commande_recurrente", 
                     "reccurente.json"
                 );
+                
+                debbug_lib.debbug_log("Commande mise à jour avec succès", "green");
+            } else {
+                debbug_lib.debbug_log("Commande non trouvée pour mise à jour", "red");
             }
         } catch (error) {
-            debbug_lib.debbug_log("Erreur mise à jour commande:"+ error, "red");
+            debbug_lib.debbug_log("Erreur mise à jour commande: " + error, "red");
+            throw error; // Re-throw to handle in calling function
         }
     };
 
     const deleteCommandeFromFile = async (commandeId) => {
         try {
+            // Read existing commands
             let commandes = await fileManager.read_file("reccurente.json") || [];
-            commandes = commandes.filter(c => c.id !== commandeId);
+            
+            // Filter out the command to delete
+            const filteredCommandes = commandes.filter(c => c.id !== commandeId);
+            
+            // Check if command was found and removed
+            if (filteredCommandes.length === commandes.length) {
+                throw new Error("Commande non trouvée");
+            }
+            
+            // Save the updated list back to file
             await fileManager.save_storage_local_storage_data(
-                commandes, 
-                "commande_recurrente", 
+                filteredCommandes, 
                 "reccurente.json"
             );
+            
+            debbug_lib.debbug_log("Commande supprimée avec succès", "green");
         } catch (error) {
-            throw error;
+            debbug_lib.debbug_log("Erreur suppression commande: " + error, "red");
+            throw error; // Re-throw to handle in calling function
         }
     };
 
@@ -490,11 +529,11 @@ const detail_commande_reccurente = ({ route, navigation }) => {
                 
                 <TouchableOpacity 
                     style={[styles.button, styles.deleteButton]} 
-                    onPress={removeProductFromCommand}
+                    onPress={supprimer_commande} 
                 >
                     <Text style={styles.buttonText}>Supprimer Commande</Text>
                 </TouchableOpacity>
-                
+                                
                 <TouchableOpacity 
                     style={[styles.button, styles.orderButton]} 
                     onPress={commander_maintenant}

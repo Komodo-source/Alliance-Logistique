@@ -98,6 +98,7 @@ const renderItem = ({ item }) => {
 // Delete function
 const supprimer_commande = async (commandeId) => {
     try {
+        debbug_lib.debbug_log("ID: " + commandeId, "cyan");
         Alert.alert(
             "Confirmer la suppression",
             "Êtes-vous sûr de vouloir supprimer cette commande récurrente ?",
@@ -107,10 +108,11 @@ const supprimer_commande = async (commandeId) => {
                     text: "Supprimer", 
                     style: "destructive",
                     onPress: async () => {
-                        let existingCommands = await fileManager.read_file("reccurente.json", true);
+                        let existingCommands = await fileManager.read_file("reccurente.json");
                         if (Array.isArray(existingCommands)) {
-                            const updatedCommands = existingCommands.filter(cmd => cmd.id !== commandeId);
+                            const updatedCommands = existingCommands.filter(obj => obj.id !== commandeId);
                             await fileManager.save_storage_local_storage_data(updatedCommands, "reccurente.json");
+                                                        
                             debbug_lib.debbug_log("commande deleted: " + JSON.stringify(updatedCommands), "cyan");
                             actualiser_commande();
                         }
@@ -179,18 +181,31 @@ const demander_nouveau_nom = (item) => {
                 </TouchableOpacity>
             </View>
             <View style={styles.commandes}>
-                <FlatList
+                {commande && commande.length > 0 ? (
+                    <FlatList
                     data={commande}
                     renderItem={renderItem}
                     keyExtractor={(item) => item.id.toString()}
                     scrollEnabled={true}
                 />
+                ) : (
+                    <View style={styles.empty}>
+                        <Text style={styles.emptyText}>Vous n'avez pas de commande réccurentes</Text>
+                    </View>
+                )}
+                
             </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
+    emptyText : {
+        fontSize: 17,
+        fontWeight: 600,
+        textAlign: "center",
+        marginTop: 10
+    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',

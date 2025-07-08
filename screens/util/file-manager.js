@@ -13,6 +13,26 @@ export const create_file = async (file_name, content = "") => {
   }
 };
 
+export const is_file_existing = async (file_name) => {
+  const fileUri = FileSystem.documentDirectory + file_name; 
+  const fileInfo = await FileSystem.getInfoAsync(fileUri);
+  
+  if (!fileInfo.exists) {
+    console.warn('Fichier inexistant:', fileUri);
+    return false;
+  }return true;
+}
+
+export const delete_file = async (file_name) => {
+  try {
+    const fileUri = FileSystem.documentDirectory + file_name;
+    await FileSystem.deleteAsync(fileUri);
+    debbug_lib.debbug_log("[FM] File has been deleted Succefully", "green");
+  }catch (error){
+    debbug_lib.debbug_log("[FM] File " + file_name + " couldn't be deleted, err: " + error, "red");
+  }
+  
+}
 
 export const save_storage_local_storage_data = async (data, file_name) => {
   try {

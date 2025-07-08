@@ -6,6 +6,7 @@ import CarouselCards from './sub_screens/CarouselCards';
 import * as FileManager from './util/file-manager.js';
 const { width, height } = Dimensions.get('window');
 import axios from 'axios';
+import { debbug_log } from './util/debbug.js';
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -15,23 +16,6 @@ const Accueil = ({ navigation }) => {
 
   // Update time every minute for dynamic greeting
 
-  const set_nb_commande_livraison = () => {
-    let val = 0;
-    for(let i = 0; i < commande.length; i++){
-      if(commande.id_status == 1){
-        val ++;
-      }
-    setNbCommandeLivraison(val);
-  }
-}
-
-  useEffect(() => {
-    set_nb_commande_livraison();
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(timer);
-  }, []);
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -69,6 +53,16 @@ const Accueil = ({ navigation }) => {
       
       return null;
     }
+  };
+
+  const set_nb_commande_livraison = () => {
+    let val = 0;
+    for(let i = 0; i < commande.length; i++){
+      if(commande[i].id_status == 1 || commande[i].id_status == 2){
+        val++;
+      }
+    } 
+    setNbCommandeLivraison(val);
   };
 
   const fetch_commande = async () => {
@@ -194,6 +188,12 @@ const Accueil = ({ navigation }) => {
       return "#4CAF50";
     };
 
+    const dic_status_color = {
+      1: "#FFA726",
+      2: "#0a75d3",
+      3: "#06bd09"
+    }
+
     return (
       <TouchableOpacity
         style={[
@@ -211,7 +211,7 @@ const Accueil = ({ navigation }) => {
             <Text style={styles.commandeName} numberOfLines={1}>{item.nom_dmd}</Text>
             <Text style={styles.commandeNumber}>#{item.id_public_cmd}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
+          <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
             <View style={styles.statusDot} />
             <Text style={styles.statusText}>{item.id_status == 1 ? "En préparation" : 
               item.id_status == 1 ? "En cours de livraison": 
@@ -237,10 +237,16 @@ const Accueil = ({ navigation }) => {
     )
   }
 
+
   useEffect(() => {
     fetch_commande();
+    set_nb_commande_livraison();
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+    
   }, []);
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
