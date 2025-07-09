@@ -59,10 +59,9 @@ const DetailProduit = ({ route, navigation }) => {
         style={styles.Panier}
         onPress={() => navigation.navigate('commande_reccurente')}
       >
-        <Text style={{color: "#fff", fontSize: 19, fontWeight: "500"}}>
+        <Text style={{color: "#fff", fontSize: 19, fontWeight: "500", numberOfLines:1, adjustsFontSizeToFit:true}}>
           Ajouter à une commande récurrente
         </Text>
-
       </TouchableOpacity>
     </View>
   );
@@ -133,15 +132,18 @@ const styles = StyleSheet.create({
       },
 
       Panier : {
-        height: 40,
+        height: 60,
         borderRadius: 7,
         width: '80%',
+        minWidth: 180,
+        paddingHorizontal: 8,
         backgroundColor: '#0141d2',
         alignSelf: 'center',
         marginTop: 20,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+
       },
 })
 

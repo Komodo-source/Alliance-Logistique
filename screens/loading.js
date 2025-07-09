@@ -53,16 +53,16 @@
     }
 
     const check_first_time = async () => {      
-      if(!fileManager.is_file_existing("auto.json")){
+      const exists = await fileManager.is_file_existing("auto.json");
+      if (exists) {
         debbug_lib.debbug_log("not the first time", "blue");
         return;
-      }else{
+      } else {
         debbug_lib.debbug_log("first time ever", "red");
-        fileManager.read_file("auto.json");
         const nv_data = {
           id: "", name: "", firstname: "", type: "", stay_logged: false, first_conn: true
         };
-        fileManager.save_storage_local_storage_data(nv_data, "auto.json");
+        await fileManager.save_storage_local_storage_data(nv_data, "auto.json");
       }
     }
 
@@ -73,7 +73,6 @@
       debbug_lib.debbug_log("v.0.4.1", "green");
       debbug_lib.debbug_log("admin version", "green");
       debbug_lib.debbug_log("loading main elements", "green");
-      //fileManager.add_value_to_local_storage("first_conn", true, "auto.json");
       try{  
         debbug_lib.debbug_log("checking if persistant logging", "magenta");  
         await stay_logged();
@@ -81,36 +80,27 @@
         await checkServer();
       }catch(error){
         debbug_lib.debbug_log("Error in the initialisation", "red");
-        loading_check();
+        setTimeout(loading_check, 1000); // prevent stack overflow
       }
-
     }
 
     const checkServer = async () => {
       try {
-        //await fileManager.modify_value_local_storage("first_conn", true, "auto.json");
         const response = await measureFetchSpeed('https://google.com');
         if (response.ok) {
           debbug_lib.debbug_log("Connecté a Internet", "green");
-          //doit faire une requête pour savoir si le serveur est actif
           const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/product.php');
           if (response_server.ok) {
             debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
-            //await save_storage(response_server);
-            //meme si le fichier jsonn'est pas vide on envoie l'user vers la page de connexion
-            // Read fresh data after stay_logged() has potentially modified it
             const dataUser = await fileManager.read_file("auto.json");
             debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
-            if(dataUser.first_conn == true){
+            if (dataUser && dataUser.first_conn === true) {
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
-
-              navigation.navigate('first_page');
-            }
-            else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
-              navigation.navigate('HomePage');            
-            }
-            else {
-              navigation.navigate('Accueil');
+              navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
+            } else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
+              navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
+            } else {
+              navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
             }
           } else {
             debbug_lib.debbug_log("BACKEND INACCESSIBLE", "red");
@@ -129,12 +119,12 @@
           const data = {
             id: "", name: "", firstname: "", type: "", stay_logged: "", first_conn: true
           };
-          fileManager.save_storage_local_storage_data(data, "auto.json");
+          await fileManager.save_storage_local_storage_data(data, "auto.json");
         } else {
           debbug_lib.debbug_log("Pas d'internet", "red");
           debbug_lib.debbug_log("Erreur: " + error, "red");
           Alert.alert('Erreur', 'Vérifiez votre connexion internet. ' + error);
-          loading_check();
+          setTimeout(loading_check, 1000);
         }
       }
     };

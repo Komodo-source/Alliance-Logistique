@@ -8,7 +8,8 @@ import ChickenImage from '../assets/Icons/Dark-Chicken.png';
 import LapinImage from '../assets/Icons/Rabbit.png';
 import OeufImage from '../assets/Icons/Dark-oeuf.png';
 import BoeufImage from '../assets/Icons/Dark-beef.png';
-import MapView,{Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView,{Marker} from 'react-native-maps';
+import LeafletMap from '../components/LeafletMap';
 
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
@@ -21,7 +22,7 @@ const Formulaire = ({ navigation, route}) => {
   
   let pre_selected_item = null;
   console.log(route);
-  if (route.params != undefined) {
+  if (route && route.params && route.params.produits) {
     pre_selected_item = route.params.produits;
     console.log("produit deja selec à partir d'un panier");
     console.log(route.params.produits);
@@ -56,6 +57,14 @@ const Formulaire = ({ navigation, route}) => {
     latitudeDelta: 0.0421,
     longitudeDelta: 0.822,
   });
+  
+  // Ensure region is always valid
+  const safeRegion = {
+    latitude: region.latitude || 9.3077,
+    longitude: region.longitude || 2.3158,
+    latitudeDelta: region.latitudeDelta || 0.0421,
+    longitudeDelta: region.longitudeDelta || 0.822,
+  };
   const [produit, setProduit] = useState([]);
   const fileUri = FileSystem.documentDirectory + 'product.json';
   const [selectedTime, setSelectedTime] = useState(new Date());
@@ -79,6 +88,8 @@ const Formulaire = ({ navigation, route}) => {
     "boeuf morceau": BoeufImage,
     "default": TomateImage, 
   };
+
+  const [mapInteracting, setMapInteracting] = useState(false);
 
   // Request location permission and get current location
   const requestLocationPermission = async () => {
@@ -219,18 +230,33 @@ const Formulaire = ({ navigation, route}) => {
       }
     };
 
-    initializeData();
-    requestLocationPermission();
-    getProduct();
-    debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");  
-    if( pre_selected_item != null){
-      set_product_rec();
-    }
+    const initializeApp = async () => {
+      try {
+        await initializeData();
+        await requestLocationPermission();
+        await getProduct();
+        
+        debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");  
+        if (pre_selected_item != null && pre_selected_item !== undefined) {
+          set_product_rec();
+        }
+      } catch (error) {
+        console.error("Error during initialization:", error);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   const handleMapPress = (e) => {
-    const { coordinate } = e.nativeEvent;
-    setSelectedLocation(coordinate);
+    try {
+      const { coordinate } = e.nativeEvent;
+      if (coordinate && coordinate.latitude && coordinate.longitude) {
+        setSelectedLocation(coordinate);
+      }
+    } catch (error) {
+      console.error('Error handling map press:', error);
+    }
   };
 
   // Simplified product list rendering
@@ -268,16 +294,18 @@ const Formulaire = ({ navigation, route}) => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
     
     // Check if pre_selected_item is an array
-    if (Array.isArray(pre_selected_item)) {
+    if (pre_selected_item && Array.isArray(pre_selected_item)) {
       // Collect all new products first
       const newProducts = [];
       
       for(let i = 0; i < pre_selected_item.length; i++){
         const item = pre_selected_item[i];
+        if (!item) continue; // Skip if item is null/undefined
+        
         debbug_lib.debbug_log(item, "blue");
         
         const newProduct = {
-          id: item.id || item.id_produit,
+          id: item.id || item.id_produit || Math.random().toString(),
           name: item.nom || item.nom_produit || 'Produit',
           productDetails: {
             ...item,
@@ -322,18 +350,20 @@ const Formulaire = ({ navigation, route}) => {
   const set_product_rec_alternative = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
     
-    if (Array.isArray(pre_selected_item)) {
+    if (pre_selected_item && Array.isArray(pre_selected_item)) {
       const newProducts = [];
       
       for(let i = 0; i < pre_selected_item.length; i++){
         const item = pre_selected_item[i];
+        if (!item) continue; // Skip if item is null/undefined
+        
         debbug_lib.debbug_log(item, "blue");
         
         const product = add_product(
           item.nom || item.nom_produit || 'Produit',
           item.quantite || item.poids || 1,
           item.quantite || item.nombre || 1,
-          item.id || item.id_produit,
+          item.id || item.id_produit || Math.random().toString(),
           item,
           true // shouldBatch = true
         );
@@ -504,6 +534,13 @@ const Formulaire = ({ navigation, route}) => {
     if (!dataUser || !dataUser.id) {
       Alert.alert('Erreur', 'Erreur de connexion utilisateur. Veuillez vous reconnecter.');
       setChargement(false);
+      try {
+        if (navigation && navigation.navigate) {
+          navigation.navigate('HomePage');
+        }
+      } catch (error) {
+        console.error('Navigation error:', error);
+      }
       return;
     }
 
@@ -640,7 +677,7 @@ const Formulaire = ({ navigation, route}) => {
   
   return(
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={!mapInteracting}>
         <View style={styles.container}>
           <Text style={styles.textH1}>Nouvelle Commande</Text>
           
@@ -944,39 +981,15 @@ const Formulaire = ({ navigation, route}) => {
               
               {/* Map Section */}
               <View style={styles.mapContainer}>
-                <MapView
-                  style={styles.map}
-                  region={region}
-                  provider={PROVIDER_GOOGLE}
-                  showsUserLocation={hasLocationPermission && userLocation !== null}
-                  showsMyLocationButton={false}
-                  onPress={handleMapPress}
-                >
-                  {selectedLocation && (
-                    <Marker
-                      coordinate={selectedLocation}
-                      title="Lieu de livraison"
-                    />
-                  )}
-                </MapView>
-
-                <View style={styles.mapControlsContainer}>
-                  <TouchableOpacity 
-                    style={styles.mapControlButton}
-                    onPress={zoomIn}
-                  >
-                    <Text style={styles.mapControlText}>+</Text>  
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={styles.mapControlButton}
-                    onPress={zoomOut}
-                  >
-                    <Text style={styles.mapControlText}>-</Text>  
-                  </TouchableOpacity>
-                </View>
-                
-                {selectedLocation && (
+                <LeafletMap
+                  latitude={selectedLocation?.latitude || region.latitude}
+                  longitude={selectedLocation?.longitude || region.longitude}
+                  selectable={true}
+                  onLocationChange={(coords) => setSelectedLocation(coords)}
+                  onMapTouchStart={() => setMapInteracting(true)}
+                  onMapTouchEnd={() => setMapInteracting(false)}
+                />
+                {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
                   <View style={styles.coordinatesContainer}>
                     <Image 
                       source={require('../assets/Icons/marker-icon.png')} 

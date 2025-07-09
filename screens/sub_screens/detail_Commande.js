@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ScrollView, Alert, Platform } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { printToFileAsync } from 'expo-print';
 import { shareAsync } from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
+import LeafletMap from '../../components/LeafletMap';
 
 var headers = {
   'Accept': 'application/json',
@@ -37,16 +38,47 @@ export const loadImages = (id_produit) => {
 }
 
 const DetailCommande = ({ route, navigation }) => {
-  const { item } = route.params;
+  const item = route && route.params && route.params.item ? route.params.item : null;
   const [region, setRegion] = useState({
     latitude: 9.3077,
     longitude: 2.3158,
     latitudeDelta: 0.0421,
     longitudeDelta: 0.822,
   });
+  
+  // Ensure region is always valid
+  const safeRegion = {
+    latitude: region.latitude || 9.3077,
+    longitude: region.longitude || 2.3158,
+    latitudeDelta: region.latitudeDelta || 0.0421,
+    longitudeDelta: region.longitudeDelta || 0.822,
+  };
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [prix, calculPrix] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [mapInteracting, setMapInteracting] = useState(false);
+
+  if (!item) {
+    return (
+      <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#fff'}}>
+        <Text style={{color:'#2E3192', fontSize:18, fontWeight:'bold'}}>Aucune donnée de commande trouvée.</Text>
+        <TouchableOpacity 
+          style={{marginTop:20, backgroundColor:'#2E3192', padding:12, borderRadius:8}} 
+          onPress={() => {
+            try {
+              if (navigation && navigation.goBack) {
+                navigation.goBack();
+              }
+            } catch (error) {
+              console.error('Navigation error:', error);
+            }
+          }}
+        >
+          <Text style={{color:'#fff'}}>Retour</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const calcul = (itemProduit) => {
     let prix = 0;
@@ -482,29 +514,33 @@ const DetailCommande = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    if (item.produits) {
-      calculPrix(calcul(item.produits));
-    }
-    
-    if (item.localisation_dmd && typeof item.localisation_dmd === 'string') {
-      const coords = item.localisation_dmd.split(';');
-      if (coords.length >= 2) {
-        const lat = parseFloat(coords[0]);
-        const lng = parseFloat(coords[1]);
-        
-        if (!isNaN(lat) && !isNaN(lng)) {
-          setSelectedLocation({
-            latitude: lat,
-            longitude: lng,
-          });
-          // Update map region to center on the location
-          setRegion(prev => ({
-            ...prev,
-            latitude: lat,
-            longitude: lng,
-          }));
+    try {
+      if (item && item.produits) {
+        calculPrix(calcul(item.produits));
+      }
+      
+      if (item && item.localisation_dmd && typeof item.localisation_dmd === 'string') {
+        const coords = item.localisation_dmd.split(';');
+        if (coords.length >= 2) {
+          const lat = parseFloat(coords[0]);
+          const lng = parseFloat(coords[1]);
+          
+          if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+            setSelectedLocation({
+              latitude: lat,
+              longitude: lng,
+            });
+            // Update map region to center on the location
+            setRegion(prev => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng,
+            }));
+          }
         }
       }
+    } catch (error) {
+      console.error('Error in useEffect:', error);
     }
   }, [item]);
 
@@ -536,18 +572,8 @@ const DetailCommande = ({ route, navigation }) => {
     3: "#06bd09"
   }
 
-  const renderStatusBadgeWithFallback = () => {
-    const statusColor = dic_status_color[item.id_status] || "#666666"; // Default gray color
-    
-    return (
-      <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-        <Text style={styles.statusText}>{dic_status[item.id_status] || "Unknown"}</Text>
-      </View>
-    );
-  };
-  
-  // If you want to handle the case where item.id_status might be undefined
-  const renderStatusBadgeSafe = () => {
+  const renderStatusBadge = () => {
+    // Add null checks to prevent crashes
     if (!item || !item.id_status) {
       return (
         <View style={[styles.statusBadge, { backgroundColor: "#666666" }]}>
@@ -555,18 +581,13 @@ const DetailCommande = ({ route, navigation }) => {
         </View>
       );
     }
-  
+    
+    const statusColor = dic_status_color[item.id_status] || "#666666";
+    const statusText = dic_status[item.id_status] || "Unknown";
+    
     return (
-      <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
-        <Text style={styles.statusText}>{dic_status[item.id_status]}</Text>
-      </View>
-    );
-  };
-
-  const renderStatusBadge = () => {
-    return (
-      <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
-        <Text style={styles.statusText}>{dic_status[item.id_status]}</Text>
+      <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+        <Text style={styles.statusText}>{statusText}</Text>
       </View>
     );
   };
@@ -580,7 +601,7 @@ const DetailCommande = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollContainer}>
+      <ScrollView style={styles.scrollContainer} scrollEnabled={!mapInteracting}>
         <View style={styles.main}>
           {/* Header Section */}
           <View style={styles.header}>
@@ -611,42 +632,14 @@ const DetailCommande = ({ route, navigation }) => {
 
           {/* Map Section */}
           <View style={styles.mapContainer}>
-            <MapView
-              style={styles.map}
-              region={region}
-              provider={PROVIDER_GOOGLE}
-              showsMyLocationButton={false}
-            >
-              {selectedLocation && (
-                <Marker
-                  coordinate={selectedLocation}
-                  title="Localisation de livraison"
-                  description="Point de livraison de la commande"
-                >
-                  <View style={styles.customMarker}>
-                    <FontAwesome name="map-pin" size={24} color="#E74C3C" />
-                  </View>
-                </Marker>
-              )}
-            </MapView>
-
-            <View style={styles.mapControlsContainer}>
-              <TouchableOpacity
-                style={styles.mapControlButton}
-                onPress={zoomIn}
-              >
-                <Text style={styles.mapControlText}>+</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.mapControlButton, styles.lastMapControlButton]}
-                onPress={zoomOut}
-              >
-                <Text style={styles.mapControlText}>-</Text>
-              </TouchableOpacity>
-            </View>
-
-            {selectedLocation && (
+            <LeafletMap
+              latitude={selectedLocation?.latitude || region.latitude}
+              longitude={selectedLocation?.longitude || region.longitude}
+              selectable={false}
+              onMapTouchStart={() => setMapInteracting(true)}
+              onMapTouchEnd={() => setMapInteracting(false)}
+            />
+            {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
               <View style={styles.coordinatesContainer}>
                 <Text style={styles.coordinatesText}>
                   {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}

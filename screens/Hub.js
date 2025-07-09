@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button,Image, FlatList} from 'react-native';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Alert} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 //import data from './../assets/data/auto.json'
 import * as FileSystem from 'expo-file-system';
 import * as FileManager from './util/file-manager.js';
@@ -8,6 +8,7 @@ import * as FileManager from './util/file-manager.js';
 const Hub = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
   const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const readProductFile = async () => {
     try {
@@ -43,66 +44,72 @@ const Hub = ({ navigation }) => {
 
   const fetch_commande = async () => {
     try {
-      // Read user data from auto.json
+      setLoading(true);
       const data = await FileManager.read_file("auto.json");
-      console.log("User data from auto.json:", data);
-      
       if (!data || !data.id) {
-        console.error("No user data or user ID found in auto.json");
+        setCommande([]);
+        setLoading(false);
         return;
       }
-      
       setUserData(data);
       const id_client = data.id;
-      console.log("id_client : ", id_client);
       
-      fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({id_client})
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log("Received data:", data);
-        if (!data || data.length === 0) {
-          console.log("No data received or empty array");
-          setCommande([]); // Explicitly set empty array if no data
-        } else {
-          setCommande(data); // Set the entire array of commands
-        }
-      })
-      .catch(error => {
-        console.log("Error fetching data:", error);
-        setCommande([]); // Set empty array on error
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      setCommande(Array.isArray(responseData) ? responseData : []);
+      setLoading(false);
     } catch (error) {
-      console.error("Error reading auto.json:", error);
+      console.error("Error fetching commands:", error);
+      setCommande([]);
+      setLoading(false);
     }
   }
 
   const renderCommande = ({item}) => {
+    if (!item) return null;
+    
+    const handlePress = () => {
+      try {
+        if (navigation && navigation.navigate) {
+          navigation.navigate('detail_Commande', {item});
+        }
+      } catch (error) {
+        console.error("Navigation error:", error);
+        Alert.alert('Erreur', 'Impossible d\'ouvrir les détails de la commande');
+      }
+    };
+    
     return (
       <TouchableOpacity
         style={styles.commandeCard}
-        onPress={() => navigation.navigate('detail_Commande', {item})}
+        onPress={handlePress}
       >
-        <Text style={{fontSize: 18, fontWeight: "800", marginBottom: 5}}>{item.nom_dmd}</Text>
+        <Text style={{fontSize: 18, fontWeight: "800", marginBottom: 5}}>
+          {item.nom_dmd || 'Commande sans nom'}
+        </Text>
         <Text style={{fontSize: 15, fontWeight: "300", marginLeft: 15, marginBottom: 5}}>
-          Date de livraison: {new Date(item.date_fin).toLocaleDateString()}
+          Date de livraison: {item.date_fin ? new Date(item.date_fin).toLocaleDateString() : 'Non définie'}
         </Text>
         <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
-          Description: {item.desc_dmd}
+          Description: {item.desc_dmd || 'Aucune description'}
         </Text>
         <Text style={{fontSize: 14, marginLeft: 15, marginBottom: 5}}>
-          Numéro de commande: {item.id_public_cmd}
+          Numéro de commande: {item.id_public_cmd || 'N/A'}
         </Text>
         <View style={{marginLeft: 15, marginTop: 5}}>
           <Text style={{fontSize: 14, fontWeight: "600", marginBottom: 3}}>Produits:</Text>
-          {item.produits && item.produits.map((produit, index) => (
+          {item.produits && Array.isArray(item.produits) && item.produits.map((produit, index) => (
             <Text key={index} style={{fontSize: 13, marginLeft: 10}}>
-              • {produit.nom_produit} - {produit.quantite} {produit.type_vendu}
+              • {produit.nom_produit || 'Produit'} - {produit.quantite || 1} {produit.type_vendu || ''}
             </Text>
           ))}
         </View>
@@ -115,76 +122,123 @@ const Hub = ({ navigation }) => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.headerTitle}>Mes Commandes</Text>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Commandes récurrentes</Text>
-        <TouchableOpacity
-          style={styles.comRecButton}
-          onPress={() => navigation.navigate('commande_reccurente')}>
-          <Text style={styles.comRecButtonText}>Voir mes commandes récurrentes {'>'}</Text>
+    <SafeAreaView style={{flex:1, backgroundColor:'#F4F7FA'}}>
+      <View style={styles.container}>
+        <Text style={styles.headerTitle}>Mes Commandes</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Commandes récurrentes</Text>
+          <TouchableOpacity
+            style={styles.comRecButton}
+            onPress={() => {
+              try {
+                navigation.navigate('commande_reccurente');
+              } catch (error) {
+                console.error("Navigation error:", error);
+              }
+            }}>
+            <Text style={styles.comRecButtonText}>Voir mes commandes récurrentes {'>'}</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.section, {flex:1}]}> {/* Make this section take available space */}
+          <Text style={styles.sectionTitle}>Vos commandes</Text>
+          <View style={[styles.commandeBox, {flex:1}]}> {/* Make this box take available space */}
+            {loading ? (
+              <Text style={{textAlign:'center', marginTop:20}}>Chargement...</Text>
+            ) : commande && commande.length > 0 ? (
+              <FlatList
+                data={commande}
+                renderItem={renderCommande}
+                keyExtractor={(item) => item.id_dmd?.toString() || Math.random().toString()}
+                contentContainerStyle={{paddingBottom: 100}}
+                style={{flex:1}}
+              />
+            ) : (
+              <View style={styles.emptyStateBox}>
+                <Text style={styles.emptyStateText}>
+                  Vous n'avez passé aucune commande pour le moment
+                </Text>
+                <TouchableOpacity 
+                  style={styles.primaryButton}
+                  onPress={() => {
+                    try {
+                      navigation.navigate('Formulaire');
+                    } catch (error) {
+                      console.error("Navigation error:", error);
+                    }
+                  }}>
+                  <Text style={styles.primaryButtonText}>Passer une commande</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        </View>
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => {
+            try {
+              navigation.navigate('Formulaire');
+            } catch (error) {
+              console.error("Navigation error:", error);
+            }
+          }}>
+          <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
         </TouchableOpacity>
-      </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Vos commandes</Text>
-        <View style={styles.commandeBox}>
-          {commande && commande.length > 0 ? (
-            <FlatList
-              data={commande}
-              renderItem={renderCommande}
-              keyExtractor={(item) => item.id_dmd.toString()}
-              contentContainerStyle={{paddingBottom: 100}}
-            />
-          ) : (
-            <View style={styles.emptyStateBox}>
-              <Text style={styles.emptyStateText}>
-                Vous n'avez passé aucune commande pour le moment
-              </Text>
-              <TouchableOpacity 
-                style={styles.primaryButton}
-                onPress={() => navigation.navigate('Formulaire')}>
-                <Text style={styles.primaryButtonText}>Passer une commande</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+        <View style={styles.navbar}> 
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => {
+              try {
+                navigation.navigate('Produit');
+              } catch (error) {
+                console.error("Navigation error:", error);
+              }
+            }}
+          >
+            <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Product.png')} />
+            <Text style={styles.navButtonText}>Produit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => {
+              try {
+                navigation.navigate('Accueil');
+              } catch (error) {
+                console.error("Navigation error:", error);
+              }
+            }}
+          >
+            <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-House.png')} />
+            <Text style={styles.navButtonText}>Accueil</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.navButton, styles.activeButton]}
+            onPress={() => {
+              try {
+                navigation.navigate('Hub');
+              } catch (error) {
+                console.error("Navigation error:", error);
+              }
+            }}
+          >
+            <Image style={[styles.logoNavBar, styles.activeIcon]} source={require('../assets/Icons/Dark-Hub.png')} />
+            <Text style={[styles.navButtonText, styles.activeText]}>Hub</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => {
+              try {
+                navigation.navigate('Profil');
+              } catch (error) {
+                console.error("Navigation error:", error);
+              }
+            }}
+          >
+            <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-profile.png')} />
+            <Text style={styles.navButtonText}>Profil</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => navigation.navigate('Formulaire')}>
-        <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
-      </TouchableOpacity>
-      <View style={styles.navbar}> 
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Produit')}
-        >
-          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Product.png')} />
-          <Text style={styles.navButtonText}>Produit</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Accueil')}
-        >
-          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-House.png')} />
-          <Text style={styles.navButtonText}>Accueil</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.navButton, styles.activeButton]}
-          onPress={() => navigation.navigate('Hub')}
-        >
-          <Image style={[styles.logoNavBar, styles.activeIcon]} source={require('../assets/Icons/Dark-Hub.png')} />
-          <Text style={[styles.navButtonText, styles.activeText]}>Hub</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Profil')}
-        >
-          <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-profile.png')} />
-          <Text style={styles.navButtonText}>Profil</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
