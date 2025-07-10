@@ -56,6 +56,7 @@ const DetailCommande = ({ route, navigation }) => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [prix, calculPrix] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
   const [mapInteracting, setMapInteracting] = useState(false);
 
   if (!item) {
@@ -342,20 +343,18 @@ const DetailCommande = ({ route, navigation }) => {
               <div class="company-section">
                   <h3>ÉMETTEUR</h3>
                   <p><strong>Alliance Logistique</strong></p>
-                  <p>22bis grande rue Bouray sur Juine</p>
-                  <p>91850 Bouray-sur-Juine, France</p>
-                  <p>Email: alliance-logistique@transport.com</p>
-                  <p>Tél: +33 X XX XX XX XX</p>
+                  <p>Dekougnbe Parcelle I</p>
+                  <p>8ême Von Droite après rond point pavé Dekougnbe</p>
+                  <p>Email: support@alliance-logistique.com</p>
+                  <p>Tél: +229 96 49 12 89</p>
               </div>
 
               <div class="company-section">
                   <h3>DESTINATAIRE</h3>
-                  <p><strong>${item.nom_dmd || 'Client'}</strong></p>
-                  <p>Adresse du client</p>
-                  <p>Ville, Code Postal</p>
+                  <p><strong>${item.nom_dmd || 'Client'}</strong></p>              
                   <p>Email: contact@client.com</p>
                   <p>Code commande: ${item.code_echange || 'N/A'}</p>
-              </div>
+              </div>              
           </div>
 
           <div class="products-section">
@@ -697,6 +696,21 @@ const DetailCommande = ({ route, navigation }) => {
           <MaterialIcons name="picture-as-pdf" size={24} color="white" />
           <Text style={styles.invoiceButtonText}>
             {isGenerating ? 'Génération en cours...' : 'Générer Facture PDF'}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[
+            styles.invoiceButton, 
+            isPaying && { opacity: 0.7 },
+            {backgroundColor: "#44c509"}
+          ]}
+          onPress={navigation.navigate("payement", {command_data: item, amount: prix})}
+          disabled={isPaying}
+        >
+          <MaterialIcons name="AttachMoney" size={24} color="white" />
+          <Text style={styles.invoiceButtonText}>
+            {isPaying ? 'Paiement en cours...' : 'Payer le commande'}
           </Text>
         </TouchableOpacity>
         {/*

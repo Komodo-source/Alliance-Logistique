@@ -20,7 +20,6 @@ const LeafletMap = ({ latitude = 9.3077, longitude = 2.3158, selectable = false,
     });
   `;
 
-  // HTML for the Leaflet map
   const leafletHTML = `
     <!DOCTYPE html>
     <html>

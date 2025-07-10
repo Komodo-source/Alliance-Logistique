@@ -20,6 +20,9 @@ import detail_Commande from './screens/sub_screens/detail_Commande';
 import commande_reccurente from './screens/sub_screens/commande_recurrentes';
 import detail_commande_reccurente from './screens/sub_screens/detail_commande_reccurente';
 import first_page from './screens/first/first_page';
+import fournisseur_produit from './screens/sub_screens/fournisseur_produit';
+import payement from './screens/sub_screens/payement'
+
 const Stack = createNativeStackNavigator();
 
 const App = () => {
@@ -35,7 +38,7 @@ const App = () => {
           <Stack.Screen name="Hub" component={Hub} options={{ headerShown: false }} />
           <Stack.Screen name="Recherche" component={Recherche} options={{ headerShown: false }} />
           <Stack.Screen name="Profil" component={Profil} options={{ headerShown: false }} />
-          <Stack.Screen name="Formulaire" component={Formulaire} options={{headerTitle : "Formulaire " }}/>
+          <Stack.Screen name="Formulaire" component={Formulaire} options={{headerTitle : "Formulaire" }}/>
           <Stack.Screen name="Details" component={Details} />
           <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
           <Stack.Screen name="choixType" component={choixType} options={{ headerShown: false }} />
@@ -47,6 +50,8 @@ const App = () => {
           <Stack.Screen name="commande_reccurente" component={commande_reccurente} options={{ headerShown: false }}/>
           <Stack.Screen name="detail_commande_reccurente" component={detail_commande_reccurente} options={{ headerShown: false }}/>
           <Stack.Screen name="first_page" component={first_page} options={{ headerShown: false }}/>
+          <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
+          <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

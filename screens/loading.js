@@ -8,6 +8,7 @@
 
   
   const Loading = ({ navigation }) => {
+    var is_first_time = false;
     //const [file_message, setFileMessage] = useState("");
 
     const stay_logged = async () => {
@@ -59,6 +60,7 @@
         return;
       } else {
         debbug_lib.debbug_log("first time ever", "red");
+        is_first_time = true;
         const nv_data = {
           id: "", name: "", firstname: "", type: "", stay_logged: false, first_conn: true
         };
@@ -139,7 +141,7 @@
     return (
       <View style={styles.wrapper}>
         <View style={styles.container}>
-        
+          <Text style={styles.txtFirst}>{is_first_time ? "La première fois le chargement peut prendre quelque minute" : ""}</Text>
           <Text style={styles.title}>Chargement...</Text>
           <Image
             style={styles.image}
@@ -169,6 +171,10 @@
       fontWeight: '800',
       marginBottom: 45,
       color : "#FFF"
+    },
+    txtFirst : {
+      fontSize: 17,
+      fontWeight: 400
     },
     image: {
       height: 350,

@@ -114,7 +114,7 @@ const first_page = ({ navigation }) => {
                 </Text>
             </View>
 
-            {/* Indicateurs de progression */}
+            {/* Indicateurs de progression 
             <View style={styles.indicatorContainer}>
                 {slides.map((_, index) => (
                     <View
@@ -128,7 +128,7 @@ const first_page = ({ navigation }) => {
                         ]}
                     />
                 ))}
-            </View>
+            </View>*/}
 
             {/* Bouton d'action */}
             <View style={styles.actionContainer}>

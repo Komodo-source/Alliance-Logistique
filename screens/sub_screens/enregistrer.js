@@ -273,7 +273,12 @@ const enregistrer = ({route, navigation }) => {
       if (data.status === 'success') {
         AutoSave();
         Alert.alert('Succès', data.message);
-        navigation.navigate('Accueil');
+        if(formData.data == "fo"){
+          navigation.navigate("fournisseur_produit");
+        }else{
+          navigation.navigate('Accueil');
+        }
+        
         try {
           await get_key(data);
           await handle_user_log(id_choosen);

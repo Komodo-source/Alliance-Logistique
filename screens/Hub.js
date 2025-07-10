@@ -9,6 +9,7 @@ const Hub = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const is_client = FileManager.read_file("auto.json").type == "cli" ? true : false;
 
   const readProductFile = async () => {
     try {
@@ -157,32 +158,37 @@ const Hub = ({ navigation }) => {
                 <Text style={styles.emptyStateText}>
                   Vous n'avez passé aucune commande pour le moment
                 </Text>
-                <TouchableOpacity 
-                  style={styles.primaryButton}
-                  onPress={() => {
-                    try {
-                      navigation.navigate('Formulaire');
-                    } catch (error) {
-                      console.error("Navigation error:", error);
-                    }
-                  }}>
-                  <Text style={styles.primaryButtonText}>Passer une commande</Text>
-                </TouchableOpacity>
+                {is_client ? (
+                 <TouchableOpacity 
+                 style={styles.primaryButton}
+                 onPress={() => {
+                   try {
+                     navigation.navigate('Formulaire');
+                   } catch (error) {
+                     console.error("Navigation error:", error);
+                   }
+                 }}>
+                 <Text style={styles.primaryButtonText}>Passer une commande</Text>
+               </TouchableOpacity>
+                ) : (<View></View>)}
+
               </View>
             )}
           </View>
         </View>
-        <TouchableOpacity 
-          style={styles.fab}
-          onPress={() => {
-            try {
-              navigation.navigate('Formulaire');
-            } catch (error) {
-              console.error("Navigation error:", error);
-            }
-          }}>
-          <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
-        </TouchableOpacity>
+        {is_client ? (
+                 <TouchableOpacity 
+                 style={styles.fab}
+                 onPress={() => {
+                   try {
+                     navigation.navigate('Formulaire');
+                   } catch (error) {
+                     console.error("Navigation error:", error);
+                   }
+                 }}>
+                 <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
+               </TouchableOpacity>
+                ) : (<View></View>)}
         <View style={styles.navbar}> 
           <TouchableOpacity 
             style={styles.navButton}

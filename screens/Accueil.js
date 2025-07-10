@@ -13,9 +13,18 @@ const Accueil = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [nb_commande_livraison, setNbCommandeLivraison] = useState(0);
-
+  const [isClient, setIsClient] = useState(true);
   // Update time every minute for dynamic greeting
+  const [jours_restants, setJours_restants] = useState(0);
 
+  // Helper to calculate days difference
+  const getDaysDifference = (dateString) => {
+    const now = new Date();
+    const target = new Date(dateString.replace(' ', 'T'));
+    const diffTime = target - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -24,36 +33,10 @@ const Accueil = ({ navigation }) => {
     return "Bonsoir";
   };
 
-  const readProductFile = async () => {
-    try {
-      const fileUri = FileSystem.documentDirectory + 'product.json';
-      console.log('lecture du fichier:', fileUri);
-  
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      if (!fileInfo.exists) {
-        console.warn('Fichier inexistant:', fileUri);
-        return null;
-      }
-  
-      const fileContents = await FileSystem.readAsStringAsync(fileUri);
-      console.log('Contenu du fichier:', fileContents);
-  
-      const parsedData = JSON.parse(fileContents);
-      console.log('Parse du json:', parsedData);
-      
-      return parsedData;
-    } catch (error) {
-      console.error('Error reading product.json:', error);
-      
-      if (error instanceof SyntaxError) {
-        console.error('Failed to parse JSON - file may be corrupted');
-      } else if (error.code === 'ENOENT') {
-        console.error('File not found - path may be incorrect');
-      }
-      
-      return null;
-    }
-  };
+  const set_jours = (date) => {
+    
+  }
+
 
   const set_nb_commande_livraison = () => {
     let val = 0;
@@ -68,6 +51,8 @@ const Accueil = ({ navigation }) => {
   const fetch_commande = async () => {
     try {
       const data = await FileManager.read_file("auto.json");
+      
+      setIsClient(data.type === "client");
       console.log("User data from auto.json:", data);
       
       if (!data || !data.id) {
@@ -124,14 +109,15 @@ const Accueil = ({ navigation }) => {
 
   // Enhanced quick actions with better visual hierarchy
   const quickActions = [
-    {
+    ...(isClient  ? [{
       id: 1,
       title: "Nouvelle Commande",
       subtitle: "Créer maintenant",
       icon: "📋",
       gradient: ['#667eea', '#764ba2'],
       action: () => navigation.navigate('Formulaire')
-    },
+    }] : []),
+  
     {
       id: 2,
       title: "Mes Commandes",
@@ -157,6 +143,7 @@ const Accueil = ({ navigation }) => {
       action: () => navigation.navigate('commande_reccurente')
     }
   ];
+  
 
   const renderQuickAction = ({ item, index }) => (
     <TouchableOpacity 
@@ -211,7 +198,7 @@ const Accueil = ({ navigation }) => {
             <Text style={styles.commandeName} numberOfLines={1}>{item.nom_dmd}</Text>
             <Text style={styles.commandeNumber}>#{item.id_public_cmd}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
+          <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}> 
             <View style={styles.statusDot} />
             <Text style={styles.statusText}>{item.id_status == 1 ? "En préparation" : 
               item.id_status == 1 ? "En cours de livraison": 
@@ -227,6 +214,16 @@ const Accueil = ({ navigation }) => {
                 day: 'numeric', 
                 month: 'short' 
               })}
+            </Text>
+          </View>
+          {/* Days remaining for this command */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>⏳ Jours restants</Text>
+            <Text style={styles.detailValue}>
+              {getDaysDifference(item.date_fin) > 0
+                ? `${getDaysDifference(item.date_fin)} jours`
+                : getDaysDifference(item.date_fin) ==  0  ? "Livraison aujourd'hui" : 
+                 "Livraison dépassé"}
             </Text>
           </View>
           <View style={styles.progressBar}>
@@ -247,6 +244,13 @@ const Accueil = ({ navigation }) => {
     return () => clearInterval(timer);
     
   }, []);
+
+  // Update jours_restants when commandes or time changes
+  useEffect(() => {
+    if (commande.length > 0) {
+      setJours_restants(getDaysDifference(commande[0].date_fin));
+    }
+  }, [commande, currentTime]);
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -314,7 +318,7 @@ const Accueil = ({ navigation }) => {
         {commande.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🚚 Prochaine Livraison</Text>
-            <View style={[styles.nextDeliveryCard, {marginTop: 20}]}>
+            <View style={[styles.nextDeliveryCard, {marginTop: 20}]}> 
               <View style={styles.deliveryHeader}>
                 <View style={styles.deliveryInfo}>
                   <Text style={styles.deliveryTitle}>{commande[0].nom_dmd}</Text>
@@ -326,8 +330,15 @@ const Accueil = ({ navigation }) => {
                     })}
                   </Text>
                 </View>
-                <View style={styles.deliveryStatus}>
-                  <Text style={styles.deliveryStatusText}>2 jours</Text>
+                <View style={[styles.deliveryStatus, {backgroundColor: jours_restants ==  0  ? "#fedec3" : 
+                 "#fecece"}]}>
+                  <Text style={[styles.deliveryStatusText, {color: jours_restants ==  0  ? "#835407" : 
+                 "#6f0606"}]}>
+                    {jours_restants > 0
+                ? `${jours_restants} jours`
+                : jours_restants ==  0  ? "Livraison aujourd'hui" : 
+                 "Livraison dépassé"}
+                  </Text>
                 </View>
               </View>
               <TouchableOpacity 
