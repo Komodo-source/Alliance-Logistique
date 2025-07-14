@@ -19,11 +19,33 @@ const Accueil = ({ navigation }) => {
 
   // Helper to calculate days difference
   const getDaysDifference = (dateString) => {
-    const now = new Date();
-    const target = new Date(dateString.replace(' ', 'T'));
-    const diffTime = target - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    try {
+      // Créer les dates en ignorant l'heure pour une comparaison juste des jours
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      // Parser la date de livraison
+      let targetDate;
+      if (dateString.includes('T')) {
+        targetDate = new Date(dateString);
+      } else {
+        // Si la date est au format "YYYY-MM-DD HH:MM:SS"
+        targetDate = new Date(dateString.replace(' ', 'T'));
+      }
+      
+      const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+      
+      // Calculer la différence en millisecondes
+      const diffTime = target.getTime() - today.getTime();
+      
+      // Convertir en jours (division par millisecondes dans une journée)
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays;
+    } catch (error) {
+      console.error('Erreur dans getDaysDifference:', error, 'dateString:', dateString);
+      return 0;
+    }
   };
 
   const getGreeting = () => {
@@ -33,9 +55,21 @@ const Accueil = ({ navigation }) => {
     return "Bonsoir";
   };
 
-  const set_jours = (date) => {
-    
-  }
+  // Fonction utilitaire pour formater les dates
+  const formatDeliveryDate = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('fr-FR', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+    } catch (error) {
+      console.error('Erreur formatage date:', error, 'dateString:', dateString);
+      return 'Date invalide';
+    }
+  };
+
+
 
 
   const set_nb_commande_livraison = () => {
@@ -52,58 +86,60 @@ const Accueil = ({ navigation }) => {
     try {
       const data = await FileManager.read_file("auto.json");
       
-      setIsClient(data.type === "client");
       console.log("User data from auto.json:", data);
       
       if (!data || !data.id) {
         console.error("No user data or user ID found in auto.json");
+        setCommande([]);
         return;
       }
       
+      setIsClient(data.type === "client");
       setUserData(data);
       const id_client = data.id;
       console.log("id_client : ", id_client);
       
-      await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({id_client})
-      })
-      .then(async response => {
-        if (!response.ok) {
-          throw new Error(`Erreur réseau: ${response.status}`);
-        }
-        
-        const responseText = await response.text();
-        console.log('Server response:', responseText);
-        
-        try {
-          return JSON.parse(responseText);
-        } catch (parseError) {
-          console.error('JSON Parse Error:', parseError);
-          console.error('Response was:', responseText);
-          throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
-        }
-      })
-      
-      .then(data => {
-        data = data.slice(0,3);
-        console.log("Received data:", data);
-        if (!data || data.length === 0) {
-          console.log("No data received or empty array");
-          setCommande([]); 
-        } else {
-          setCommande(data); 
-        }
-      })
-      .catch(error => {
-        console.log("Error fetching data:", error);
-        setCommande([]);
       });
+      
+      if (!response.ok) {
+        throw new Error(`Erreur réseau: ${response.status}`);
+      }
+      
+      const responseText = await response.text();
+      console.log('Server response:', responseText);
+      
+      let parsedData;
+      try {
+        parsedData = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('JSON Parse Error:', parseError);
+        console.error('Response was:', responseText);
+        throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
+      }
+      
+      console.log("Parsed data:", parsedData);
+      
+      if (!parsedData || !Array.isArray(parsedData)) {
+        console.log("Invalid data format received");
+        setCommande([]);
+        return;
+      }
+      
+      // Limiter à 3 commandes pour l'affichage
+      const limitedData = parsedData.slice(0, 3);
+      console.log("Limited data for display:", limitedData);
+      
+      setCommande(limitedData);
+      
     } catch (error) {
-      console.error("Error reading auto.json:", error);
+      console.error("Error in fetch_commande:", error);
+      setCommande([]);
     }
   }
 
@@ -210,20 +246,23 @@ const Accueil = ({ navigation }) => {
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>📅 Livraison prévue</Text>
             <Text style={styles.detailValue}>
-              {new Date(item.date_fin).toLocaleDateString('fr-FR', { 
-                day: 'numeric', 
-                month: 'short' 
-              })}
+              {formatDeliveryDate(item.date_fin)}
             </Text>
           </View>
           {/* Days remaining for this command */}
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>⏳ Jours restants</Text>
             <Text style={styles.detailValue}>
-              {getDaysDifference(item.date_fin) > 0
-                ? `${getDaysDifference(item.date_fin)} jours`
-                : getDaysDifference(item.date_fin) ==  0  ? "Livraison aujourd'hui" : 
-                 "Livraison dépassé"}
+              {(() => {
+                const daysDiff = getDaysDifference(item.date_fin);
+                if (daysDiff > 0) {
+                  return `${daysDiff} jour${daysDiff > 1 ? 's' : ''}`;
+                } else if (daysDiff === 0) {
+                  return "Livraison aujourd'hui";
+                } else {
+                  return "Livraison dépassée";
+                }
+              })()}
             </Text>
           </View>
           <View style={styles.progressBar}>
@@ -236,14 +275,21 @@ const Accueil = ({ navigation }) => {
 
 
   useEffect(() => {
+    console.log('=== ACCUEIL: useEffect déclenché ===');
     fetch_commande();
-    set_nb_commande_livraison();
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
     return () => clearInterval(timer);
     
   }, []);
+
+  // Mettre à jour le nombre de commandes en livraison quand les commandes changent
+  useEffect(() => {
+    console.log('=== ACCUEIL: Mise à jour nb_commande_livraison ===');
+    console.log('Commandes actuelles:', commande);
+    set_nb_commande_livraison();
+  }, [commande]);
 
   // Update jours_restants when commandes or time changes
   useEffect(() => {
@@ -330,14 +376,14 @@ const Accueil = ({ navigation }) => {
                     })}
                   </Text>
                 </View>
-                <View style={[styles.deliveryStatus, {backgroundColor: jours_restants ==  0  ? "#fedec3" : 
-                 "#fecece"}]}>
-                  <Text style={[styles.deliveryStatusText, {color: jours_restants ==  0  ? "#835407" : 
-                 "#6f0606"}]}>
+                <View style={[styles.deliveryStatus, {backgroundColor: jours_restants === 0 ? "#fedec3" : 
+                 jours_restants > 0 ? "#d1fae5" : "#fecece"}]}>
+                  <Text style={[styles.deliveryStatusText, {color: jours_restants === 0 ? "#835407" : 
+                 jours_restants > 0 ? "#065f46" : "#6f0606"}]}>
                     {jours_restants > 0
-                ? `${jours_restants} jours`
-                : jours_restants ==  0  ? "Livraison aujourd'hui" : 
-                 "Livraison dépassé"}
+                ? `${jours_restants} jour${jours_restants > 1 ? 's' : ''}`
+                : jours_restants === 0 ? "Livraison aujourd'hui" : 
+                 "Livraison dépassée"}
                   </Text>
                 </View>
               </View>

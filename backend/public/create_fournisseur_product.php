@@ -8,11 +8,12 @@ try{
     $id_fournisseur = $data['id_fournisseur'];
     $list_produit = $data['list_produit'];
     $qte_produit = $data['qte_produit'];
+    $lst_prix_prod = $data['prix_produit'];
     //list_produit == qte_produit length
 
     for($i=0; $i<$list_produit.count();$i++){
-        $sql = "INSERT INTO FOURNIR (id_fournisseur,id_produit,nb_produit) VALUES(?, ?, ?) ";
-        $sql->bind_param("iii", $id_fournisseur, $list_produit[$i], $qte_produit[$i]);
+        $sql = "INSERT INTO FOURNIR (id_fournisseur,id_produit,nb_produit, prix_produit) VALUES(?, ?, ?, ?) ";
+        $sql->bind_param("iiii", $id_fournisseur, $list_produit[$i], $qte_produit[$i], $lst_prix_prod[$i]);
         $sql->execute();
     }
 }catch (Exception $e) {

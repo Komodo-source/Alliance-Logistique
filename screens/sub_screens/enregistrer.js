@@ -55,9 +55,7 @@ const enregistrer = ({route, navigation }) => {
     });
   } */
   
-  const AutoSave = async () => {
-    //Obsolète
-    if(stayLoggedIn){
+  const AutoSave = async (form) => {
       try {
         // Nouvelle on utilise le fs de expo donc obsolète
         //
@@ -65,17 +63,26 @@ const enregistrer = ({route, navigation }) => {
         //  id: id_choosen,
         //  type: data,
         //}));
-        await fileManager.save_storage_local_storage_data({
-          id: id_choosen,
-          type: data,
-          name: nom,
-          firstname: Prenom,
-        }, 'auto.json');
+ 
+        await fileManager.modify_value_local_storage(
+         "name", nom
+         ,'auto.json');
+        
+         await fileManager.modify_value_local_storage(
+           "firstname", Prenom
+           ,'auto.json');
+        
+           await fileManager.modify_value_local_storage(
+             "id", id_choosen
+             ,'auto.json');
+          
+             await fileManager.modify_value_local_storage(
+              "type", form.data
+              ,'auto.json');
 
       } catch (error) {
         console.error('Erreur lors de la sauvegarde des données:', error);
       }
-    }
   };
 
   const save_storage = async (data, file) => {          
@@ -271,7 +278,7 @@ const enregistrer = ({route, navigation }) => {
   
       console.log('Parsed response:', data);
       if (data.status === 'success') {
-        AutoSave();
+        AutoSave(formData);
         Alert.alert('Succès', data.message);
         if(formData.data == "fo"){
           navigation.navigate("fournisseur_produit");

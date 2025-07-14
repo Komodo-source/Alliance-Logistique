@@ -9,7 +9,7 @@ const choixType = ({ navigation }) => {
       <View style={styles.buttonWrapper}>
         <TouchableOpacity
           style={styles.roleButton}
-          onPress={() => navigation.navigate('fournisseur_produit', { data: 'fo' })}
+          onPress={() => navigation.navigate('enregistrer', { data: 'fo' })}
         >
           <Image
             style={styles.icon}

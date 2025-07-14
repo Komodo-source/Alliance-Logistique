@@ -1,4 +1,7 @@
 {
-    "type": "", 
-    "id": 1
+    "type": "client", 
+    "id": 1,
+    "nom": "Test User",
+    "email": "test@example.com",
+    "telephone": "123456789"
 }

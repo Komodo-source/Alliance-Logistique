@@ -13,6 +13,7 @@ const fournisseur_produit = ({ navigation }) => {
     const [price, setPrice] = useState('0');
     const [supplierProducts, setSupplierProducts] = useState([]);
     const [loading, setLoading] = useState(false);
+    //const [fourniListPrix, setFourniListPrix] = useState([]);
 
     const getProduct = async () => {
         let data = {};
@@ -164,8 +165,8 @@ const fournisseur_produit = ({ navigation }) => {
         setLoading(true);
         try {
             // Get supplier ID from session or user data
-            const userInfo = await fileManager.read_file("user_info.json");
-            const id_fournisseur = userInfo?.id_fournisseur || 1; // Default to 1 for testing
+            const userInfo = await fileManager.read_file("auto.json");
+            const id_fournisseur = userInfo?.id || 1; // Default to 1 for testing
 
             const list_produit = supplierProducts.map(p => p.id);
             const qte_produit = supplierProducts.map(p => p.quantite);
@@ -183,6 +184,12 @@ const fournisseur_produit = ({ navigation }) => {
                     prix_produit: prix_produit
                 })
             });
+            console.log("data sent: " + JSON.stringify({
+                id_fournisseur: id_fournisseur,
+                list_produit: list_produit,
+                qte_produit: qte_produit,
+                prix_produit: prix_produit
+            }))
 
             const result = await response.json();
             
@@ -190,7 +197,7 @@ const fournisseur_produit = ({ navigation }) => {
                 Alert.alert("Succès", result.message, [
                     {
                         text: "OK",
-                        onPress: () => navigation.goBack()
+                        onPress: () => navigation.navigate('Accueil')
                     }
                 ]);
             } else {
@@ -214,6 +221,7 @@ const fournisseur_produit = ({ navigation }) => {
     };
 
     useEffect(() => {        
+        Alert.alert("Ajout Produit", "Vous devez ajouter les produits que vous fournissez avant de continuer.");
         getProduct();
     }, []);
 

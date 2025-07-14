@@ -8,7 +8,7 @@ try{
     $id_fournisseur = $data['id_fournisseur'];
     $list_produit = $data['list_produit'];
     $qte_produit = $data['qte_produit'];
-    $prix_produit = $data['prix_produit']; // Add price array
+    $prix_produit = $data['prix_produit']; 
     
     // Check if arrays have same length
     if (count($list_produit) !== count($qte_produit) || count($list_produit) !== count($prix_produit)) {
@@ -27,12 +27,14 @@ try{
         
         if ($row['count'] > 0) {
             // Update existing record
-            $sql = "UPDATE FOURNIR SET nb_produit_fourni = nb_produit_fourni + ?, prix_produit_fourni = ? WHERE id_fournisseur = ? AND id_produit = ?";
+            echo 1;
+            $sql = "UPDATE FOURNIR SET nb_produit_fourni = nb_produit_fourni + ?, prix_produit = ? WHERE id_fournisseur = ? AND id_produit = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("idii", $qte_produit[$i], $prix_produit[$i], $id_fournisseur, $list_produit[$i]);
         } else {
             // Insert new record
-            $sql = "INSERT INTO FOURNIR (id_fournisseur, id_produit, prix_produit_fourni, nb_produit_fourni) VALUES (?, ?, ?, ?)";
+            echo 12;
+            $sql = "INSERT INTO FOURNIR (id_fournisseur, id_produit, prix_produit, nb_produit_fourni) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iidi", $id_fournisseur, $list_produit[$i], $prix_produit[$i], $qte_produit[$i]);
         }

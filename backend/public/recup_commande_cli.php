@@ -15,22 +15,38 @@ $data_commande = $conn->prepare(
     COMMANDE.id_coursier,
     COMMANDE.code_echange,
     COMMANDE.id_status,
-    GROUP_CONCAT(
-        JSON_OBJECT(
-            'id_produit', PRODUIT.id_produit,
-            'nom_produit', PRODUIT.nom_produit,
-            'quantite', COMMANDE_PRODUIT.nb_produit,
-            'prix', PRIX.prix_produit,
-            'type_vendu', PRODUIT.type_vendu
+    COMMANDE.est_paye,
+    PAYEMENT.amount as montant_paye,
+    PAYEMENT.date_payement,
+    PAYEMENT.momo_number,
+    (
+        SELECT GROUP_CONCAT(
+            JSON_OBJECT(
+                'id_produit', P.id_produit,
+                'nom_produit', P.nom_produit,
+                'quantite', CP.nb_produit,
+                'prix', FR.prix_produit,
+                'type_vendu', P.type_vendu
+            )
         )
+        FROM COMMANDE_PRODUIT CP
+        INNER JOIN PRODUIT P ON CP.id_produit = P.id_produit
+        INNER JOIN FOURNIR FR ON FR.id_fournisseur = COMMANDE.id_fournisseur
+        WHERE CP.id_cmd = COMMANDE.id_cmd
     ) AS produits
 FROM COMMANDE 
 INNER JOIN HUB ON HUB.id_dmd = COMMANDE.id_dmd        
-INNER JOIN COMMANDE_PRODUIT ON COMMANDE_PRODUIT.id_cmd = COMMANDE.id_cmd
-INNER JOIN PRODUIT ON PRODUIT.id_produit = COMMANDE_PRODUIT.id_produit
-INNER JOIN PRIX ON PRIX.id_prix = PRODUIT.id_prix
+LEFT JOIN (
+    SELECT 
+        id_cmd, 
+        MAX(amount) AS amount, 
+        MAX(date_payement) AS date_payement, 
+        MAX(momo_number) AS momo_number
+    FROM PAYEMENT
+    GROUP BY id_cmd
+) AS PAYEMENT ON PAYEMENT.id_cmd = COMMANDE.id_cmd
 WHERE COMMANDE.id_client = ?
-GROUP BY HUB.id_dmd, COMMANDE.id_cmd");
+ORDER BY HUB.date_fin DESC");
 //lorsque cela sera implémenté il faudra rajouté 
 // le status de la commande
 //et le prix total des produits

@@ -58,6 +58,7 @@ const DetailCommande = ({ route, navigation }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [mapInteracting, setMapInteracting] = useState(false);
+  const [isAdresse, setIsAddresse] = useState(false);
 
   if (!item) {
     return (
@@ -517,28 +518,33 @@ const DetailCommande = ({ route, navigation }) => {
       if (item && item.produits) {
         calculPrix(calcul(item.produits));
       }
-      
-      if (item && item.localisation_dmd && typeof item.localisation_dmd === 'string') {
-        const coords = item.localisation_dmd.split(';');
-        if (coords.length >= 2) {
-          const lat = parseFloat(coords[0]);
-          const lng = parseFloat(coords[1]);
-          
-          if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
-            setSelectedLocation({
-              latitude: lat,
-              longitude: lng,
-            });
-            // Update map region to center on the location
-            setRegion(prev => ({
-              ...prev,
-              latitude: lat,
-              longitude: lng,
-            }));
+      if ([...item.localisation_dmd].some(char => /[a-zA-Z]/.test(char))){ //check si il y a une lettre
+        //donc si c'est une addresse
+        setIsAddresse(true);        
+      }else{
+          if (item && item.localisation_dmd && typeof item.localisation_dmd === 'string') {
+            const coords = item.localisation_dmd.split(';');
+            if (coords.length >= 2) {
+              const lat = parseFloat(coords[0]);
+              const lng = parseFloat(coords[1]);
+              
+              if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
+                setSelectedLocation({
+                  latitude: lat,
+                  longitude: lng,
+                });
+                // Update map region to center on the location
+                setRegion(prev => ({
+                  ...prev,
+                  latitude: lat,
+                  longitude: lng,
+                }));
+              }
+            }
           }
         }
       }
-    } catch (error) {
+       catch (error) {
       console.error('Error in useEffect:', error);
     }
   }, [item]);
@@ -591,11 +597,59 @@ const DetailCommande = ({ route, navigation }) => {
     );
   };
 
+  const renderPaymentBadge = () => {
+    if (!item) return null;
+    
+    const isPaid = item.est_paye === true || item.est_paye === 1;
+    const paymentColor = isPaid ? "#06bd09" : "#FFA726";
+    const paymentText = isPaid ? "Payé" : "Non payé";
+    const paymentIcon = isPaid ? "✓" : "⏳";
+    
+    return (
+      <View style={[styles.paymentBadge, { backgroundColor: paymentColor }]}>
+        <Text style={styles.paymentIcon}>{paymentIcon}</Text>
+        <Text style={styles.paymentText}>{paymentText}</Text>
+      </View>
+    );
+  };
+
+  const renderPaymentInfo = () => {
+    if (!item || !item.est_paye) return null;
+    
+    return (
+      <View style={styles.paymentInfoSection}>
+        <Text style={styles.paymentInfoTitle}>Informations de paiement</Text>
+        <View style={styles.paymentInfoRow}>
+          <Text style={styles.paymentInfoLabel}>Montant payé:</Text>
+          <Text style={styles.paymentInfoValue}>
+            {item.montant_paye ? `${item.montant_paye} FCFA` : 'N/A'}
+          </Text>
+        </View>
+        <View style={styles.paymentInfoRow}>
+          <Text style={styles.paymentInfoLabel}>Numéro MoMo:</Text>
+          <Text style={styles.paymentInfoValue}>
+            {item.momo_number || 'N/A'}
+          </Text>
+        </View>
+        <View style={styles.paymentInfoRow}>
+          <Text style={styles.paymentInfoLabel}>Date de paiement:</Text>
+          <Text style={styles.paymentInfoValue}>
+            {item.date_payement ? new Date(item.date_payement).toLocaleDateString('fr-FR') : 'N/A'}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const shorten_localisation_data = (data) => {
-    if (!data || typeof data !== 'string') return 'N/A';
-    const parts = data.split(';');
-    if (parts.length < 2) return 'N/A';
-    return parts[0].slice(0, 8) + ', ' + parts[1].slice(0, 8);
+    if (isAdresse){
+      return data;
+    }else{
+      if (!data || typeof data !== 'string') return 'N/A';
+      const parts = data.split(';');
+      if (parts.length < 2) return 'N/A';
+      return parts[0].slice(0, 8) + ', ' + parts[1].slice(0, 8);
+    }
   };
 
   return (
@@ -606,7 +660,10 @@ const DetailCommande = ({ route, navigation }) => {
           <View style={styles.header}>
             <Text style={styles.title}>{item.nom_dmd || 'Commande'}</Text>
             <Text style={styles.subtitle}>{item.desc_dmd || 'Description non disponible'}</Text>
-            {renderStatusBadge()}
+            <View style={styles.badgesContainer}>
+              {renderStatusBadge()}
+              {renderPaymentBadge()}
+            </View>
           </View>
 
           {/* Order Info Section */}
@@ -629,23 +686,33 @@ const DetailCommande = ({ route, navigation }) => {
             </View>
           </View>
 
+          {/* Payment Info Section */}
+          {renderPaymentInfo()}
+
           {/* Map Section */}
-          <View style={styles.mapContainer}>
-            <LeafletMap
-              latitude={selectedLocation?.latitude || region.latitude}
-              longitude={selectedLocation?.longitude || region.longitude}
-              selectable={false}
-              onMapTouchStart={() => setMapInteracting(true)}
-              onMapTouchEnd={() => setMapInteracting(false)}
-            />
-            {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
-              <View style={styles.coordinatesContainer}>
-                <Text style={styles.coordinatesText}>
-                  {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-                </Text>
-              </View>
-            )}
-          </View>
+          {isAdresse ? (
+            <View style={styles.addr_container}>
+              <Text style={styles.addr_title}>Adresse de livraison: </Text>
+              <Text style={styles.addr_text}>{item.localisation_dmd}</Text>
+            </View>
+          ): <View style={styles.mapContainer}>
+          <LeafletMap
+            latitude={selectedLocation?.latitude || region.latitude}
+            longitude={selectedLocation?.longitude || region.longitude}
+            selectable={false}
+            onMapTouchStart={() => setMapInteracting(true)}
+            onMapTouchEnd={() => setMapInteracting(false)}
+          />
+          {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
+            <View style={styles.coordinatesContainer}>
+              <Text style={styles.coordinatesText}>
+                {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+              </Text>
+            </View>
+          )}
+        </View>
+        }
+          
 
           {/* Products Section */}
           <View style={styles.productsSection}>
@@ -676,7 +743,7 @@ const DetailCommande = ({ route, navigation }) => {
           </View>
 
           {/* Total Price Section */}
-          <View style={styles.totalSection}>
+          <View style={[styles.totalSection, , { marginBottom: 20 }]}>
             <Text style={styles.totalLabel}>Total TTC:</Text>
             <Text style={styles.totalPrice}>{prix.toLocaleString('fr-FR')} FCFA</Text>
           </View>
@@ -684,7 +751,7 @@ const DetailCommande = ({ route, navigation }) => {
       </ScrollView>
 
       {/* Footer Buttons */}
-      <View style={styles.footer}>
+      <View style={[styles.footer]}>
         <TouchableOpacity 
           style={[
             styles.invoiceButton, 
@@ -699,20 +766,31 @@ const DetailCommande = ({ route, navigation }) => {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[
-            styles.invoiceButton, 
-            isPaying && { opacity: 0.7 },
-            {backgroundColor: "#44c509"}
-          ]}
-          onPress={navigation.navigate("payement", {command_data: item, amount: prix})}
-          disabled={isPaying}
-        >
-          <MaterialIcons name="AttachMoney" size={24} color="white" />
-          <Text style={styles.invoiceButtonText}>
-            {isPaying ? 'Paiement en cours...' : 'Payer le commande'}
-          </Text>
-        </TouchableOpacity>
+        {(!item.est_paye || item.est_paye === 0) && (
+          <TouchableOpacity 
+            style={[
+              styles.invoiceButton, 
+              isPaying && { opacity: 0.7 },
+              {backgroundColor: "#44c509",
+                marginTop: 10,
+              }
+            ]}
+            onPress={() => navigation.navigate("payement", {command_data: item, amount: prix})}
+            disabled={isPaying}
+          >
+            <MaterialIcons name="attach-money" size={24} color="white" />
+            <Text style={styles.invoiceButtonText}>
+              {isPaying ? 'Paiement en cours...' : 'Payer la commande'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {(item.est_paye === true || item.est_paye === 1) && (
+          <View style={styles.paidMessage}>
+            <MaterialIcons name="check-circle" size={24} color="#06bd09" />
+            <Text style={styles.paidMessageText}>Commande payée</Text>
+          </View>
+        )}
         {/*
         <TouchableOpacity 
           style={[styles.invoiceButton, styles.secondaryButton]}
@@ -733,6 +811,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+  },
+  addr_title : {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+  },
+  addr_text : {
+    padding: 10,
+    backgroundColor: '#c1c6bf',
+    borderRadius: 7,
+    textAlign: 'center',
+    marginTop: 10,
+    width: '90%',
+    fontSize: 16,
   },
   scrollContainer: {
     flex: 1,
@@ -769,6 +862,74 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     fontSize: 14,
+  },
+  paymentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginLeft: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 15,
+  },
+  paymentIcon: {
+    fontSize: 16,
+    marginRight: 5,
+    color: 'white',
+  },
+  paymentText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  paymentInfoSection: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  paymentInfoTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 15,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eaeaea',
+  },
+  paymentInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  paymentInfoLabel: {
+    fontSize: 15,
+    color: '#34495e',
+  },
+  paymentInfoValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  paidMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    paddingVertical: 10,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 8,
+  },
+  paidMessageText: {
+    color: '#06bd09',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 5,
   },
   infoSection: {
     backgroundColor: 'white',
@@ -994,14 +1155,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
-
-  iconWrapper: {
-  backgroundColor: 'transparent',
-  borderRadius: 20,
-  padding: 10,
-},
-
-activeIconWrapper: {
+  badgesContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  activeIconWrapper: {
   backgroundColor: '#007bff',
   borderRadius: 20,
   padding: 10,

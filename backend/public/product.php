@@ -2,9 +2,11 @@
 header('Content-Type: application/json');
 include_once('db.php'); 
 
-$sql = "SELECT id_produit, nom_produit,nom_categorie, PR.prix_produit
-FROM PRODUIT P INNER JOIN CATEGORIE C ON P.id_categorie = C.id_categorie
-INNER JOIN PRIX PR ON PR.id_prix = P.id_prix ";
+$sql = "SELECT P.id_produit, nom_produit,nom_categorie, ROUND(AVG(FR.prix_produit), 2) as prix_produit
+FROM PRODUIT P 
+INNER JOIN CATEGORIE C ON P.id_categorie = C.id_categorie
+LEFT JOIN FOURNIR FR ON FR.id_produit = P.id_produit
+GROUP BY P.id_produit, nom_produit,nom_categorie; ";
 //on est obligé de recup les id prod pour les insérer dans CONTENANCE
 $result = $conn->query($sql);
 

@@ -13,7 +13,7 @@ import LeafletMap from '../components/LeafletMap';
 
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
-import DatePicker from 'react-native-ui-datepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import * as debbug_lib from './util/debbug.js';
 import * as fileManager from './util/file-manager.js';
 import axios from 'axios';
@@ -29,7 +29,9 @@ const Formulaire = ({ navigation, route}) => {
   }
   
   // Fixed date state management
-  const [date, setDate] = useState(dayjs());
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerMode, setPickerMode] = useState('date');
+  const [date, setDate] = useState(new Date());
   const [tempDate, setTempDate] = useState(dayjs()); // Temporary date for modal
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -57,6 +59,7 @@ const Formulaire = ({ navigation, route}) => {
     latitudeDelta: 0.0421,
     longitudeDelta: 0.822,
   });
+  const [addresse, setAddresse] = useState('');
   
   // Ensure region is always valid
   const safeRegion = {
@@ -394,31 +397,40 @@ const Formulaire = ({ navigation, route}) => {
     );
   };
 
+
   // Fixed date picker handlers
-  const handleDatePickerOpen = () => {
-    setTempDate(date); // Set temporary date to current date
-    setShowDatePicker(true);
+  const openDatePicker = () => {
+    setPickerMode('date');
+    setShowPicker(true);
   };
 
-  const handleDateConfirm = () => {
-    setDate(tempDate); // Apply the temporary date
-    setShowDatePicker(false);
-    setShowTimePicker(true); // Show time picker next
-  };
-
-  const handleDateCancel = () => {
-    setTempDate(date); // Reset temporary date
-    setShowDatePicker(false);
-  };
-
-  const handleTimeConfirm = () => {
-    setDate(tempDate); // Apply the temporary date with time
-    setShowTimePicker(false);
-  };
-
-  const handleTimeCancel = () => {
-    setTempDate(date); // Reset temporary date
-    setShowTimePicker(false);
+  const onPickerChange = (event, selectedValue) => {
+    if (pickerMode === 'date') {
+      setShowPicker(false);
+      if (selectedValue) {
+        // Set date, then open time picker
+        const newDate = new Date(selectedValue);
+        setDate(prev => {
+          // Keep previous time if any
+          const prevDate = prev || new Date();
+          newDate.setHours(prevDate.getHours());
+          newDate.setMinutes(prevDate.getMinutes());
+          return newDate;
+        });
+        setPickerMode('time');
+        setTimeout(() => setShowPicker(true), 300); // Open time picker after a short delay
+      }
+    } else if (pickerMode === 'time') {
+      setShowPicker(false);
+      if (selectedValue) {
+        setDate(prev => {
+          const newDate = new Date(prev);
+          newDate.setHours(selectedValue.getHours());
+          newDate.setMinutes(selectedValue.getMinutes());
+          return newDate;
+        });
+      }
+    }
   };
 
   const handleProductPress = (item) => {
@@ -550,7 +562,7 @@ const Formulaire = ({ navigation, route}) => {
       desc_dmd: description.trim(),
       date_fin: formatDate(date), // Using the fixed formatDate function
       id_client: parseInt(dataUser.id) || 1, // Ensure it's an integer
-      localisation_dmd: `${selectedLocation.latitude};${selectedLocation.longitude}`,
+      localisation_dmd: addresse !== '' ? addresse : `${selectedLocation.latitude};${selectedLocation.longitude}`,
       produit_contenu: products.map(product => ({
         id_produit: parseInt(product.id) || 1, // Ensure it's an integer
         nb_produit: parseInt(product.productDetails.nombre) || 1,
@@ -718,100 +730,27 @@ const Formulaire = ({ navigation, route}) => {
               <Text style={styles.inputLabel}>Date de livraison</Text>
               <TouchableOpacity 
                 style={styles.datePickerButton}
-                onPress={handleDatePickerOpen}
+                onPress={openDatePicker}
               >
                 <Text style={styles.datePickerButtonText}>
-                  {normaliseDate(date)}
+                  {dayjs(date).format('DD/MM/YYYY HH:mm')}
                 </Text>
                 <Image 
                   source={require('../assets/Icons/calendar-icon.png')} 
                   style={styles.calendarIcon}
                 />
               </TouchableOpacity>
+              {showPicker && (
+                <DateTimePicker
+                  value={date}
+                  mode={pickerMode}
+                  is24Hour={true}
+                  display="default"
+                  onChange={onPickerChange}
+                  minimumDate={new Date()}
+                />
+              )}
             </View>
-
-            {/* Date Picker Modal */}
-            <Modal
-              animationType="fade"
-              transparent={true}
-              visible={showDatePicker}
-              onRequestClose={handleDateCancel}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.datePickerModal}>
-                  <Text style={styles.modalTitle}>Sélectionner la date</Text>
-                  <View style={styles.datePickerContainer}>
-                    <DatePicker
-                      value={tempDate}
-                      onValueChange={(selectedDate) => setTempDate(selectedDate)}
-                      mode="single"
-                      style={styles.datePicker}
-                    />
-                  </View>
-                  <View style={styles.dateDisplayContainer}>
-                    <Text style={styles.dateDisplayText}>
-                      Date sélectionnée: {tempDate.format('DD/MM/YYYY')}
-                    </Text>
-                  </View>
-                  <View style={styles.buttonModal}>
-                    <TouchableOpacity
-                      style={styles.modalButtonAnnul}
-                      onPress={handleDateCancel}
-                    >
-                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.modalButtonOK}
-                      onPress={handleDateConfirm}
-                    >
-                      <Text style={styles.modalButtonText}>Suivant</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
-
-            {/* Time Picker Modal */}
-            <Modal
-              animationType="fade"
-              transparent={true}
-              visible={showTimePicker}
-              onRequestClose={handleTimeCancel}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.timePickerModal}>
-                  <Text style={styles.modalTitle}>Sélectionner l'heure</Text>
-                  <View style={styles.timePickerContainer}>
-                    <DatePicker
-                      value={tempDate}
-                      onValueChange={(selectedDateTime) => setTempDate(selectedDateTime)}
-                      mode="time"
-                      style={styles.timePicker}
-                      minuteInterval={15}
-                    />
-                  </View>
-                  <View style={styles.timeDisplayContainer}>
-                    <Text style={styles.timeDisplayText}>
-                      Heure sélectionnée: {tempDate.format('HH:mm')}
-                    </Text>
-                  </View>
-                  <View style={styles.buttonModal}>
-                    <TouchableOpacity
-                      style={styles.modalButtonAnnul}
-                      onPress={handleTimeCancel}
-                    >
-                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.modalButtonOK}
-                      onPress={handleTimeConfirm}
-                    >
-                      <Text style={styles.modalButtonText}>Confirmer</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
 
             {/* Product Modal */}
             <Modal
@@ -1001,6 +940,25 @@ const Formulaire = ({ navigation, route}) => {
                   </View>
                 )}
               </View>
+              <View style={styles.orDivider}>
+                  <View style={styles.dividerLine}></View>
+                  <Text style={styles.orText}>OU</Text>
+                  <View style={styles.dividerLine}></View>
+                </View>
+                <Text style={[styles.tapInstruction, {marginBottom: 10}]}>
+                  Entrez votre addresse manuellement
+                </Text>
+                <TextInput
+                  style={[styles.inputDesc, isDescFocused && styles.inputFocused, {height: 60}]}
+                  placeholder="ex: 98JM+HPR, Cotonou, Bénin"
+                  placeholderTextColor="#a2a2a9"                
+                  numberOfLines={1}
+                  maxLength={200}
+                  value={addresse}
+                  onChangeText={setAddresse}
+                  onFocus={() => setIsDescFocused(true)}
+                  onBlur={() => setIsDescFocused(false)}
+                />
             </View>
           
             {/* Submit Button */}
