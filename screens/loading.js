@@ -1,15 +1,17 @@
   import React, { useEffect, useState} from 'react';
   import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert, Platform } from 'react-native';
-  //import * as dataUser from '../assets/data/auto.json';
+  //import * as dataUser from '../assealexandrie.rf.gdts/data/auto.json';
   import * as FileSystem from 'expo-file-system';
   import * as fileManager from './util/file-manager.js';
   import * as debbug_lib from './util/debbug.js';
-  import axios from 'axios';
+  import * as Updates from 'expo-updates';
 
   
   const Loading = ({ navigation }) => {
     var is_first_time = false;
     //const [file_message, setFileMessage] = useState("");
+    const [isUpdating, setisUpdating] = useState(false);
+    const [version, setVersion] = useState("");
 
     const stay_logged = async () => {
       const key = await fileManager.read_file('auto.json');
@@ -29,6 +31,81 @@
               ,'auto.json');
       }
     }
+
+    //
+    //
+    // SYSTEME D'UPDATE OBSOLETE
+    //
+    //
+{/**}
+    const check_update = async () => {
+      try {
+        const dataUser = await fileManager.read_file("auto.json");
+    
+        const get_status = await fetch("https://api.jsonbin.io/v3/b/6875026b6063391d31ad7732", {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': '$2a$10$dBbVITXHjZD1X4jIevicPe1p8yYg.LtbFnyy4lidCYsNH/u27PPJS',
+          },
+        });
+    
+        const responseJson = await get_status.json();
+        const data = responseJson.record; // Adjust depending on JSONBin structure
+    
+        if (data.version !== dataUser.version) {
+          setisUpdating(true);
+          setVersion(data.version)
+          debbug_lib.debbug_log("Build was outdated: " + dataUser.version  + " -> " + data.version, "yellow");
+          debbug_lib.debbug_log("Found " + data.toUpdate.length + " files to update!", "cyan");
+          for (let i = 0; i < data.toUpdate.length; i++) {
+            await get_file(data.toUpdate[i]); // Await file downloads
+          }
+             
+         await fileManager.modify_value_local_storage("version", data.version, "auto.json");
+         debbug_lib.debbug_log("Update finished Successfully", "green");
+        }
+      } catch (error) {
+        debbug_lib.debbug_log("Error in update: " + error.message, 'red');
+      }
+    };
+    
+    const get_file = async (file_name) => {
+      debbug_lib.debbug_log("Getting file from GitHub: " + file_name, "cyan");
+    
+      try {
+        // Construct the raw GitHub URL dynamically
+        const url = `https://github.com/LopoDistrict/Alliance-Logistique/raw/refs/heads/main/${file_name}`;
+    
+        const response = await fetch(url);
+        //if (!response.ok) throw new Error(`Failed to fetch ${file_name}: ${response.statusText}`);
+    
+        const fileContent = await response.text();
+    
+        console.log("File fetched:", file_name.replace("screens/", ""));
+        //console.log(fileContent);
+    
+
+        await fileManager.replaceFileAndWrite(fileContent, file_name.replace("screens/", ""));
+    
+      } catch (error) {
+        debbug_lib.debbug_log("Error fetching file: " + error.message, 'red');
+      }
+    }; */}
+
+
+    const check_update = async() => {
+      try{
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          setisUpdating(true);
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync()
+        }
+      } catch (error) {
+        debbug_lib.debbug_log("Error in update: " + error, "red");
+      }
+    }
+    
 
     const measureFetchSpeed = async(url) => {
       const start = Date.now();
@@ -62,7 +139,7 @@
         debbug_lib.debbug_log("first time ever", "red");
         is_first_time = true;
         const nv_data = {
-          id: "", name: "", firstname: "", type: "", stay_logged: false, first_conn: true
+          id: "", name: "", firstname: "", type: "", stay_logged: false, first_conn: true, version: "1.0.0"
         };
         await fileManager.save_storage_local_storage_data(nv_data, "auto.json");
       }
@@ -98,11 +175,11 @@
             debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
             if (dataUser && dataUser.first_conn === true) {
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
-              navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
+              //navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
             } else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
-              navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
+              //navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
             } else {
-              navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
+              //navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
             }
           } else {
             debbug_lib.debbug_log("BACKEND INACCESSIBLE", "red");
@@ -119,7 +196,7 @@
       }catch (error) {
         if (error instanceof TypeError) {
           const data = {
-            id: "", name: "", firstname: "", type: "", stay_logged: "", first_conn: true
+            id: "", name: "", firstname: "", type: "", stay_logged: "", first_conn: true, version: "1.0.0"
           };
           await fileManager.save_storage_local_storage_data(data, "auto.json");
         } else {
@@ -134,8 +211,9 @@
     useEffect(() => {  
       //fileManager.modify_value_local_storage("first_conn", false, "auto.json");
       //fileManager.delete_file("auto.json");
-      check_first_time();
-      loading_check();
+      //check_update();
+      //check_first_time();
+      //loading_check();
     }, []);
 
     return (
@@ -143,13 +221,18 @@
         <View style={styles.container}>
           <Text style={styles.txtFirst}>{is_first_time ? "La première fois le chargement peut prendre quelque minute" : ""}</Text>
           <Text style={styles.title}>Chargement...</Text>
+
           <Image
             style={styles.image}
             source={require('../assets/Icons/logo-Blue.jpeg')}
           />
           
         </View>
-        <Text style={styles.versionText}>Admin Beta 0.0.3</Text>
+        {isUpdating ? 
+          <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text> 
+          : 
+          <View></View>}
+        <Text style={styles.versionText}>Admin Beta 1.0.1</Text>
       </View>
     );
   };
@@ -170,6 +253,12 @@
       fontSize: 25,
       fontWeight: '800',
       marginBottom: 45,
+      color : "#FFF"
+    },
+    maj: {
+      fontSize: 18,
+      fontWeight: '600',
+      textAlign:   "center",
       color : "#FFF"
     },
     txtFirst : {

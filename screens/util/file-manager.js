@@ -34,6 +34,94 @@ export const delete_file = async (file_name) => {
   
 }
 
+export const replaceFileAndWrite = async (newContent, file_name) => {
+  try{
+    const fileUri = FileSystem.documentDirectory + file_name;
+    await FileSystem.writeAsStringAsync(fileUri, newContent);
+    debbug_lib.debbug_log("[FM] rewrite file sucessfully");
+  }catch(error){
+    debbug_lib.debbug_log("[FM] error in replaceFileAndWrite: " + error, "red");
+  }
+};
+
+export const checkFileExists = async (filePath) => {
+  try {
+    const fullPath = `${FileSystem.documentDirectory}${filePath}`;
+    const fileInfo = await FileSystem.getInfoAsync(fullPath);  // Use the full path
+    return fileInfo.exists;
+  } catch (error) {
+    console.error('Error checking file:', error);
+    return false;
+  }
+};
+
+
+export const listAllFiles = async (directory = FileSystem.documentDirectory) => {
+  try {
+    const files = await FileSystem.readDirectoryAsync(directory);
+    console.log(`Files in ${directory}:`);
+    console.log(files);
+    
+    // Get detailed info for each file
+    for (const file of files) {
+      const filePath = `${directory}${file}`;
+      const fileInfo = await FileSystem.getInfoAsync(filePath);
+      console.log(`${file}:`, {
+        exists: fileInfo.exists,
+        isDirectory: fileInfo.isDirectory,
+        size: fileInfo.size,
+        modificationTime: fileInfo.modificationTime
+      });
+    }
+    
+    return files;
+  } catch (error) {
+    console.error('Error listing files:', error);
+    return [];
+  }
+};
+
+// Optional: List files in subdirectories too
+export const listAllFilesRecursive = async (directory = FileSystem.documentDirectory, depth = 0) => {
+  try {
+    const files = await FileSystem.readDirectoryAsync(directory);
+    const indent = '  '.repeat(depth);
+    
+    console.log(`${indent}Directory: ${directory}`);
+    
+    for (const file of files) {
+      const filePath = `${directory}${file}`;
+      const fileInfo = await FileSystem.getInfoAsync(filePath);
+      
+      if (fileInfo.isDirectory) {
+        console.log(`${indent}📁 ${file}/`);
+        await listAllFilesRecursive(filePath + '/', depth + 1);
+      } else {
+        console.log(`${indent}📄 ${file} (${fileInfo.size} bytes)`);
+      }
+    }
+    
+    return files;
+  } catch (error) {
+    console.error('Error listing files recursively:', error);
+    return [];
+  }
+}
+
+export const readFileWithErrorHandling = async (filepath) => {
+  try {
+    const enregistrerPath = `${FileSystem.documentDirectory}${filepath}`;
+    const content = await FileSystem.readAsStringAsync(enregistrerPath);
+    console.log('File content:', content);
+    console.log('Content length:', content.length);
+    return content;
+  } catch (error) {
+    console.error('Error reading file:', error);
+    console.error('Error details:', error.message);
+    return null;
+  }
+}
+
 export const save_storage_local_storage_data = async (data, file_name) => {
   try {
     debbug_lib.debbug_log("[FM] save_storage_local_storage_data", "yellow");
@@ -186,6 +274,9 @@ export const add_value_to_local_storage = async (key, value, file_name) => {
     return false;
   }
 };
+
+
+
 
 export const read_file = async (file_name, if_not_create=false) => {
   try {
