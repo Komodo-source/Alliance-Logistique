@@ -10,6 +10,7 @@ import OeufImage from '../assets/Icons/Dark-oeuf.png';
 import BoeufImage from '../assets/Icons/Dark-beef.png';
 import MapView,{Marker} from 'react-native-maps';
 import LeafletMap from '../components/LeafletMap';
+import { getAlertRef } from './util/AlertService';
 
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
@@ -17,6 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as debbug_lib from './util/debbug.js';
 import * as fileManager from './util/file-manager.js';
 import axios from 'axios';
+
 
 const Formulaire = ({ navigation, route}) => {
   
@@ -105,7 +107,15 @@ const Formulaire = ({ navigation, route}) => {
         return true;
       } else {
         setHasLocationPermission(false);
-        Alert.alert('Permission refusée', 'Vous devez autoriser la localisation');
+        //Alert.alert('Permission refusée', 'Vous devez autoriser la localisation');
+        getAlertRef().current?.showAlert(
+          "Permission refusée",
+          "Vous devez autoriser la localisation",
+          true,
+          "Autoriser",
+          null,
+  
+        ); 
         return false;
       }
     } catch (err) {
@@ -192,7 +202,14 @@ const Formulaire = ({ navigation, route}) => {
 
   const getCurrentLocation = async () => {
     if (!hasLocationPermission) {
-      Alert.alert('Permission requise', 'Vous devez autoriser la localisation');
+      getAlertRef().current?.showAlert(
+        "Permission refusée",
+        "Vous devez autoriser la localisation",
+        true,
+        "Autoriser",
+        null,
+
+      ); 
       return;
     }
     
@@ -329,6 +346,8 @@ const Formulaire = ({ navigation, route}) => {
     if (!shouldBatch) {
       setModalVisible(false);
     }
+
+
     
     const newProduct = {
       id,
@@ -381,20 +400,22 @@ const Formulaire = ({ navigation, route}) => {
 
   // New function to remove product
   const removeProduct = (productId) => {
-    Alert.alert(
-      'Supprimer le produit',
-      'Voulez-vous vraiment supprimer ce produit de votre commande?',
-      [
-        {text: 'Annuler', style: 'cancel'},
-        {
-          text: 'Supprimer', 
-          style: 'destructive',
-          onPress: () => {
-            setProducts(products.filter(product => product.id !== productId));
-          }
-        },
-      ]
-    );
+
+
+    getAlertRef().current?.showAlert(
+      "Supprimer le produit",
+      "Voulez-vous vraiment supprimer ce produit de votre commande?",
+      true,
+      "Annuler",
+      null,
+      true,
+      "Supprimer",
+      () => {
+        setProducts(products.filter(product => product.id !== productId)) 
+      },
+    ); 
+
+    
   };
 
 
@@ -455,15 +476,17 @@ const Formulaire = ({ navigation, route}) => {
   };
 
   const handleConfirmationCommand = () => {
-    Alert.alert(
-      'Validation de la commande',
-      'Voulez vous vraiment valider cette commande?', 
-      [
-        {text: 'Oui', onPress: () => handleSubmit()},
-        {text: 'Non', onPress: () => console.log('Annulation')},
-      ],
-      {cancelable: false},
-    );
+    getAlertRef().current?.showAlert(
+      "Validation de la commande",
+      "Voulez vous vraiment valider cette commande?",
+      true,
+      "Valider",
+      () => handleSubmit(),
+      true,
+      "Annuler",
+      () => console.log('Annulation'),
+
+    ); 
   }
 
   const testServerConnection = async () => {
@@ -668,7 +691,10 @@ const Formulaire = ({ navigation, route}) => {
     })
     .then(splitData => {
       console.log('Split assign result:', splitData);
-      Alert.alert('Succès', 'Commande créée avec succès!');
+      getAlertRef().current?.showAlert(
+        "Succès",
+        "Commande créée avec succès! La Préparation est en cours.",
+      ); 
       
       // Reset form
       setCommandeName('');
@@ -811,8 +837,9 @@ const Formulaire = ({ navigation, route}) => {
                             selectedProduct.id,
                             selectedProduct.originalItem
                           );
+
                         } else {
-                          Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+                          Alert.alert('Err  eur', 'Veuillez remplir tous les champs');
                         }
                       }}
                     >

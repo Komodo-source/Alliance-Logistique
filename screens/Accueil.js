@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList ,Dimensions, ScrollView, StatusBar, Modal} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
@@ -7,6 +7,9 @@ import * as FileManager from './util/file-manager.js';
 const { width, height } = Dimensions.get('window');
 import axios from 'axios';
 import { debbug_log } from './util/debbug.js';
+import * as Progress from 'react-native-progress';
+
+
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -15,6 +18,7 @@ const Accueil = ({ navigation }) => {
   const [nb_commande_livraison, setNbCommandeLivraison] = useState(0);
   const [isClient, setIsClient] = useState(true);
   // Update time every minute for dynamic greeting
+  const [modalVisible, setModalVisible] = useState(false);
   const [jours_restants, setJours_restants] = useState(0);
 
   // Helper to calculate days difference
@@ -82,8 +86,10 @@ const Accueil = ({ navigation }) => {
     setNbCommandeLivraison(val);
   };
 
+
   const fetch_commande = async () => {
     try {
+      setModalVisible(true);
       const data = await FileManager.read_file("auto.json");
       
       console.log("User data from auto.json:", data);
@@ -136,7 +142,7 @@ const Accueil = ({ navigation }) => {
       console.log("Limited data for display:", limitedData);
       
       setCommande(limitedData);
-      
+      setModalVisible(false);
     } catch (error) {
       console.error("Error in fetch_commande:", error);
       setCommande([]);
@@ -358,6 +364,15 @@ const Accueil = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.quickActionsContainer}
           />
+          <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
+            <View style={styles.overlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.message}>Récupération de vos commandes en cours...</Text>
+                <Progress.Circle indeterminate={true} style={styles.bar} size={60} thickness={10} />
+              </View>
+            </View>
+          </Modal>
+
         </View>
 
         {/* Next Delivery Highlight */}
@@ -525,6 +540,27 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  bar : {
+    alignItems: "center"
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+  },
+  message: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: '600',
+    textAlign: "center"
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',

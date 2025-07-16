@@ -92,20 +92,34 @@
       }
     }; */}
 
-
     const check_update = async() => {
-      try{
+      try {
+        console.log("Update Channel: ", Updates.channel);
+        console.log("Update ID: ", Updates.updateId);
+        console.log("Runtime Version: ", Updates.runtimeVersion);
+        
+        if (!Updates.isEnabled) {
+          debbug_lib.debbug_log("Updates not enabled in this environment", "yellow");
+          return;
+        }
+    
         const update = await Updates.checkForUpdateAsync();
+        console.log("Update available: ", update.isAvailable);
+        console.log("Update manifest: ", update.manifest);
+        
         if (update.isAvailable) {
           setisUpdating(true);
+          debbug_lib.debbug_log("Fetching update...", "blue");
           await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync()
+          debbug_lib.debbug_log("Reloading app...", "blue");
+          await Updates.reloadAsync();
+        } else {
+          debbug_lib.debbug_log("No update available", "yellow");
         }
       } catch (error) {
         debbug_lib.debbug_log("Error in update: " + error, "red");
       }
     }
-    
 
     const measureFetchSpeed = async(url) => {
       const start = Date.now();
@@ -175,11 +189,11 @@
             debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
             if (dataUser && dataUser.first_conn === true) {
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
-              //navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
+              navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
             } else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
-              //navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
+              navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
             } else {
-              //navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
+              navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
             }
           } else {
             debbug_lib.debbug_log("BACKEND INACCESSIBLE", "red");
@@ -211,15 +225,16 @@
     useEffect(() => {  
       //fileManager.modify_value_local_storage("first_conn", false, "auto.json");
       //fileManager.delete_file("auto.json");
-      //check_update();
-      //check_first_time();
-      //loading_check();
+      check_update();
+      check_first_time();
+      loading_check();
     }, []);
 
     return (
       <View style={styles.wrapper}>
         <View style={styles.container}>
           <Text style={styles.txtFirst}>{is_first_time ? "La première fois le chargement peut prendre quelque minute" : ""}</Text>
+          <Text></Text>
           <Text style={styles.title}>Chargement...</Text>
 
           <Image

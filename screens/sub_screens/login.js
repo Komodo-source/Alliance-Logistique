@@ -10,6 +10,7 @@ import * as debbug_lib from '../util/debbug.js';
 import Checkbox from 'expo-checkbox';
 //pour une araison bizarre les checkbox de react native ne fonctionnent pas
 //import CheckBox from '@react-native-community/checkbox';
+import { getAlertRef } from '../util/AlertService';
 
 var headers = {
   'Accept' : 'application/json',
@@ -25,15 +26,33 @@ const Login = ({ navigation }) => {
 
   const validateForm = () => {
     if (!username.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer votre email', [{ text: 'OK' }]);
+      getAlertRef().current?.showAlert(
+        'Erreur',
+        'Veuillez entrer votre email',
+        true,
+        'OK',
+        null
+      );
       return false;
     }
     if (!username.includes('@') || !username.includes('.')) {
-      Alert.alert('Erreur', 'Veuillez entrer un email valide', [{ text: 'OK' }]);
+      getAlertRef().current?.showAlert(
+        'Erreur',
+        'Veuillez entrer un email valide',
+        true,
+        'OK',
+        null
+      );
       return false;
     }
     if (!password.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer votre mot de passe', [{ text: 'OK' }]);
+      getAlertRef().current?.showAlert(
+        'Erreur',
+        'Veuillez entrer votre mot de passe',
+        true,
+        'OK',
+        null
+      );
       return false;
     }
     return true;
@@ -148,12 +167,14 @@ const Login = ({ navigation }) => {
         await fileManager.read_file('auto.json');
 
         // Fixed Alert.alert call - proper format with buttons array
-        Alert.alert('Succès', `Connecté en tant que: ${username}`, [
-          { 
-            text: 'OK', 
-            onPress: () => navigation.navigate('Accueil')
-          }
-        ]);
+        getAlertRef().current?.showAlert(
+          "Connecté",
+          "Bonjour " + data.user_data[`prenom_${data.user_type}`] + " " + data.user_data[`nom_${data.user_type}`],
+          true,
+          "OK",
+          () => navigation.navigate("Accueil"),
+
+        );      
 
         try {
           // Use the actual user ID from the response
@@ -163,11 +184,23 @@ const Login = ({ navigation }) => {
         }
         
       } else {
-        Alert.alert('err', data.message || 'Identifiants incorrects', [{ text: 'OK' }]);
+        getAlertRef().current?.showAlert(
+          'Erreur',
+          data.message || 'Identifiants incorrects',
+          true,
+          'OK',
+          null
+        );
       }
     } catch (error) {
       console.error('err:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue lors de la connexion', [{ text: 'OK' }]);
+      getAlertRef().current?.showAlert(
+        'Erreur',
+        'Une erreur est survenue lors de la connexion',
+        true,
+        'OK',
+        null
+      );
     } finally {
       setIsLoading(false);
     }

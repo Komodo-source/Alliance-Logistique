@@ -1,6 +1,8 @@
 import React, {useState, useEffect} from 'react';
 import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, Alert, PermissionsAndroid, ActivityIndicator, Dimensions, Animated} from 'react-native';
 import * as fileManager from '../util/file-manager.js';
+import { getAlertRef } from '../util/AlertService';
+
 
 const fournisseur_produit = ({ navigation }) => {
     const [produits, setProduits] = useState([]);
@@ -111,7 +113,8 @@ const fournisseur_produit = ({ navigation }) => {
         setSearchText('');
         setProduits(produit);
         
-        Alert.alert("Succès", existingProductIndex !== -1 ? "Quantité mise à jour" : "Produit ajouté à votre liste");
+        //Alert.alert("Succès", existingProductIndex !== -1 ? "Quantité mise à jour" : "Produit ajouté à votre liste");
+
     };
 
     const removeProductFromSupplier = async (index) => {
@@ -194,12 +197,16 @@ const fournisseur_produit = ({ navigation }) => {
             const result = await response.json();
             
             if (result.success) {
-                Alert.alert("Succès", result.message, [
-                    {
-                        text: "OK",
-                        onPress: () => navigation.navigate('Accueil')
-                    }
-                ]);
+
+            getAlertRef().current?.showAlert(
+                "Succès",
+                "Produit ajouté à votre liste",
+                true,
+                "OK",
+                () => navigation.navigate("Accueil"),
+        
+              ); 
+                
             } else {
                 Alert.alert("Erreur", result.error || "Erreur lors de la sauvegarde");
             }
@@ -221,7 +228,14 @@ const fournisseur_produit = ({ navigation }) => {
     };
 
     useEffect(() => {        
-        Alert.alert("Ajout Produit", "Vous devez ajouter les produits que vous fournissez avant de continuer.");
+        getAlertRef().current?.showAlert(
+            "",
+            "Ici vous devez ajouter les produits que vous pouvez fournir",
+            true,
+            "Compris",
+            null,
+    
+          ); 
         getProduct();
     }, []);
 
