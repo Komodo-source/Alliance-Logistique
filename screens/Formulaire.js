@@ -11,6 +11,9 @@ import BoeufImage from '../assets/Icons/Dark-beef.png';
 import MapView,{Marker} from 'react-native-maps';
 import LeafletMap from '../components/LeafletMap';
 import { getAlertRef } from './util/AlertService';
+import Snackbar from './util/SnackBar.js';
+import { useRef } from 'react';
+
 
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
@@ -95,6 +98,7 @@ const Formulaire = ({ navigation, route}) => {
   };
 
   const [mapInteracting, setMapInteracting] = useState(false);
+  const snackBarRef = useRef();
 
   // Request location permission and get current location
   const requestLocationPermission = async () => {
@@ -366,6 +370,8 @@ const Formulaire = ({ navigation, route}) => {
       setProducts(prevProducts => [...prevProducts, newProduct]);
       setPoids('');
       setNombre('');
+      // Show snackbar
+      snackBarRef.current?.show('Produit ajouté à la commande', 'info');
     }
   };
 
@@ -411,7 +417,9 @@ const Formulaire = ({ navigation, route}) => {
       true,
       "Supprimer",
       () => {
-        setProducts(products.filter(product => product.id !== productId)) 
+        setProducts(products.filter(product => product.id !== productId));
+        // Show snackbar
+        snackBarRef.current?.show('Produit supprimé de la commande', 'info');
       },
     ); 
 
@@ -715,97 +723,98 @@ const Formulaire = ({ navigation, route}) => {
   
   return(
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={!mapInteracting}>
-        <View style={styles.container}>
-          <Text style={styles.textH1}>Nouvelle Commande</Text>
-          
-          <View style={styles.form}>
-            {/* Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Nom de la commande</Text>
-              <TextInput
-                style={[styles.input, isNameFocused && styles.inputFocused]}
-                placeholder="Ex: Commande pour restaurant"
-                placeholderTextColor="#a2a2a9"
-                value={commandeName}
-                onChangeText={setCommandeName}
-                onFocus={() => setIsNameFocused(true)}
-                onBlur={() => setIsNameFocused(false)}
-              />
-            </View>
-
-            {/* Description Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Description</Text>
-              <TextInput
-                style={[styles.inputDesc, isDescFocused && styles.inputFocused]}
-                placeholder="Décrivez votre commande en détail..."
-                placeholderTextColor="#a2a2a9"
-                multiline
-                numberOfLines={4}
-                maxLength={200}
-                value={description}
-                onChangeText={setDescription}
-                onFocus={() => setIsDescFocused(true)}
-                onBlur={() => setIsDescFocused(false)}
-              />
-            </View>
-
-            {/* Date Picker */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Date de livraison</Text>
-              <TouchableOpacity 
-                style={styles.datePickerButton}
-                onPress={openDatePicker}
-              >
-                <Text style={styles.datePickerButtonText}>
-                  {dayjs(date).format('DD/MM/YYYY HH:mm')}
-                </Text>
-                <Image 
-                  source={require('../assets/Icons/calendar-icon.png')} 
-                  style={styles.calendarIcon}
+      <View style={{flex: 1, position: 'relative'}}>
+        <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={!mapInteracting}>
+          <View style={styles.container}>
+            <Text style={styles.textH1}>Nouvelle Commande</Text>
+            
+            <View style={styles.form}>
+              {/* Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Nom de la commande</Text>
+                <TextInput
+                  style={[styles.input, isNameFocused && styles.inputFocused]}
+                  placeholder="Ex: Commande pour restaurant"
+                  placeholderTextColor="#a2a2a9"
+                  value={commandeName}
+                  onChangeText={setCommandeName}
+                  onFocus={() => setIsNameFocused(true)}
+                  onBlur={() => setIsNameFocused(false)}
                 />
-              </TouchableOpacity>
-              {showPicker && (
-                <DateTimePicker
-                  value={date}
-                  mode={pickerMode}
-                  is24Hour={true}
-                  display="default"
-                  onChange={onPickerChange}
-                  minimumDate={new Date()}
+              </View>
+
+              {/* Description Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Description</Text>
+                <TextInput
+                  style={[styles.inputDesc, isDescFocused && styles.inputFocused]}
+                  placeholder="Décrivez votre commande en détail..."
+                  placeholderTextColor="#a2a2a9"
+                  multiline
+                  numberOfLines={4}
+                  maxLength={200}
+                  value={description}
+                  onChangeText={setDescription}
+                  onFocus={() => setIsDescFocused(true)}
+                  onBlur={() => setIsDescFocused(false)}
                 />
-              )}
-            </View>
+              </View>
 
-            {/* Product Modal */}
-            <Modal
-              animationType="fade"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>
-                    Produit sélectionné: 
+              {/* Date Picker */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Date de livraison</Text>
+                <TouchableOpacity 
+                  style={styles.datePickerButton}
+                  onPress={openDatePicker}
+                >
+                  <Text style={styles.datePickerButtonText}>
+                    {dayjs(date).format('DD/MM/YYYY HH:mm')}
                   </Text>
-                  <Text style={styles.modalTextSelected}>
-                    {selectedProduct?.key}
-                  </Text>
-
-                  <Text style={styles.modalText}>
-                    Quantité (nombre de pièces):
-                  </Text>
-                  <TextInput
-                    style={styles.inputNB}
-                    placeholder="Ex: 10"
-                    keyboardType="numeric"
-                    value={nombre}
-                    onChangeText={setNombre}
+                  <Image 
+                    source={require('../assets/Icons/calendar-icon.png')} 
+                    style={styles.calendarIcon}
                   />
+                </TouchableOpacity>
+                {showPicker && (
+                  <DateTimePicker
+                    value={date}
+                    mode={pickerMode}
+                    is24Hour={true}
+                    display="default"
+                    onChange={onPickerChange}
+                    minimumDate={new Date()}
+                  />
+                )}
+              </View>
 
-                  {/*
+              {/* Product Modal */}
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+              >
+                <View style={styles.modalOverlay}>
+                  <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>
+                      Produit sélectionné: 
+                    </Text>
+                    <Text style={styles.modalTextSelected}>
+                      {selectedProduct?.key}
+                    </Text>
+
+                    <Text style={styles.modalText}>
+                      Quantité (nombre de pièces):
+                    </Text>
+                    <TextInput
+                      style={styles.inputNB}
+                      placeholder="Ex: 10"
+                      keyboardType="numeric"
+                      value={nombre}
+                      onChangeText={setNombre}
+                    />
+
+                    {/*
                   <Text style={styles.modalText}>
                     Poids par pièce (en grammes):
                   </Text>
@@ -817,207 +826,211 @@ const Formulaire = ({ navigation, route}) => {
                     onChangeText={setPoids}
                   />*/}
 
-                  <View style={styles.buttonModal}>
-                    <TouchableOpacity
-                      style={styles.modalButtonAnnul}
-                      onPress={() => setModalVisible(false)}
-                    >
-                      <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.modalButtonOK}
-                      onPress={() => {
-                        if (nombre ) {
-                          add_product(
-                            selectedProduct.key,
-                            //poids,
-                            1,
-                            nombre,
-                            selectedProduct.id,
-                            selectedProduct.originalItem
-                          );
-
-                        } else {
-                          Alert.alert('Err  eur', 'Veuillez remplir tous les champs');
-                        }
-                      }}
-                    >
-                      <Text style={styles.modalButtonText}>Confirmer</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
-
-            {/* Search Input - Fixed */}
-            <Text style={styles.inputLabel}>Rechercher vos produits</Text>
-            <View style={styles.SearchInputText}>
-              <TextInput
-                style={styles.inputTextSearch}
-                keyboardType="default"
-                placeholder="Rechercher un produit"
-                placeholderTextColor="#a2a2a9"
-                value={searchText}
-                onChangeText={handleSearchTextChange}
-              />      
-              <Image 
-                source={require('../assets/Icons/Dark-Search.png')}
-                style={styles.imageSearch}
-              />  
-            </View>
-
-            {/* Products List Section */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Produits à commander</Text>
-              <FlatList
-                data={produits}
-                keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
-                renderItem={renderProductItem}
-                scrollEnabled={false}
-                ListEmptyComponent={
-                  <Text style={styles.emptyListText}>Aucun produit trouvé</Text>
-                }
-              />
-            </View>
-
-            {/* Selected Products - Enhanced with delete functionality */}
-            {products.length > 0 && (
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
-                <View style={styles.selectedProductsContainer}>
-                {products.map((product, index) => (
-                  <View key={`${product.name}-${index}`} style={styles.containerProduct}>
-                    <View style={styles.productInfo}>
-                      <Text style={styles.productInfoText}>
-                        {product.productDetails.nombre}x {product.name} - {/*{product.productDetails.poids}g/pièce*/}
-                      </Text>
-                      <Text style={styles.categoryText}>
-                        ({product.productDetails.nom_categorie || 'Catégorie non définie'})
-                      </Text>
-                    </View>
-                    <View style={styles.productActions}>
-                      <Image
-                        style={{marginRight: 25}}
-                        source={dic_image_name[typeof product.name === 'string' ? product.name.toLowerCase() : 'tomate']}
-                      />
+                    <View style={styles.buttonModal}>
                       <TouchableOpacity
-                        style={styles.deleteButton}
-                        onPress={() => removeProduct(product.id)}
+                        style={styles.modalButtonAnnul}
+                        onPress={() => setModalVisible(false)}
                       >
-                        <Text style={{fontSize: 20, color: '#000'}}>✕</Text>
+                        <Text style={styles.modalButtonTextAnnul}>Annuler</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.modalButtonOK}
+                        onPress={() => {
+                          
+                          
+                          if (nombre ) {
+                            add_product(
+                              selectedProduct.key,
+                              //poids,
+                              1,
+                              nombre,
+                              selectedProduct.id,
+                              selectedProduct.originalItem
+                            );
+   
+
+                          } else {
+                            Alert.alert('Err  eur', 'Veuillez remplir tous les champs');
+                          }
+                        }}
+                      >
+                        <Text style={styles.modalButtonText}>Confirmer</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
-                  ))}
                 </View>
-              </View>
-            )}
+              </Modal>
 
-            {/* Delivery Section */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Livraison</Text>
-              <Text style={styles.locationHelpText}>
-                Sélectionnez le lieu de livraison sur la carte ci-dessous
-              </Text>
-              
-              <View style={styles.locationButtons}>
-                <TouchableOpacity 
-                  style={styles.locationButton}
-                  onPress={getCurrentLocation}
-                  disabled={!hasLocationPermission}
-                >
-                  <Image 
-                    source={require('../assets/Icons/location-icon.png')} 
-                    style={styles.locationIcon}
-                  />
-                  <Text style={styles.locationButtonText}>Utiliser ma position</Text>
-                </TouchableOpacity>
-                
-                <View style={styles.orDivider}>
-                  <View style={styles.dividerLine}></View>
-                  <Text style={styles.orText}>OU</Text>
-                  <View style={styles.dividerLine}></View>
-                </View>
-                
-                <Text style={styles.tapInstruction}>
-                  Touchez la carte pour choisir manuellement
-                </Text>
-              </View>
-              
-              {/* Map Section */}
-              <View style={styles.mapContainer}>
-                <LeafletMap
-                  latitude={selectedLocation?.latitude || region.latitude}
-                  longitude={selectedLocation?.longitude || region.longitude}
-                  selectable={true}
-                  onLocationChange={(coords) => setSelectedLocation(coords)}
-                  onMapTouchStart={() => setMapInteracting(true)}
-                  onMapTouchEnd={() => setMapInteracting(false)}
-                />
-                {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
-                  <View style={styles.coordinatesContainer}>
-                    <Image 
-                      source={require('../assets/Icons/marker-icon.png')} 
-                      style={styles.markerIcon}
-                    />
-                    <Text style={styles.coordinatesText}>
-                      {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.orDivider}>
-                  <View style={styles.dividerLine}></View>
-                  <Text style={styles.orText}>OU</Text>
-                  <View style={styles.dividerLine}></View>
-                </View>
-                <Text style={[styles.tapInstruction, {marginBottom: 10}]}>
-                  Entrez votre addresse manuellement
-                </Text>
+              {/* Search Input - Fixed */}
+              <Text style={styles.inputLabel}>Rechercher vos produits</Text>
+              <View style={styles.SearchInputText}>
                 <TextInput
-                  style={[styles.inputDesc, isDescFocused && styles.inputFocused, {height: 60}]}
-                  placeholder="ex: 98JM+HPR, Cotonou, Bénin"
-                  placeholderTextColor="#a2a2a9"                
-                  numberOfLines={1}
-                  maxLength={200}
-                  value={addresse}
-                  onChangeText={setAddresse}
-                  onFocus={() => setIsDescFocused(true)}
-                  onBlur={() => setIsDescFocused(false)}
-                />
-            </View>
-          
-            {/* Submit Button */}
-            <TouchableOpacity
-              style={[styles.submitButton, (chargement || userDataLoading) && styles.submitButtonDisabled]}
-              onPress={handleConfirmationCommand}
-              disabled={chargement || userDataLoading}
-            >
-              <Text style={styles.submitButtonText}>
-                {userDataLoading ? "Chargement..." : chargement ? "Envoi en cours..." : "Valider la commande"}
-              </Text>
-              {(chargement || userDataLoading) && (
-                <ActivityIndicator color="#fff" style={styles.loadingIndicator} />
-              )}
-            </TouchableOpacity>
+                  style={styles.inputTextSearch}
+                  keyboardType="default"
+                  placeholder="Rechercher un produit"
+                  placeholderTextColor="#a2a2a9"
+                  value={searchText}
+                  onChangeText={handleSearchTextChange}
+                />      
+                <Image 
+                  source={require('../assets/Icons/Dark-Search.png')}
+                  style={styles.imageSearch}
+                />  
+              </View>
 
-            {/* Test Server Button - For debugging */}
-            {/*<TouchableOpacity
-              style={[styles.testButton]}
-              onPress={async () => {
-                const isConnected = await testServerConnection();
-                Alert.alert(
-                  'Test Serveur', 
-                  isConnected ? 'Serveur accessible' : 'Erreur de connexion au serveur'
-                );
-              }}
-            > 
-              <Text style={styles.testButtonText}>Tester la connexion serveur</Text>
-            </TouchableOpacity>*/}
+              {/* Products List Section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Produits à commander</Text>
+                <FlatList
+                  data={produits}
+                  keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
+                  renderItem={renderProductItem}
+                  scrollEnabled={false}
+                  ListEmptyComponent={
+                    <Text style={styles.emptyListText}>Aucun produit trouvé</Text>
+                  }
+                />
+              </View>
+
+              {/* Selected Products - Enhanced with delete functionality */}
+              {products.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
+                  <View style={styles.selectedProductsContainer}>
+                  {products.map((product, index) => (
+                    <View key={`${product.name}-${index}`} style={styles.containerProduct}>
+                      <View style={styles.productInfo}>
+                        <Text style={styles.productInfoText}>
+                          {product.productDetails.nombre}x {product.name} - {/*{product.productDetails.poids}g/pièce*/}
+                        </Text>
+                        <Text style={styles.categoryText}>
+                          ({product.productDetails.nom_categorie || 'Catégorie non définie'})
+                        </Text>
+                      </View>
+                      <View style={styles.productActions}>
+                        <Image
+                          style={{marginRight: 25}}
+                          source={dic_image_name[typeof product.name === 'string' ? product.name.toLowerCase() : 'tomate']}
+                        />
+                        <TouchableOpacity
+                          style={styles.deleteButton}
+                          onPress={() => removeProduct(product.id)}
+                        >
+                          <Text style={{fontSize: 20, color: '#000'}}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Delivery Section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Livraison</Text>
+                <Text style={styles.locationHelpText}>
+                  Sélectionnez le lieu de livraison sur la carte ci-dessous
+                </Text>
+                
+                <View style={styles.locationButtons}>
+                  <TouchableOpacity 
+                    style={styles.locationButton}
+                    onPress={getCurrentLocation}
+                    disabled={!hasLocationPermission}
+                  >
+                    <Image 
+                      source={require('../assets/Icons/location-icon.png')} 
+                      style={styles.locationIcon}
+                    />
+                    <Text style={styles.locationButtonText}>Utiliser ma position</Text>
+                  </TouchableOpacity>
+                  
+                  <View style={styles.orDivider}>
+                    <View style={styles.dividerLine}></View>
+                    <Text style={styles.orText}>OU</Text>
+                    <View style={styles.dividerLine}></View>
+                  </View>
+                  
+                  <Text style={styles.tapInstruction}>
+                    Touchez la carte pour choisir manuellement
+                  </Text>
+                </View>
+                
+                {/* Map Section */}
+                <View style={styles.mapContainer}>
+                  <LeafletMap
+                    latitude={selectedLocation?.latitude || region.latitude}
+                    longitude={selectedLocation?.longitude || region.longitude}
+                    selectable={true}
+                    onLocationChange={(coords) => setSelectedLocation(coords)}
+                    onMapTouchStart={() => setMapInteracting(true)}
+                    onMapTouchEnd={() => setMapInteracting(false)}
+                  />
+                  {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
+                    <View style={styles.coordinatesContainer}>
+                      <Image 
+                        source={require('../assets/Icons/marker-icon.png')} 
+                        style={styles.markerIcon}
+                      />
+                      <Text style={styles.coordinatesText}>
+                        {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.orDivider}>
+                    <View style={styles.dividerLine}></View>
+                    <Text style={styles.orText}>OU</Text>
+                    <View style={styles.dividerLine}></View>
+                  </View>
+                  <Text style={[styles.tapInstruction, {marginBottom: 10}]}>
+                    Entrez votre addresse manuellement
+                  </Text>
+                  <TextInput
+                    style={[styles.inputDesc, isDescFocused && styles.inputFocused, {height: 60}]}
+                    placeholder="ex: 98JM+HPR, Cotonou, Bénin"
+                    placeholderTextColor="#a2a2a9"                
+                    numberOfLines={1}
+                    maxLength={200}
+                    value={addresse}
+                    onChangeText={setAddresse}
+                    onFocus={() => setIsDescFocused(true)}
+                    onBlur={() => setIsDescFocused(false)}
+                  />
+              </View>
+            
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.submitButton, (chargement || userDataLoading) && styles.submitButtonDisabled]}
+                onPress={handleConfirmationCommand}
+                disabled={chargement || userDataLoading}
+              >
+                <Text style={styles.submitButtonText}>
+                  {userDataLoading ? "Chargement..." : chargement ? "Envoi en cours..." : "Valider la commande"}
+                </Text>
+                {(chargement || userDataLoading) && (
+                  <ActivityIndicator color="#fff" style={styles.loadingIndicator} />
+                )}
+              </TouchableOpacity>
+
+              {/* Test Server Button - For debugging */}
+              {/*<TouchableOpacity
+                style={[styles.testButton]}
+                onPress={async () => {
+                  const isConnected = await testServerConnection();
+                  Alert.alert(
+                    'Test Serveur', 
+                    isConnected ? 'Serveur accessible' : 'Erreur de connexion au serveur'
+                  );
+                }}
+              > 
+                <Text style={styles.testButtonText}>Tester la connexion serveur</Text>
+              </TouchableOpacity>*/}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+        <Snackbar ref={snackBarRef} />
+      </View>
     </TouchableWithoutFeedback>
   );
 };
