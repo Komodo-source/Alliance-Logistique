@@ -2,9 +2,10 @@
 
 header('Content-Type: application/json');
 include_once('db.php');
+include_once('lib/get_session_info.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
-$id = $data['id']; // ces valeurs seront déja hashé par le front
+$session_id = $data['session_id'];
 $ip = $data['ip']; // ces valeurs seront déja hashé par le front
 $device_num = $data['device_num'];;
 $last_id = 0;
@@ -19,7 +20,7 @@ try{
 
 try{
     $stmt = $conn->prepare("INSERT INTO LOG_USER (id_log, ip_log, device_num_client, id_user) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssssi", $last_id, $ip, $device_num, $id);
+    $stmt->bind_param("sssi", $last_id, $ip, $device_num, $id);
     $stmt->execute();
     $stmt->close();
     echo json_encode(['ok' => $last_id]);

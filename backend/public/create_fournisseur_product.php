@@ -3,9 +3,18 @@ header('Content-Type: application/json');
 
 try{
     include_once('db.php');
+    include_once('lib/get_session_info.php');
     $data = json_decode(file_get_contents("php://input"), true);
-
-    $id_fournisseur = $data['id_fournisseur'];
+    if (!isset($data['session_id'])) {
+        echo json_encode(['error' => 'session_id is required']);
+        exit;
+    }
+    $session_id = $data['session_id'];
+    $id_fournisseur = getIdSession($session_id);
+    if (!$id_fournisseur) {
+        echo json_encode(['error' => 'Invalid session_id']);
+        exit;
+    }
     $list_produit = $data['list_produit'];
     $qte_produit = $data['qte_produit'];
     $lst_prix_prod = $data['prix_produit'];

@@ -56,6 +56,7 @@ if ($result->num_rows > 0) {
 
 // 6. Test de la requête de récupération des commandes
 echo "\n6. Test de la requête de récupération des commandes:\n";
+// For real API test, use session_id and resolve id_client using getIdSession.
 $test_client_id = 1; // ID du client admin
 $stmt = $conn->prepare("
 SELECT 
