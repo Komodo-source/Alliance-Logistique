@@ -23,7 +23,6 @@ import first_page from './screens/first/first_page';
 import fournisseur_produit from './screens/sub_screens/fournisseur_produit';
 import payement from './screens/sub_screens/payement'
 import ParentAlert from './screens/util/ParentAlert';
-import Notification from './NotificationService';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,7 +54,7 @@ const App = () => {
           <Stack.Screen name="first_page" component={first_page} options={{ headerShown: false }}/>
           <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
           <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
-          <Stack.Screen name="Notification" component={Notification} options={{ headerTitle : "Notification" }}/>
+          
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

@@ -2,20 +2,9 @@
 
 header('Content-Type: application/json');
 include_once('db.php'); 
-include('lib/get_session_info.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
-if (!isset($data['session_id'])) {
-    echo json_encode(['message' => 'error', 'error' => 'session_id is required']);
-    exit;
-}
-$session_id = $data['session_id'];
-$id = getIdSession($session_id);
-if (!$id) {
-    echo json_encode(['message' => 'error', 'error' => 'Invalid session_id']);
-    exit;
-}
-
+$id = $data['id_client'];
 
 $data_commande = $conn->prepare(
 "SELECT 

@@ -22,15 +22,6 @@ try {
             throw new Exception("Missing required field: $field");
         }
     }
-
-    function create_session($conn, $id){
-        $id_session = hash('sha256', uniqid('', true));
-        $stmt = $conn->prepare("INSERT INTO SESSION (id_key, key_value, id_user, date_expiration) VALUES (?, 'temp_key', ?, DATE('2026-06-15 09:34:21'))");
-        $stmt->bind_param("ss", $id_session, $id);
-        $stmt->execute();
-        $stmt->close();
-        return $id_session;
-    }
     
     $id = $data['id'];
     $nom = $data['nom'];
@@ -67,46 +58,23 @@ try {
     if($flag == "cl"){
         $stmt = $conn->prepare("INSERT INTO CLIENT(id_client, nom_client, prenom_client, email_client, telephone_client, mdp_client) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
-        $user_data = [
-            'id_client' => $id,
-            'nom_client' => $nom,
-            'prenom_client' => $Prenom,
-            'email_client' => $Email,
-            'telephone_client' => $Tel
-        ];
     } else if($flag == "fo"){
         $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);    
-        $user_data = [
-            'id_fournisseur' => $id,
-            'nom_fournisseur' => $nom,
-            'prenom_fournisseur' => $Prenom,
-            'email_fournisseur' => $Email,
-            'telephone_fournisseur' => $Tel
-        ];
     } else {
         $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $occupied = 1;
         $stmt->bind_param("ssssssi", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);        
-        $user_data = [
-            'id_coursier' => $id,
-            'nom_coursier' => $nom,
-            'prenom_coursier' => $Prenom,
-            'email_coursier' => $Email,
-            'telephone_coursier' => $Tel
-        ];
     }
     
     if (!$stmt->execute()) {
         throw new Exception('Insertion error: ' . $stmt->error);
     }
     
-    $session_id = create_session($conn, $id);
-    $user_data['session_id'] = $session_id;
     echo json_encode([
         'message' => 'Registration successful', 
         'status' => 'success',
-        'user_data' => $user_data
+        'data' => ['id' => $id]
     ]);
     
 } catch (Exception $e) {

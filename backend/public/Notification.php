@@ -1,9 +1,5 @@
 <?php
-header('Content-Type: application/json');
-
-$data = json_decode(file_get_contents("php://input"), true);
-$token = $data["token"];
-
+$token = 'ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]';
 $message = [
     'to' => $token,
     'sound' => 'default',
@@ -12,20 +8,19 @@ $message = [
     'data' => ['extra' => 'valeur optionnelle']
 ];
 
-$options = [
-    'http' => [
-        'header' => "Content-type: application/json\r\nAccept: application/json\r\n",
-        'method' => 'POST',
-        'content' => json_encode($message)
-    ]
-];
+$data = json_encode($message);
 
-$context = stream_context_create($options);
-$response = file_get_contents('https://exp.host/--/api/v2/push/send', false, $context);
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'https://exp.host/--/api/v2/push/send');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json'
+]);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
-if ($response === FALSE) {
-    echo json_encode(['success' => false, 'error' => 'Failed to send notification']);
-} else {
-    echo json_encode(['success' => true, 'response' => $response]);
-}
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
 ?>

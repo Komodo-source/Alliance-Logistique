@@ -21,16 +21,6 @@ $mdp = $data['password']; // This is already SHA256 hashed from frontend
 // For now, let's use the hashed value directly since database might store hashed passwords
 // If database stores plain text, uncomment the line below:
 // $mdp = hash('sha256', $data['password']);
-
-function create_session($conn, $id){
-    $id_session = hash('sha256', uniqid('', true));
-    $stmt = $conn->prepare("INSERT INTO SESSION (id_key, key_value, id_user, date_expiration) VALUES (?, 'temp_key', ?, DATE('2026-06-15 09:34:21'))");
-    $stmt->bind_param("ss", $id_session, $id);
-    $stmt->execute();
-    $stmt->close();
-    return $id_session;
-}
-
 try {
     // Requêtes pour vérifier les identifiants dans chaque table
     $stmt = $conn->prepare("SELECT id_client, nom_client, prenom_client FROM CLIENT WHERE email_client = ? AND mdp_client = ?
@@ -61,34 +51,25 @@ try {
 
     // Vérification des résultats et envoi de la réponse appropriée
     if ($client_data) {
-        $session_id = create_session($conn, $client_data['id_client']);
-        $user_data = $client_data;
-        $user_data['session_id'] = $session_id;
         echo json_encode([
             'message' => 'Connexion réussie', 
             'status' => 'success',
             'user_type' => 'client',
-            'user_data' => $user_data
+            'user_data' => $client_data
         ]);
     } else if ($fournisseur_data) {
-        $session_id = create_session($conn, $fournisseur_data['id_fournisseur']);
-        $user_data = $fournisseur_data;
-        $user_data['session_id'] = $session_id;
         echo json_encode([
             'message' => 'Connexion réussie', 
             'status' => 'success',
             'user_type' => 'fournisseur',
-            'user_data' => $user_data
+            'user_data' => $fournisseur_data
         ]);
     } else if ($coursier_data) {
-        $session_id = create_session($conn, $coursier_data['id_coursier']);
-        $user_data = $coursier_data;
-        $user_data['session_id'] = $session_id;
         echo json_encode([
             'message' => 'Connexion réussie', 
             'status' => 'success',
             'user_type' => 'coursier',
-            'user_data' => $user_data
+            'user_data' => $coursier_data
         ]);
     } else {
         echo json_encode([

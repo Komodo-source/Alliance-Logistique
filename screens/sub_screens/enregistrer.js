@@ -279,16 +279,6 @@ const enregistrer = ({route, navigation }) => {
       console.log('Parsed response:', data);
       if (data.status === 'success') {
         AutoSave(formData);
-        // Save session id to auto.json
-        if (data.data && data.data.id) {
-          await fileManager.modify_value_local_storage(
-            'session_id', data.data.id, 'auto.json'
-          );
-        } else {
-          Alert.alert('Erreur', "L'inscription a échoué : identifiant de session manquant. Veuillez réessayer.");
-          setIsLoading(false);
-          return;
-        }
         Alert.alert('Succès', data.message);
         if(formData.data == "fo"){
           navigation.navigate("fournisseur_produit");

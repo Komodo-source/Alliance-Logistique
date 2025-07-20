@@ -3,20 +3,9 @@ header('Content-Type: application/json');
 
 try{
     include_once('db.php');
-    include_once('lib/get_session_info.php');
-    
     $data = json_decode(file_get_contents("php://input"), true);
 
-    if (!isset($data['session_id'])) {
-        echo json_encode(['error' => 'session_id is required']);
-        exit;
-    }
-    $session_id = $data['session_id'];
-    $id_fournisseur = getIdSession($session_id);
-    if (!$id_fournisseur) {
-        echo json_encode(['error' => 'Invalid session_id']);
-        exit;
-    }
+    $id_fournisseur = $data['id_fournisseur'];
     $list_produit = $data['list_produit'];
     $qte_produit = $data['qte_produit'];
     $prix_produit = $data['prix_produit']; 
@@ -38,11 +27,13 @@ try{
         
         if ($row['count'] > 0) {
             // Update existing record
+            echo 1;
             $sql = "UPDATE FOURNIR SET nb_produit_fourni = nb_produit_fourni + ?, prix_produit = ? WHERE id_fournisseur = ? AND id_produit = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("idii", $qte_produit[$i], $prix_produit[$i], $id_fournisseur, $list_produit[$i]);
         } else {
             // Insert new record
+            echo 12;
             $sql = "INSERT INTO FOURNIR (id_fournisseur, id_produit, prix_produit, nb_produit_fourni) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iidi", $id_fournisseur, $list_produit[$i], $prix_produit[$i], $qte_produit[$i]);

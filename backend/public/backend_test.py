@@ -3,10 +3,10 @@ import json
 
 # URL de ton backend (change-la par l'URL de ton API)
 #https://backend-logistique-api-latest.onrender.com/db.php
-url = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
+url = "http://127.0.0.1:8000/add_fournisseur_product.php"
 
 # Données à envoyer (modifie selon tes besoins)
-payload =  {'id_client': '774f2d2b1124697dc3fcded0850d76be4a78a89fb996ca672ae1cb111651fffc'}
+payload =  {"id_fournisseur":999325,"list_produit":["2","6"],"qte_produit":[100,25],"prix_produit":[100,100]}
 
 # En-têtes HTTP
 headers = {

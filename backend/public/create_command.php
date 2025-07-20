@@ -16,7 +16,6 @@ error_reporting(E_ALL);
 
 try {
     include_once('db.php'); 
-    include_once('lib/get_session_info.php');
     
     $input = file_get_contents("php://input");
     $data = json_decode($input, true);
@@ -39,16 +38,7 @@ try {
     $desc_dmd = $data['desc_dmd'] ?? "";
     $localisation_dmd = $data['localisation_dmd'];
     $date_fin = $data['date_fin'];
-    $id_client = null;
-    if (isset($data['session_id'])) {
-        $id_client = getIdSession($data['session_id']);
-        if (!$id_client) {
-            echo json_encode(['error' => 'Invalid session_id']);
-            exit;
-        }
-    } else {
-        $id_client = 1; // fallback for legacy/test
-    }
+    $id_client = $data['id_client'] ?? 1; 
     $all_inserted = true;
 
     // Insertion dans HUB
