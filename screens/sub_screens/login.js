@@ -136,27 +136,39 @@ const Login = ({ navigation }) => {
         // Save user data
         await fileManager.modify_value_local_storage(
           'id', data.user_data[`id_${data.user_type}`] // Fixed: use actual ID from response          
-          //name: data.user_data[`nom_${data.user_type}`],
-          //firstname: data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
         debbug_lib.debbug_log("data.user_data[`id_${data.user_type}`]: " + data.user_data[`id_${data.user_type}`], "magenta");
         debbug_lib.debbug_log("data.user_data: " + data.user_data, "magenta");
         
         await fileManager.modify_value_local_storage(
           'type', data.user_type // Fixed: use actual ID from response          
-          //name: data.user_data[`nom_${data.user_type}`],
-          //firstname: data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
 
         await fileManager.modify_value_local_storage(     
           'name', data.user_data[`nom_${data.user_type}`]
-          //firstname: data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
 
         await fileManager.modify_value_local_storage(     
-          //'name', data.user_data[`nom_${data.user_type}`]
           'firstname', data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
+
+        // Save session id if present
+        if (data.user_data && data.user_data.session_id) {
+          await fileManager.modify_value_local_storage(
+            'session_id', data.user_data.session_id, 'auto.json'
+          );
+        } else {
+          // session_id missing: show error and do not proceed
+          getAlertRef().current?.showAlert(
+            'Erreur',
+            'La connexion a échoué : identifiant de session manquant. Veuillez réessayer.',
+            true,
+            'OK',
+            null
+          );
+          setIsLoading(false);
+          return;
+        }
 
         if (isSelected){
           debbug_lib.debbug_log("Persistant login", "green");
@@ -196,7 +208,7 @@ const Login = ({ navigation }) => {
       console.error('err:', error);
       getAlertRef().current?.showAlert(
         'Erreur',
-        'Une erreur est survenue lors de la connexion',
+        'Une erreur est survenue lors de la connexion' ,
         true,
         'OK',
         null

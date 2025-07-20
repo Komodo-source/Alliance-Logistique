@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-//import 'react-native-reanimated';
+import 'react-native-reanimated';
 import Loading from './screens/loading';
 import Accueil from './screens/Accueil';
 import Hub from './screens/Hub';
@@ -23,6 +23,8 @@ import first_page from './screens/first/first_page';
 import fournisseur_produit from './screens/sub_screens/fournisseur_produit';
 import payement from './screens/sub_screens/payement'
 import ParentAlert from './screens/util/ParentAlert';
+import Notification from './NotificationService';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,31 +34,33 @@ const App = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ParentAlert />
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Loading">
-          <Stack.Screen name="Loading" component={Loading} options={{ headerShown: false }} />
-          <Stack.Screen name="Accueil" component={Accueil} options={{ headerShown: false }} />
-          <Stack.Screen name="Hub" component={Hub} options={{ headerShown: false }} />
-          <Stack.Screen name="Recherche" component={Recherche} options={{ headerShown: false }} />
-          <Stack.Screen name="Profil" component={Profil} options={{ headerShown: false }} />
-          <Stack.Screen name="Formulaire" component={Formulaire} options={{headerTitle : "Formulaire" }}/>
-          <Stack.Screen name="Details" component={Details} />
-          <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
-          <Stack.Screen name="choixType" component={choixType} options={{ headerShown: false }} />
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="enregistrer" component={enregistrer} />
-          <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
-          <Stack.Screen name="DetailProduit" component={DetailProduit} options={{headerTitle : "Produit" }}/>
-          <Stack.Screen name="detail_Commande" component={detail_Commande} options={{headerTitle : "Commande" }}/>          
-          <Stack.Screen name="commande_reccurente" component={commande_reccurente} options={{ headerShown: false }}/>
-          <Stack.Screen name="detail_commande_reccurente" component={detail_commande_reccurente} options={{ headerShown: false }}/>
-          <Stack.Screen name="first_page" component={first_page} options={{ headerShown: false }}/>
-          <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
-          <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
-          
-        </Stack.Navigator>
-      </NavigationContainer>
+      <ErrorBoundary>
+        <ParentAlert />
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Loading">
+            <Stack.Screen name="Loading" component={Loading} options={{ headerShown: false }} />
+            <Stack.Screen name="Accueil" component={Accueil} options={{ headerShown: false }} />
+            <Stack.Screen name="Hub" component={Hub} options={{ headerShown: false }} />
+            <Stack.Screen name="Recherche" component={Recherche} options={{ headerShown: false }} />
+            <Stack.Screen name="Profil" component={Profil} options={{ headerShown: false }} />
+            <Stack.Screen name="Formulaire" component={Formulaire} options={{headerTitle : "Formulaire" }}/>
+            <Stack.Screen name="Details" component={Details} />
+            <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }}/>
+            <Stack.Screen name="choixType" component={choixType} options={{ headerShown: false }} />
+            <Stack.Screen name="Login" component={Login} />
+            <Stack.Screen name="enregistrer" component={enregistrer} />
+            <Stack.Screen name="Produit" component={Produit} options={{ headerShown: false }} />
+            <Stack.Screen name="DetailProduit" component={DetailProduit} options={{headerTitle : "Produit" }}/>
+            <Stack.Screen name="detail_Commande" component={detail_Commande} options={{headerTitle : "Commande" }}/>
+            <Stack.Screen name="commande_reccurente" component={commande_reccurente} options={{ headerShown: false }}/>
+            <Stack.Screen name="detail_commande_reccurente" component={detail_commande_reccurente} options={{ headerShown: false }}/>
+            <Stack.Screen name="first_page" component={first_page} options={{ headerShown: false }}/>
+            <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
+            <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
+            <Stack.Screen name="Notification" component={Notification} options={{ headerTitle : "Notification" }}/>
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 };

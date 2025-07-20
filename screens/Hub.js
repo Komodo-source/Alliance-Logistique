@@ -58,7 +58,7 @@ const Hub = ({ navigation }) => {
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({id_client})
+        body: JSON.stringify(data)
       });
       
       if (!response.ok) {

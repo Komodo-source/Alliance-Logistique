@@ -94,30 +94,42 @@
 
     const check_update = async() => {
       try {
+        debbug_lib.debbug_log("=== UPDATE SYSTEM CHECK ===", "cyan");
         console.log("Update Channel: ", Updates.channel);
         console.log("Update ID: ", Updates.updateId);
         console.log("Runtime Version: ", Updates.runtimeVersion);
+        console.log("Updates enabled: ", Updates.isEnabled);
         
         if (!Updates.isEnabled) {
           debbug_lib.debbug_log("Updates not enabled in this environment", "yellow");
+          debbug_lib.debbug_log("This is normal in development mode", "yellow");
           return;
         }
     
+        debbug_lib.debbug_log("Checking for updates...", "blue");
         const update = await Updates.checkForUpdateAsync();
         console.log("Update available: ", update.isAvailable);
         console.log("Update manifest: ", update.manifest);
         
         if (update.isAvailable) {
           setisUpdating(true);
-          debbug_lib.debbug_log("Fetching update...", "blue");
-          await Updates.fetchUpdateAsync();
-          debbug_lib.debbug_log("Reloading app...", "blue");
-          await Updates.reloadAsync();
+          debbug_lib.debbug_log("Update available! Fetching...", "green");
+          
+          try {
+            await Updates.fetchUpdateAsync();
+            debbug_lib.debbug_log("Update fetched successfully", "green");
+            debbug_lib.debbug_log("Reloading app...", "blue");
+            await Updates.reloadAsync();
+          } catch (fetchError) {
+            debbug_lib.debbug_log("Error fetching update: " + fetchError.message, "red");
+            setisUpdating(false);
+          }
         } else {
           debbug_lib.debbug_log("No update available", "yellow");
         }
       } catch (error) {
-        debbug_lib.debbug_log("Error in update: " + error, "red");
+        debbug_lib.debbug_log("Error in update check: " + error.message, "red");
+        console.error("Update error details:", error);
       }
     }
 
@@ -189,11 +201,11 @@
             debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
             if (dataUser && dataUser.first_conn === true) {
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
-              navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
+              navigation.navigate('first_page');
             } else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
-              navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
+              navigation.navigate('HomePage');
             } else {
-              navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
+              navigation.navigate('Accueil');
             }
           } else {
             debbug_lib.debbug_log("BACKEND INACCESSIBLE", "red");
@@ -235,7 +247,7 @@
         <View style={styles.container}>
           <Text style={styles.txtFirst}>{is_first_time ? "La première fois le chargement peut prendre quelque minute" : ""}</Text>
           <Text></Text>
-          <Text style={styles.title}>Chargement...</Text>
+          <Text style={styles.title}>Chargement</Text>
 
           <Image
             style={styles.image}
@@ -247,7 +259,7 @@
           <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text> 
           : 
           <View></View>}
-        <Text style={styles.versionText}>Admin Beta 1.0.1</Text>
+        <Text style={styles.versionText}>Admin Beta 1.0.5</Text>
       </View>
     );
   };

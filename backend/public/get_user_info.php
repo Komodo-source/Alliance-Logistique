@@ -1,10 +1,12 @@
 <?php
 header('Content-Type: application/json');
 include_once('db.php');
+include_once('lib/get_session_info.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
 $type = $data['type'];
-$id = $data['id'];
+$session_id = $data['session_id'];
+$id = getIdSession($session_id);
 
 $data_client = $conn->prepare("SELECT id_client, nom_client, prenom_client, telephone_client FROM CLIENT WHERE id_client = ?");
 $data_fournisseur = $conn->prepare("SELECT id_fournisseur, nom_fournisseur, prenom_fournisseur, telephone_fournisseur FROM FOURNISSEUR WHERE id_fournisseur = ?");
