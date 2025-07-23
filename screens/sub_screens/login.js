@@ -243,7 +243,7 @@ const Login = ({ navigation }) => {
           placeholder="Mot de passe"
           placeholderTextColor="#a2a2a9"
           value={password}
-          onChangeText={setPassword}
+          onChangeText={setPassword}  
         />        
       </View>
 
@@ -255,6 +255,15 @@ const Login = ({ navigation }) => {
             color={isSelected ? '#2E3192' : undefined}
           />
           <Text style={{fontSize : 15, fontWeight : "500", marginLeft : 10}}>Rester connecté</Text>
+      </View>
+
+      <View style={styles.oubliVue}>
+        <TouchableOpacity
+        onPress={() => navigation.navigate("mdp_oubli")}
+        
+        style={styles.BouttonOubli}>
+          <Text style={styles.textOubli}>Mot de Passe Oublié?</Text>
+        </TouchableOpacity>
       </View>
       
 
@@ -272,6 +281,20 @@ const Login = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+    oubliVue : {
+      alignSelf: 'center',
+      marginTop: 20,
+      marginBottom: 20,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',      
+
+    },
+    textOubli : {
+      fontSize: 15,
+      fontWeight: "600",
+      color: "#2E3192"
+    },
     container : {
         marginTop : 45,
     },

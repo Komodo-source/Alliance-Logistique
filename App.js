@@ -25,6 +25,8 @@ import payement from './screens/sub_screens/payement'
 import ParentAlert from './screens/util/ParentAlert';
 import Notification from './NotificationService';
 import ErrorBoundary from './components/ErrorBoundary';
+import mdp_oubli from './screens/sub_screens/mdp_oubli';
+import VerifyResetCode from './screens/sub_screens/verify_reset_code';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +60,8 @@ const App = () => {
             <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
             <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
             <Stack.Screen name="Notification" component={Notification} options={{ headerTitle : "Notification" }}/>
+            <Stack.Screen name="mdp_oubli" component={mdp_oubli} options={{ headerShown: false }}/>
+            <Stack.Screen name="VerifyResetCode" component={VerifyResetCode} options={{ headerTitle: "Réinitialisation" }}/>
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>
