@@ -9,7 +9,21 @@ const Hub = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const is_client = FileManager.read_file("auto.json").type == "cli" ? true : false;
+  const [isClient, setIsClient] = useState(false);
+
+  // Move the file reading logic into useEffect to avoid synchronous operations
+  useEffect(() => {
+    const checkUserType = async () => {
+      try {
+        const data = await FileManager.read_file("auto.json");
+        setIsClient(data?.type === "cli");
+      } catch (error) {
+        console.error("Error reading user type:", error);
+        setIsClient(false);
+      }
+    };
+    checkUserType();
+  }, []);
 
   const readProductFile = async () => {
     try {
@@ -53,12 +67,12 @@ const Hub = ({ navigation }) => {
         return;
       }
       setUserData(data);
-      const id_client = data.id;
+      const session_id = data.session_id;
       
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({session_id})
       });
       
       if (!response.ok) {
@@ -140,9 +154,9 @@ const Hub = ({ navigation }) => {
             <Text style={styles.comRecButtonText}>Voir mes commandes récurrentes {'>'}</Text>
           </TouchableOpacity>
         </View>
-        <View style={[styles.section, {flex:1}]}> {/* Make this section take available space */}
+        <View style={[styles.section, {flex:1}]}>
           <Text style={styles.sectionTitle}>Vos commandes</Text>
-          <View style={[styles.commandeBox, {flex:1}]}> {/* Make this box take available space */}
+          <View style={[styles.commandeBox, {flex:1}]}>
             {loading ? (
               <Text style={{textAlign:'center', marginTop:20}}>Chargement...</Text>
             ) : commande && commande.length > 0 ? (
@@ -158,7 +172,7 @@ const Hub = ({ navigation }) => {
                 <Text style={styles.emptyStateText}>
                   Vous n'avez passé aucune commande pour le moment
                 </Text>
-                {is_client ? (
+                {isClient && (
                  <TouchableOpacity 
                  style={styles.primaryButton}
                  onPress={() => {
@@ -170,25 +184,24 @@ const Hub = ({ navigation }) => {
                  }}>
                  <Text style={styles.primaryButtonText}>Passer une commande</Text>
                </TouchableOpacity>
-                ) : (<View></View>)}
-
+                )}
               </View>
             )}
           </View>
         </View>
-        {is_client ? (
-                 <TouchableOpacity 
-                 style={styles.fab}
-                 onPress={() => {
-                   try {
-                     navigation.navigate('Formulaire');
-                   } catch (error) {
-                     console.error("Navigation error:", error);
-                   }
-                 }}>
-                 <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
-               </TouchableOpacity>
-                ) : (<View></View>)}
+        {isClient && (
+          <TouchableOpacity 
+            style={styles.fab}
+            onPress={() => {
+              try {
+                navigation.navigate('Formulaire');
+              } catch (error) {
+                console.error("Navigation error:", error);
+              }
+            }}>
+            <Image source={require('../assets/Icons/Light-commande.png')} style={styles.fabIcon}/>
+          </TouchableOpacity>
+        )}
         <View style={styles.navbar}> 
           <TouchableOpacity 
             style={styles.navButton}
@@ -369,6 +382,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     marginBottom: 2,
+    tintColor: '#666666',
   },
   navbar: {
     flexDirection: 'row',
@@ -418,12 +432,6 @@ const styles = StyleSheet.create({
   iconContainer: {
     marginBottom: 4,
     padding: 2,
-  },
-  
-  logoNavBar: {
-    width: 24,
-    height: 24,
-    tintColor: '#666666',
   },
   
   activeIcon: {

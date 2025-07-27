@@ -8,7 +8,7 @@ import ChickenImage from '../assets/Icons/Dark-Chicken.png';
 import LapinImage from '../assets/Icons/Rabbit.png';
 import OeufImage from '../assets/Icons/Dark-oeuf.png';
 import BoeufImage from '../assets/Icons/Dark-beef.png';
-import MapView,{Marker} from 'react-native-maps';
+//import MapView,{Marker} from 'react-native-maps';
 import LeafletMap from '../components/LeafletMap';
 import { getAlertRef } from './util/AlertService';
 import Snackbar from './util/SnackBar.js';

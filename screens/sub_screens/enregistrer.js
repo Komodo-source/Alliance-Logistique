@@ -401,12 +401,13 @@ const styles = StyleSheet.create({
     fontWeight: "500"
   },
   input: {
-    height: 40,
+    height: 50,
     borderWidth: 2.5,
     borderRadius: 7,
     width: '80%',
     padding: 10,
     color: '#111',
+     borderColor: '#666',
     marginBottom: 20,
     marginTop: 5,
     alignSelf: 'center',

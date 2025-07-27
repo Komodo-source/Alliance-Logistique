@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList ,Dimensions, ScrollView, StatusBar, Modal, Alert} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView, StatusBar } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
@@ -7,9 +7,6 @@ import * as FileManager from './util/file-manager.js';
 const { width, height } = Dimensions.get('window');
 import axios from 'axios';
 import { debbug_log } from './util/debbug.js';
-import * as Progress from 'react-native-progress';
-
-
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -18,7 +15,6 @@ const Accueil = ({ navigation }) => {
   const [nb_commande_livraison, setNbCommandeLivraison] = useState(0);
   const [isClient, setIsClient] = useState(true);
   // Update time every minute for dynamic greeting
-  const [modalVisible, setModalVisible] = useState(false);
   const [jours_restants, setJours_restants] = useState(0);
 
   // Helper to calculate days difference
@@ -86,69 +82,29 @@ const Accueil = ({ navigation }) => {
     setNbCommandeLivraison(val);
   };
 
-
   const fetch_commande = async () => {
     try {
-      setModalVisible(true);
-      let data;
-      try {
-        data = await FileManager.read_file("auto.json");
-      } catch (fileError) {
-        console.error("Error reading auto.json:", fileError);
-        setCommande([]);
-        setModalVisible(false);
-        Alert.alert(
-          "Erreur de session",
-          "Impossible de lire les données de session. Veuillez vous reconnecter.",
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.reset({ index: 0, routes: [{ name: 'login' }] }),
-            },
-          ],
-          { cancelable: false }
-        );
-        return;
-      }
+      const data = await FileManager.read_file("auto.json");
       
       console.log("User data from auto.json:", data);
       
-      if (!data || typeof data !== 'object' || !data.session_id) {
-        console.error("No user data or session_id found in auto.json");
+      if (!data || !data.id) {
+        console.error("No user data or user ID found in auto.json");
         setCommande([]);
-        setModalVisible(false);
-        Alert.alert(
-          "Erreur de session",
-          "Votre session a expiré ou est invalide. Veuillez vous reconnecter.",
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.reset({ index: 0, routes: [{ name: 'login' }] }),
-            },
-          ],
-          { cancelable: false }
-        );
         return;
       }
       
       setIsClient(data.type === "client");
       setUserData(data);
-      const id_client = data.session_id;
-      console.log("id_client : ", id_client);
-      let url = "";
-      //get command from either the client or supplier side
-      if (data.type === "client"){
-         url = 'https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php'
-      }else {
-         url = 'https://backend-logistique-api-latest.onrender.com/recup_commande_fourni.php'
-      }
-            
-      const response = await fetch(url, {
+      const session_id = data.session_id;
+      console.log("session_id : ", session_id);
+      
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({session_id})
       });
       
       if (!response.ok) {
@@ -164,15 +120,7 @@ const Accueil = ({ navigation }) => {
       } catch (parseError) {
         console.error('JSON Parse Error:', parseError);
         console.error('Response was:', responseText);
-        setModalVisible(false);
-        Alert.alert(
-          "Erreur serveur",
-          "La réponse du serveur est invalide. Veuillez réessayer plus tard.",
-          [
-            { text: "OK" }
-          ]
-        );
-        return;
+        throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
       }
       
       console.log("Parsed data:", parsedData);
@@ -180,7 +128,6 @@ const Accueil = ({ navigation }) => {
       if (!parsedData || !Array.isArray(parsedData)) {
         console.log("Invalid data format received");
         setCommande([]);
-        setModalVisible(false);
         return;
       }
       
@@ -189,18 +136,10 @@ const Accueil = ({ navigation }) => {
       console.log("Limited data for display:", limitedData);
       
       setCommande(limitedData);
-      setModalVisible(false);
+      
     } catch (error) {
       console.error("Error in fetch_commande:", error);
       setCommande([]);
-      setModalVisible(false);
-      Alert.alert(
-        "Erreur",
-        error.message || "Une erreur est survenue lors de la récupération des commandes.",
-        [
-          { text: "OK" }
-        ]
-      );
     }
   }
 
@@ -213,13 +152,7 @@ const Accueil = ({ navigation }) => {
       icon: "📋",
       gradient: ['#667eea', '#764ba2'],
       action: () => navigation.navigate('Formulaire')
-    }] : [{      
-      id: 1,
-      title: "Vos Produits",
-      subtitle: "Ajouter & compléter",
-      icon: "📋",
-      gradient: ['#667eea', '#764ba2'],
-      action: () => navigation.navigate('fournisseur_produit')}]),
+    }] : []),
   
     {
       id: 2,
@@ -425,15 +358,6 @@ const Accueil = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.quickActionsContainer}
           />
-          <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
-            <View style={styles.overlay}>
-              <View style={styles.modalContent}>
-                <Text style={styles.message}>Récupération de vos commandes en cours...</Text>
-                <Progress.Circle indeterminate={true} style={styles.bar} size={60} thickness={10} />
-              </View>
-            </View>
-          </Modal>
-
         </View>
 
         {/* Next Delivery Highlight */}
@@ -601,27 +525,6 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  bar : {
-    alignItems: "center"
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  message: {
-    fontSize: 18,
-    marginBottom: 20,
-    fontWeight: '600',
-    textAlign: "center"
-  },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',

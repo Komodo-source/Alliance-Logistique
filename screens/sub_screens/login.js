@@ -4,7 +4,7 @@ import * as Device from 'expo-device';
 import * as fileManager from '../util/file-manager';
 //import {NetworkInfo} from 'react-native-network-info';
 //import { SHA256 } from 'react-native-sha';
-import { sha256, sha256Bytes } from 'react-native-sha256';
+//import { sha256, sha256Bytes } from 'react-native-sha256';
 import * as Crypto from 'expo-crypto'; // Added missing import
 import * as debbug_lib from '../util/debbug.js';
 import Checkbox from 'expo-checkbox';
@@ -184,7 +184,7 @@ const Login = ({ navigation }) => {
           "Bonjour " + data.user_data[`prenom_${data.user_type}`] + " " + data.user_data[`nom_${data.user_type}`],
           true,
           "OK",
-          () => navigation.navigate("Accueil"),
+          () => navigation.navigate("Accueil")
 
         );      
 
@@ -198,7 +198,7 @@ const Login = ({ navigation }) => {
       } else {
         getAlertRef().current?.showAlert(
           'Erreur',
-          data.message || 'Identifiants incorrects',
+          data.message || 'Identifiants incorrects - Faites attention aux majuscules',
           true,
           'OK',
           null
@@ -224,7 +224,7 @@ const Login = ({ navigation }) => {
       <Text style={{fontSize : 16, fontWeight : "500", marginLeft : 25, marginBottom : 45}}>Pour continuer veuillez vous connecter</Text>
 
       <View style={styles.nom}>
-        <Text style={styles.descInput}>Email</Text>
+        <Text style={styles.descInput}>Email/Téléphone</Text>
         <TextInput
           style={styles.input}
           keyboardType="email-address"
@@ -304,12 +304,13 @@ const styles = StyleSheet.create({
       fontWeight: "500"
     },
     input: {
-      height: 40,
+      height: 50,
       borderWidth: 2.5,
       borderRadius: 7,
       width: '80%',
       padding: 10,
       color: '#111',
+      borderColor: '#666',
       marginBottom: 20,
       marginTop: 5,
       alignSelf: 'center',

@@ -1,10 +1,12 @@
-  import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState} from 'react';
   import { View, Text, Button, StyleSheet, Image, ActivityIndicator, Alert, Platform } from 'react-native';
   //import * as dataUser from '../assealexandrie.rf.gdts/data/auto.json';
   import * as FileSystem from 'expo-file-system';
   import * as fileManager from './util/file-manager.js';
   import * as debbug_lib from './util/debbug.js';
   import * as Updates from 'expo-updates';
+
+  let hasNavigated = false; // outside the component
 
   
   const Loading = ({ navigation }) => {
@@ -123,6 +125,11 @@
           } catch (fetchError) {
             debbug_lib.debbug_log("Error fetching update: " + fetchError.message, "red");
             setisUpdating(false);
+            Alert.alert(
+              "Erreur de mise à jour",
+              "Impossible de télécharger la mise à jour. Veuillez vérifier votre connexion ou réessayer plus tard.",
+              [{ text: "OK" }]
+            );
           }
         } else {
           debbug_lib.debbug_log("No update available", "yellow");
@@ -189,7 +196,7 @@
       }
     }
 
-    const checkServer = async () => {
+     const checkServer = async () => {
       try {
         const response = await measureFetchSpeed('https://google.com');
         if (response.ok) {
@@ -201,11 +208,14 @@
             debbug_lib.debbug_log("fist_conn: " + dataUser?.first_conn, "magenta")
             if (dataUser && dataUser.first_conn === true) {
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
-              navigation.navigate('first_page');
+              //navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
+              navigation.navigate("first_page");
             } else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
-              navigation.navigate('HomePage');
+              //navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
+              navigation.navigate("HomePage");
             } else {
-              navigation.navigate('Accueil');
+              //navigation.reset({ index: 0, routes: [{ name: 'Accueil' }] });
+              navigation.navigate("Accueil");
             }
           } else {
             debbug_lib.debbug_log("BACKEND INACCESSIBLE", "red");
@@ -237,9 +247,14 @@
     useEffect(() => {  
       //fileManager.modify_value_local_storage("first_conn", false, "auto.json");
       //fileManager.delete_file("auto.json");
-      check_update();
-      check_first_time();
-      loading_check();
+      try {
+        check_update();
+        check_first_time();
+        loading_check();
+      } catch( error ) {
+        debbug_lib.debbug_log("Error in useEffect: " + error.message, "red");
+      }
+
     }, []);
 
     return (
@@ -259,7 +274,7 @@
           <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text> 
           : 
           <View></View>}
-        <Text style={styles.versionText}>Admin Beta 1.0.6</Text>
+        <Text style={styles.versionText}>Admin Beta 1.0.12</Text>
       </View>
     );
   };

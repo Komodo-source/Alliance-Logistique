@@ -6,7 +6,7 @@ import json
 url = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
 
 # Données à envoyer (modifie selon tes besoins)
-payload =  {'id_client': '774f2d2b1124697dc3fcded0850d76be4a78a89fb996ca672ae1cb111651fffc'}
+payload =  {'session_id': '715e2b51c22e09faf0f3e299f8d1ed9ec7ba75255f38e231208cfc3234985c44'}
 
 # En-têtes HTTP
 headers = {

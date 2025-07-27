@@ -1,12 +1,12 @@
 {
   "expo": {
     "name": "Alliance Logistique",
-    "slug": "alliance_logistique",
-    "version": "1.0.4",
+    "slug": "alliance-logistique",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/icon_light.png",
       "resizeMode": "contain",
@@ -28,10 +28,6 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
       "package": "com.k0m0d0.alliance_logistique"
@@ -40,6 +36,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-updates",
       [
         "expo-location",
         {
@@ -49,14 +46,16 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "e2aaec2e-feae-4114-b202-d73b6e6474ae"
+        "projectId": "5ce8989b-a43f-4e79-9647-99cf4c2b276d"
       }
     },
-    "runtimeVersion": "1.0.4",
+    "runtimeVersion": "1.0.7",
     "updates": {
       "url": "https://u.expo.dev/e2aaec2e-feae-4114-b202-d73b6e6474ae",
       "enabled": true,
-      "fallbackToCacheTimeout": 0
-    }
+      "fallbackToCacheTimeout": 0,
+      "checkAutomatically": "ON_LOAD"
+    },
+    "owner": "kr0k0"
   }
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ScrollView, Alert, Platform } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+//import MapView, { Marker } from 'react-native-maps';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { printToFileAsync } from 'expo-print';
 import { shareAsync } from 'expo-sharing';
