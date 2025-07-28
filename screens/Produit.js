@@ -308,8 +308,8 @@ const styles = StyleSheet.create({
   },
   
   activeButton: {
-    backgroundColor: '#7CC6FE',
-    shadowColor: '#7CC6FE',
+    backgroundColor: '#3B82F6',
+    shadowColor: '#3B82F6',
     shadowOffset: {
       width: 0,
       height: 2,

@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView, StatusBar, Modal} from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
@@ -7,7 +7,7 @@ import * as FileManager from './util/file-manager.js';
 const { width, height } = Dimensions.get('window');
 import axios from 'axios';
 import { debbug_log } from './util/debbug.js';
-
+import * as Progress from 'react-native-progress';
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -17,11 +17,12 @@ const Accueil = ({ navigation }) => {
   const [isClient, setIsClient] = useState(true);
   // Update time every minute for dynamic greeting
   const [jours_restants, setJours_restants] = useState(0);
+   const [modalVisible, setModalVisible] = useState(false);
 
-  // Helper to calculate days difference
+  // calcul la diff entre 2 dates en jours
   const getDaysDifference = (dateString) => {
     try {
-      // Créer les dates en ignorant l'heure pour une comparaison juste des jours
+      
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
@@ -36,7 +37,7 @@ const Accueil = ({ navigation }) => {
       
       const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
       
-      // Calculer la différence en millisecondes
+      
       const diffTime = target.getTime() - today.getTime();
       
       // Convertir en jours (division par millisecondes dans une journée)
@@ -84,7 +85,13 @@ const Accueil = ({ navigation }) => {
   };
 
   const fetch_commande = async () => {
+    // identique a celle de Hub.js
+    //utilisé basiquement pour afficher et récupérer les commandes du client
+    // Attention, passer en paramètre l'id du client et pas tout le fichier
+    // sinon cela fait crasher l'application
+
     try {
+      setModalVisible(true);
       const data = await FileManager.read_file("auto.json");
       
       console.log("User data from auto.json:", data);
@@ -129,6 +136,7 @@ const Accueil = ({ navigation }) => {
       if (!parsedData || !Array.isArray(parsedData)) {
         console.log("Invalid data format received");
         setCommande([]);
+        setModalVisible(false);
         return;
       }
       
@@ -137,10 +145,11 @@ const Accueil = ({ navigation }) => {
       console.log("Limited data for display:", limitedData);
       
       setCommande(limitedData);
-      
+      setModalVisible(false);
     } catch (error) {
       console.error("Error in fetch_commande:", error);
       setCommande([]);
+      setModalVisible(false);
     }
   }
 
@@ -275,7 +284,7 @@ const Accueil = ({ navigation }) => {
   }
 
 
-  useEffect(() => {
+  useEffect(() => { // Initial fetch of commandes and user data
     console.log('=== ACCUEIL: useEffect déclenché ===');
     fetch_commande();
     const timer = setInterval(() => {
@@ -360,6 +369,17 @@ const Accueil = ({ navigation }) => {
             contentContainerStyle={styles.quickActionsContainer}
           />
         </View>
+
+        {/* Modal for loading state */}
+        {/* TODO: récupérer les commandes la premières fois et ne plus jamais avoir à les récupérer */}
+          <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
+            <View style={styles.overlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.message}>Récupération de vos commandes en cours...</Text>
+                <Progress.Circle indeterminate={true} style={styles.bar} size={60} thickness={10} />
+              </View>
+            </View>
+          </Modal>
 
         {/* Next Delivery Highlight */}
         {commande.length > 0 && (
@@ -526,6 +546,27 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  bar : {
+    alignItems: "center"
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+  },
+  message: {
+    fontSize: 18,
+    marginBottom: 20,
+    fontWeight: '600',
+    textAlign: "center"
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
@@ -1010,8 +1051,8 @@ const styles = StyleSheet.create({
   },
   
   activeButton: {
-    backgroundColor: '#7CC6FE',
-    shadowColor: '#7CC6FE',
+    backgroundColor: '#3B82F6',
+    shadowColor: '#3B82F6',
     shadowOffset: {
       width: 0,
       height: 2,
