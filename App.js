@@ -60,7 +60,7 @@ const App = () => {
             <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
             <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
             <Stack.Screen name="Notification" component={Notification} options={{ headerTitle : "Notification" }}/>
-            <Stack.Screen name="mdp_oubli" component={mdp_oubli} options={{ headerShown: false }}/>
+            <Stack.Screen name="mdp_oubli" component={mdp_oubli} options={{ headerShown: true, headerTitle : "Recouvrement"}}/>
             <Stack.Screen name="VerifyResetCode" component={VerifyResetCode} options={{ headerTitle: "Réinitialisation" }}/>
           </Stack.Navigator>
         </NavigationContainer>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity, Image, TextInput} from 'react-native';
 import { getAlertRef } from '../util/AlertService';
+import fileManager from '../util/file-manager';
 
 var headers = {
   'Accept' : 'application/json',
@@ -12,11 +13,14 @@ const mdp_oubli = ({ route, navigation }) => {
 
     const fetchNewMdp = async () => {
         try {
+            const data = await fileManager.read_file("auto.json");
             const response = await fetch('https://backend-logistique-api-latest.onrender.com/reset_email.php', {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({ email: Identifiant })
+                body: JSON.stringify({ email: Identifiant})
             });
+
+            console.log(JSON.stringify({ email: Identifiant}));
             
             const result = await response.json();
             
@@ -37,6 +41,7 @@ const mdp_oubli = ({ route, navigation }) => {
                 );
             }
         } catch(error) {
+            console.error("Erreur lors de la récupération du mot de passe :", error);
             getAlertRef().current?.showAlert(
                 "Erreur",
                 "Erreur de connexion au serveur",

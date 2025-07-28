@@ -203,7 +203,7 @@ const fournisseur_produit = ({ navigation }) => {
                 "Produit ajouté à votre liste",
                 true,
                 "OK",
-                () => navigation.navigate("Accueil"),
+                () => navigation.navigate("login"),
         
               ); 
                 

@@ -8,6 +8,7 @@ const { width, height } = Dimensions.get('window');
 import axios from 'axios';
 import { debbug_log } from './util/debbug.js';
 
+
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
   const [userData, setUserData] = useState(null);

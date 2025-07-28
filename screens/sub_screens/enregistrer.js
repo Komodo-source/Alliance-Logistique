@@ -11,7 +11,7 @@ import * as Device from 'expo-device';
 import * as debbug_lib from '../util/debbug.js';
 //import id from 'dayjs/locale/id';
 //Limport { has } from 'lodash-es';
-import axios from 'axios';
+import { getAlertRef } from '../util/AlertService';
 
 var headers = {
   'Accept' : 'application/json',
@@ -65,16 +65,16 @@ const enregistrer = ({route, navigation }) => {
         //}));
  
         await fileManager.modify_value_local_storage(
-         "name", nom
+         "name", form.nom
          ,'auto.json');
         
          await fileManager.modify_value_local_storage(
            "firstname", Prenom
            ,'auto.json');
         
-           await fileManager.modify_value_local_storage(
-             "id", id_choosen
-             ,'auto.json');
+           //await fileManager.modify_value_local_storage(
+           //  "id", id_choosen
+           //  ,'auto.json');
           
              await fileManager.modify_value_local_storage(
               "type", form.data
@@ -190,35 +190,54 @@ const enregistrer = ({route, navigation }) => {
   }
 
 
-  const validateForm = () => {
+  const validateForm = () => { //basiquement un check de tous les champs
     if (!nom.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer votre nom');
+      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre nom', true, "OK", null);
       return false;
     }
     if (!Prenom.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer votre prénom');
+      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre prénom', true, "OK", null);
       return false;
     }
     if (!Email.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer votre email');
-      return false;
+      let averti = false
+      //Alert.alert('Attention', 
+      //  'Attention si vous n\'entrez pas d\'email vous ne pourrez pas récupérer le mot de passe en cas de parte'
+      //, [{text: 'OK', onPress: () => averti = true }], 
+      //  [{text: 'Annuler', onPress: () => null }]);
+
+
+      getAlertRef().current?.showAlert(
+        '⚠️Attention',
+        'Attention si vous n\'entrez pas d\'email vous ne pourrez pas récupérer le mot de passe en cas de parte',
+        true,
+        'OK',
+        () => averti = true,
+        true,
+        'Annuler',
+        null
+      );
+      
+        return averti; // Si l'utilisateur accepte de continuer sans email
     }
     if (!Email.includes('@') || !Email.includes('.')) {
-      Alert.alert('Erreur', 'Veuillez entrer un email valide');
+      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer un email valide', true, "OK", null);
       return false;
     }
     if (!Tel.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer votre numéro de téléphone');
+      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre numéro de téléphone', true, "OK", null);
       return false;
     }
     if (!Password.trim()) {
-      Alert.alert('Erreur', 'Veuillez entrer un mot de passe');
+      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer un mot de passe', true, "OK", null);
       return false;
     }
     if (Password.length < 6) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 6 caractères');
+      getAlertRef().current?.showAlert('Attention', 'Le mot de passe doit contenir au moins 6 caractères', true, "OK", null);
       return false;
     }
+
+
     return true;
   };
 
@@ -257,7 +276,6 @@ const enregistrer = ({route, navigation }) => {
   
       console.log('Response status:', response.status);
       
-      // First get the raw text
       const text = await response.text();
       console.log('Raw response:', text);
       
@@ -267,7 +285,7 @@ const enregistrer = ({route, navigation }) => {
         data = text ? JSON.parse(text) : {};
         
         if (!response.ok) {
-          // Handle HTTP errors (4xx, 5xx)
+          // Handle HTTP errors 
           throw new Error(data.message || `HTTP error! status: ${response.status}`);
         }
       } catch (e) {
@@ -278,22 +296,31 @@ const enregistrer = ({route, navigation }) => {
   
       console.log('Parsed response:', data);
       if (data.status === 'success') {
-        AutoSave(formData);
+        await AutoSave(formData);
         // Save session id to auto.json
-        if (data.data && data.data.id) {
+
+        debbug_lib.debbug_log("formData: " + JSON.stringify(formData), "cyan");
+        debbug_lib.debbug_log("data: " + JSON.stringify(data), "cyan");
+        if (data.user_data) {
           await fileManager.modify_value_local_storage(
-            'session_id', data.data.id, 'auto.json'
+            'session_id', data.user_data.session_id, 'auto.json'
           );
         } else {
           Alert.alert('Erreur', "L'inscription a échoué : identifiant de session manquant. Veuillez réessayer.");
           setIsLoading(false);
           return;
         }
-        Alert.alert('Succès', data.message);
+        getAlertRef().current?.showAlert(
+          'Succès',
+          'Voitre compte a été créé avec succès',
+          true,
+          'OK',
+          null
+        );
         if(formData.data == "fo"){
           navigation.navigate("fournisseur_produit");
         }else{
-          navigation.navigate('Accueil');
+          navigation.navigate('login');
         }
         
         try {
@@ -303,11 +330,14 @@ const enregistrer = ({route, navigation }) => {
           console.log("Error in post-registration tasks: ", error);
         }
       } else {
-        Alert.alert('Erreur', data.message || "Une erreur est survenue lors de l'inscription");
+        Alert.alert('Erreure', "Une erreur est survenue lors de l'inscription");
       }
     } catch (error) {
       console.error('Error details:', error);
-      Alert.alert('Erreur', error.message || "Une erreur est survenue lors de la création de l'enregistrement");
+      if (error.message.includes("already")){ // Retourne erreur si l'email est déjà utilisé
+        Alert.alert('Erreur', "Cet email a déja été utilisé pour un autre compte. Veuillez en choisir un autre.");  
+      }
+      Alert.alert('Erreur', "Une erreur est survenue lors de la création de l'enregistrement");
     } finally {
       setIsLoading(false);
     }
@@ -350,7 +380,7 @@ const enregistrer = ({route, navigation }) => {
         <TextInput
           style={styles.input}
           keyboardType="email-address"
-          placeholder="Email"
+          placeholder="Email ex: john.doe@gmail.com"
           placeholderTextColor="#a2a2a9"
           value={Email}
           onChangeText={setEmail}
@@ -370,7 +400,7 @@ const enregistrer = ({route, navigation }) => {
         <TextInput
           style={styles.input}
           keyboardType="phone-pad"
-          placeholder="Téléphone"
+          placeholder="Téléphone ex: 0123456789"
           placeholderTextColor="#a2a2a9"
           value={Tel}
           onChangeText={setTel}

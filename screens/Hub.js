@@ -257,6 +257,8 @@ const Hub = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
+      
+      
     </SafeAreaView>
   );
 };

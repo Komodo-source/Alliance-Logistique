@@ -3,10 +3,10 @@ import json
 
 # URL de ton backend (change-la par l'URL de ton API)
 #https://backend-logistique-api-latest.onrender.com/db.php
-url = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
+url = "http://127.0.0.1:8000/reset_email.php"
 
 # Données à envoyer (modifie selon tes besoins)
-payload =  {'session_id': '715e2b51c22e09faf0f3e299f8d1ed9ec7ba75255f38e231208cfc3234985c44'}
+payload =  {'email': 'l@gmail.com'}
 
 # En-têtes HTTP
 headers = {

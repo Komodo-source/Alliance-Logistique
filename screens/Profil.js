@@ -60,7 +60,7 @@ const Profile = ({ navigation }) => {
     try {
       debbug_lib.debbug_log('load profile from backend', 'blue');
       const file = await fileManager.read_file('auto.json');
-      //console.log("File: ", file);  
+      console.log("1");  
       
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_user_info.php', {
         method: 'POST',
@@ -70,10 +70,10 @@ const Profile = ({ navigation }) => {
         },
         body: JSON.stringify(file)
       });
-  
+  console.log("2");  
       const data = await response.json();
       console.log('Data Received:', data);
-  
+  console.log("3");  
       if (data.err) {
         throw new Error('Mauvaise Réponse du serveur');
       }
@@ -82,8 +82,8 @@ const Profile = ({ navigation }) => {
       return data;
   
     } catch (error) {
-      console.log('Erreur lors de la récupération des données');
-      console.error('Erreur lors de la récupération des données', error);
+      console.log('Erreur lors de la récupération des données + ' + error.message);
+      
     }
   }; 
 
