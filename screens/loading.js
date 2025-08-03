@@ -95,29 +95,31 @@ import React, { useEffect, useState} from 'react';
     }; */}
 
     const check_update = async() => {
+      
       try {
         debbug_lib.debbug_log("=== UPDATE SYSTEM CHECK ===", "cyan");
         console.log("Update Channel: ", Updates.channel);
         console.log("Update ID: ", Updates.updateId);
         console.log("Runtime Version: ", Updates.runtimeVersion);
         console.log("Updates enabled: ", Updates.isEnabled);
-        
+        // 1. Check if Updates is enabled
         if (!Updates.isEnabled) {
           debbug_lib.debbug_log("Updates not enabled in this environment", "yellow");
           debbug_lib.debbug_log("This is normal in development mode", "yellow");
           return;
         }
-    
+        // 2. Check for updates
         debbug_lib.debbug_log("Checking for updates...", "blue");
         const update = await Updates.checkForUpdateAsync();
         console.log("Update available: ", update.isAvailable);
         console.log("Update manifest: ", update.manifest);
-        
+        // 3. If an update is available, fetch it
         if (update.isAvailable) {
           setisUpdating(true);
           debbug_lib.debbug_log("Update available! Fetching...", "green");
           
           try {
+            // Fetch the update
             await Updates.fetchUpdateAsync();
             debbug_lib.debbug_log("Update fetched successfully", "green");
             debbug_lib.debbug_log("Reloading app...", "blue");
@@ -141,6 +143,8 @@ import React, { useEffect, useState} from 'react';
     }
 
     const measureFetchSpeed = async(url) => {
+      // Just a function to measure the speed of a fetch request
+      // This function is for debbug only and will not be used in production
       const start = Date.now();
     
       const response = await fetch(url);
@@ -163,7 +167,8 @@ import React, { useEffect, useState} from 'react';
       return response;
     }
 
-    const check_first_time = async () => {      
+    const check_first_time = async () => {  
+      // Check if it's the first time the app is launched    
       const exists = await fileManager.is_file_existing("auto.json");
       if (exists) {
         debbug_lib.debbug_log("not the first time", "blue");
@@ -192,11 +197,14 @@ import React, { useEffect, useState} from 'react';
         await checkServer();
       }catch(error){
         debbug_lib.debbug_log("Error in the initialisation", "red");
-        setTimeout(loading_check, 1000); // prevent stack overflow
+        setTimeout(loading_check, 1000); // prevent stack overflow 
       }
     }
 
      const checkServer = async () => {
+      // Check if internet is reachable
+      // Check if the server is reachable
+      //
       try {
         const response = await measureFetchSpeed('https://google.com');
         if (response.ok) {
@@ -274,7 +282,7 @@ import React, { useEffect, useState} from 'react';
           <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text> 
           : 
           <View></View>}
-        <Text style={styles.versionText}>Admin Beta 1.0.13</Text>
+        <Text style={styles.versionText}>Admin Beta 1.1.1</Text>
       </View>
     );
   };

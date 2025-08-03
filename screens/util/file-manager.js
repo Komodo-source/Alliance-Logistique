@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system';
 import * as debbug_lib from './debbug.js';
 
 export const create_file = async (file_name, content = "") => {
+  // Crée un fichier avec un nom ("doit être fourni sino null")
   try {
     const fileUri = FileSystem.documentDirectory + file_name;
     
@@ -14,6 +15,7 @@ export const create_file = async (file_name, content = "") => {
 };
 
 export const is_file_existing = async (file_name) => {
+  // check si un fichier existe
   const fileUri = FileSystem.documentDirectory + file_name; 
   const fileInfo = await FileSystem.getInfoAsync(fileUri);
   
@@ -25,6 +27,7 @@ export const is_file_existing = async (file_name) => {
 
 export const delete_file = async (file_name) => {
   try {
+    // Essaye de supprimer un fichier
     const fileUri = FileSystem.documentDirectory + file_name;
     await FileSystem.deleteAsync(fileUri);
     debbug_lib.debbug_log("[FM] File has been deleted Succefully", "green");
@@ -36,6 +39,8 @@ export const delete_file = async (file_name) => {
 
 export const replaceFileAndWrite = async (newContent, file_name) => {
   try{
+    //remplace le contenu d'un fichier
+    // Attention: This will overwrite the file if it exists
     const fileUri = FileSystem.documentDirectory + file_name;
     await FileSystem.writeAsStringAsync(fileUri, newContent);
     debbug_lib.debbug_log("[FM] rewrite file sucessfully");
@@ -44,6 +49,8 @@ export const replaceFileAndWrite = async (newContent, file_name) => {
   }
 };
 
+// Se répète donc inutile
+/*
 export const checkFileExists = async (filePath) => {
   try {
     const fullPath = `${FileSystem.documentDirectory}${filePath}`;
@@ -53,11 +60,12 @@ export const checkFileExists = async (filePath) => {
     console.error('Error checking file:', error);
     return false;
   }
-};
+};*/
 
 
 export const listAllFiles = async (directory = FileSystem.documentDirectory) => {
   try {
+    //DEBBUG: list fichier dans un dossier
     const files = await FileSystem.readDirectoryAsync(directory);
     console.log(`Files in ${directory}:`);
     console.log(files);
@@ -81,9 +89,10 @@ export const listAllFiles = async (directory = FileSystem.documentDirectory) => 
   }
 };
 
-// Optional: List files in subdirectories too
+
 export const listAllFilesRecursive = async (directory = FileSystem.documentDirectory, depth = 0) => {
   try {
+    // Debbug: List files in subdirectories too
     const files = await FileSystem.readDirectoryAsync(directory);
     const indent = '  '.repeat(depth);
     
@@ -110,6 +119,7 @@ export const listAllFilesRecursive = async (directory = FileSystem.documentDirec
 
 export const readFileWithErrorHandling = async (filepath) => {
   try {
+    // Lecture d'un fichier avec gestion des erreurs
     const enregistrerPath = `${FileSystem.documentDirectory}${filepath}`;
     const content = await FileSystem.readAsStringAsync(enregistrerPath);
     console.log('File content:', content);
@@ -124,6 +134,7 @@ export const readFileWithErrorHandling = async (filepath) => {
 
 export const save_storage_local_storage_data = async (data, file_name) => {
   try {
+    // Enregistre des données dans le stockage local
     debbug_lib.debbug_log("[FM] save_storage_local_storage_data", "yellow");
     const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
     if (!dirInfo.exists) {
@@ -157,6 +168,7 @@ export const save_storage_local_storage_data = async (data, file_name) => {
 
 export const save_storage_local_storage_response = async (response, file_name) => {
   try {    
+    // Enregistre la réponse d'une requête dans le stockage local
     debbug_lib.debbug_log("[FM] save_storage_local_storage_data", "yellow");
     const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
     if (!dirInfo.exists) {
@@ -191,6 +203,7 @@ export const save_storage_local_storage_response = async (response, file_name) =
 // FIXED: Now actually modifies existing data instead of overwriting
 export const modify_value_local_storage = async (key, value, file_name) => {
   try {
+    // Modifie une valeur dans le stockage local, dans un fichier JSON
     debbug_lib.debbug_log("[FM] modify_value_local_storage", "yellow");
     const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
     if (!dirInfo.exists) {
@@ -239,6 +252,7 @@ export const modify_value_local_storage = async (key, value, file_name) => {
 // FIXED: Now prevents overwriting existing keys
 export const add_value_to_local_storage = async (key, value, file_name) => {
   try {
+    // Ajoute une valeur dans le stockage local, dans un fichier JSON
     debbug_lib.debbug_log("[FM] add_value_to_local_storage", "yellow");
     const fileUri = FileSystem.documentDirectory + file_name;
     let existingData = {};
@@ -280,6 +294,7 @@ export const add_value_to_local_storage = async (key, value, file_name) => {
 
 export const read_file = async (file_name, if_not_create=false) => {
   try {
+    // Lecture d'un fichier JSON
     debbug_lib.debbug_log("[FM] read_file", "yellow");
     const fileUri = FileSystem.documentDirectory + file_name; 
     console.log('lecture du fichier:', fileUri);
@@ -320,6 +335,7 @@ export const read_file = async (file_name, if_not_create=false) => {
 
 export const delete_key_from_local_storage = async (key, file_name) => {
   try {
+    // Supprime une clé d'un fichier JSON dans le stockage local
     debbug_lib.debbug_log("[FM] delete_key_from_local_storage", "yellow");
     const fileUri = FileSystem.documentDirectory + file_name;
     let existingData = {};
@@ -360,6 +376,7 @@ export const delete_key_from_local_storage = async (key, file_name) => {
 
 export const check_key_exists = async (key, file_name) => {
   try {
+    // Vérifie si une clé existe dans un fichier JSON
     debbug_lib.debbug_log("[FM] check_key_exists", "yellow");
     const data = await read_file(file_name);
     if (data === null) return false;

@@ -5,6 +5,9 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
+// Ce script traite les demmandes de HUB non traités et crée pour chaque commande de HUB
+// une COMMANDE avec les produits associés (divisé par catégorie), en choisissant le meilleur fournisseur et le meilleur coursier.
+
 try {
 
     function calculate_dist($x, $y) {

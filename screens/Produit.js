@@ -32,8 +32,9 @@ const Produit = ({ navigation }) => {
   const [allProduits, setAllProduits] = useState([]); 
   const [commandeName, setCommandeName] = useState('');
   const fileUri = FileSystem.documentDirectory + 'product.json';
-
+/*
   const checkIfProductFileEmpty = async() => {
+    //Obsolète
     try {
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
   
@@ -51,7 +52,7 @@ const Produit = ({ navigation }) => {
       console.error('Error checking file:', error);
       return true;
     }
-  };
+  };*/
 
 
   const readProductFile = async () => {
@@ -87,6 +88,8 @@ const Produit = ({ navigation }) => {
   const getProduct = async () => {
     let data = {};
     try {
+      // soit on get les produits depuis le fichier local, soit on les récupère depuis le serveur
+      // normalement le fichier local est mis à jour par le serveur lors du login
       const fileData = await readProductFile();
       if (fileData && Object.keys(fileData).length > 0) {
         console.log("Lecture depuis le fichier local");

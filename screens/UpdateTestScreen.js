@@ -4,6 +4,8 @@ import * as Updates from 'expo-updates';
 import * as fileManager from './util/file-manager.js';
 import * as debbug_lib from './util/debbug.js';
 
+// Ce fichier est obsolète et sera supprimé dans la prochaine version majeure.
+
 const UpdateTestScreen = () => {
   const [testResults, setTestResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

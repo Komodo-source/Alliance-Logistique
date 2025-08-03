@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 include_once('db.php');
 
+// TODO
 $sql = "SELECT *  FROM HUB";
 $result = $conn->query($sql);
 

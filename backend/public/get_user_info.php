@@ -1,4 +1,8 @@
 <?php
+
+// Tout est dans le titre
+// Ce script permet de récupérer les informations de l'utilisateur (client, fournisseur, coursier) en fonction du type et de la session_id.
+// Il renvoie les informations de l'utilisateur sous forme de JSON.
 header('Content-Type: application/json');
 include_once('db.php');
 include_once('lib/get_session_info.php');

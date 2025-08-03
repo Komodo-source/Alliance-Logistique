@@ -1,5 +1,9 @@
 <?php
 
+//Récup les commandes du client
+//Ce script permet de récupérer les commandes du client en fonction de la session_id.
+//Il renvoie les informations de la commande sous forme de JSON.
+
 header('Content-Type: application/json');
 include_once('db.php'); 
 include('lib/get_session_info.php');

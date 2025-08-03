@@ -1,7 +1,10 @@
 <?php
 header('Content-Type: application/json');
+// Add in FOURNIR (in db) the products provided by the supplier
 
 try{
+    
+
     include_once('db.php');
     include_once('lib/get_session_info.php');
     

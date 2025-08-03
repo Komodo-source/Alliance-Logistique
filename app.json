@@ -2,7 +2,7 @@
   "expo": {
     "name": "Alliance Logistique",
     "slug": "alliance-logistique",
-    "version": "1.0.7",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -51,7 +51,7 @@
     },
     "runtimeVersion": "1.0.7",
     "updates": {
-      "url": "https://u.expo.dev/e2aaec2e-feae-4114-b202-d73b6e6474ae",
+      "url": "https://u.expo.dev/1633206a-ced9-477d-97bf-d7360ad6e56f",
       "enabled": true,
       "fallbackToCacheTimeout": 0,
       "checkAutomatically": "ON_LOAD"

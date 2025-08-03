@@ -25,6 +25,7 @@ const Profile = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
 
   const modify_profile = (data) => {
+    // TO DO: Modify the profile data based on the received data
     debbug_lib.debbug_log('Load profile from local', 'blue');
     const mappedData = {
       name: (data.nom_client || data.nom_fournisseur || data.name || userData.name || '') + " " + (data.prenom_client || data.prenom_fournisseur || data.firstname || ''),
@@ -44,6 +45,7 @@ const Profile = ({ navigation }) => {
   }
 
   const save_profil = async (nom, prenom) => {
+    // TO DO: Save the profile data to the db
     try {
       await fileManager.modify_value_local_storage(
        "name", nom, 'auto.json');

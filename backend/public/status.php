@@ -3,7 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
 // === CONFIG ===
-include_once("lib/api.php"); // Ce fichier doit définir : $subscriptionKey, $apiUser, $apiKey, $targetEnvironment
+include_once("lib/api.php"); 
 
 $data = json_decode(file_get_contents("php://input"), true);
 $referenceId = $data['referenceId'] ?? null;
