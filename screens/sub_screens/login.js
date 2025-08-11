@@ -254,7 +254,9 @@ const Login = ({ navigation }) => {
             onValueChange={setSelection}
             color={isSelected ? '#2E3192' : undefined}
           />
+          
           <Text style={{fontSize : 15, fontWeight : "500", marginLeft : 10}}>Rester connecté</Text>
+          
       </View>
 
       <View style={styles.oubliVue}>

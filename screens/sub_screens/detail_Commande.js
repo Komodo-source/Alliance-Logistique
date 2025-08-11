@@ -60,6 +60,9 @@ const DetailCommande = ({ route, navigation }) => {
   const [mapInteracting, setMapInteracting] = useState(false);
   const [isAdresse, setIsAddresse] = useState(false);
 
+  const [addresse, setAddress] = useState("");
+  const [email, setEmail] = useState("");
+
   if (!item) {
     return (
       <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#fff'}}>
@@ -345,15 +348,16 @@ const DetailCommande = ({ route, navigation }) => {
                   <h3>ÉMETTEUR</h3>
                   <p><strong>Alliance Logistique</strong></p>
                   <p>Dekougnbe Parcelle I</p>
-                  <p>8ême Von Droite après rond point pavé Dekougnbe</p>
+                  <p>8eme Von Droite après rond point pavé Dekougnbe</p>
                   <p>Email: support@alliance-logistique.com</p>
                   <p>Tél: +229 96 49 12 89</p>
               </div>
 
               <div class="company-section">
                   <h3>DESTINATAIRE</h3>
-                  <p><strong>${item.nom_dmd || 'Client'}</strong></p>              
-                  <p>Email: contact@client.com</p>
+                  <p><strong>${item.nom_dmd || 'Client'}</strong></p> 
+                  <p>${adresse || "pas d'adresse physique"}</p>              
+                  <p>Email: ${email || "pas d'adresse email"}</p>
                   <p>Code commande: ${item.code_echange || 'N/A'}</p>
               </div>              
           </div>
@@ -457,7 +461,7 @@ const DetailCommande = ({ route, navigation }) => {
       console.log('PDF copied to:', finalPath);
 
       // Try to save to Media Library for better accessibility
-      try {
+      try {a
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === 'granted') {
           const asset = await MediaLibrary.createAssetAsync(uri);
@@ -712,8 +716,8 @@ const DetailCommande = ({ route, navigation }) => {
           )}
         </View>
         }
-          
 
+        
           {/* Products Section */}
           <View style={styles.productsSection}>
             <Text style={styles.sectionTitle}>Produits Achetés</Text>

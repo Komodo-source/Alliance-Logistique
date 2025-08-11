@@ -169,7 +169,7 @@ const fournisseur_produit = ({ navigation }) => {
         try {
             // Get supplier ID from session or user data
             const userInfo = await fileManager.read_file("auto.json");
-            const id_fournisseur = userInfo?.id || 1; // Default to 1 for testing
+            const session_id = userInfo?.session_id || 1; // Default to 1 for testing
 
             const list_produit = supplierProducts.map(p => p.id);
             const qte_produit = supplierProducts.map(p => p.quantite);
@@ -181,14 +181,14 @@ const fournisseur_produit = ({ navigation }) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    id_fournisseur: id_fournisseur,
+                    session_id: session_id,
                     list_produit: list_produit,
                     qte_produit: qte_produit,
                     prix_produit: prix_produit
                 })
             });
             console.log("data sent: " + JSON.stringify({
-                id_fournisseur: id_fournisseur,
+                session_id: session_id,
                 list_produit: list_produit,
                 qte_produit: qte_produit,
                 prix_produit: prix_produit
@@ -203,7 +203,7 @@ const fournisseur_produit = ({ navigation }) => {
                 "Produit ajouté à votre liste",
                 true,
                 "OK",
-                () => navigation.navigate("login"),
+                () => navigation.navigate("Accueil"),
         
               ); 
                 
