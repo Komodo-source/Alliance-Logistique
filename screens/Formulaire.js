@@ -110,6 +110,7 @@ const Formulaire = ({ navigation, route}) => {
         getCurrentLocation();
         return true;
       } else {
+
         setHasLocationPermission(false);
         //Alert.alert('Permission refusée', 'Vous devez autoriser la localisation');
         getAlertRef().current?.showAlert(
@@ -206,6 +207,7 @@ const Formulaire = ({ navigation, route}) => {
 
   const getCurrentLocation = async () => {
     if (!hasLocationPermission) {
+      /*
       getAlertRef().current?.showAlert(
         "Permission refusée",
         "Vous devez autoriser la localisation",
@@ -213,7 +215,7 @@ const Formulaire = ({ navigation, route}) => {
         "Autoriser",
         null,
 
-      ); 
+      ); */
       return;
     }
     
@@ -734,7 +736,7 @@ const Formulaire = ({ navigation, route}) => {
                 <Text style={styles.inputLabel}>Nom de la commande</Text>
                 <TextInput
                   style={[styles.input, isNameFocused && styles.inputFocused]}
-                  placeholder="Ex: Commande pour restaurant"
+                  placeholder="Ex: Commande viande restaurant"
                   placeholderTextColor="#a2a2a9"
                   value={commandeName}
                   onChangeText={setCommandeName}
@@ -745,10 +747,10 @@ const Formulaire = ({ navigation, route}) => {
 
               {/* Description Input */}
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Description</Text>
+                <Text style={styles.inputLabel}>Description (Optionnel)</Text>
                 <TextInput
                   style={[styles.inputDesc, isDescFocused && styles.inputFocused]}
-                  placeholder="Décrivez votre commande en détail..."
+                  placeholder="Ex: Viande et poisson pour l'Hotel n°..."
                   placeholderTextColor="#a2a2a9"
                   multiline
                   numberOfLines={4}
@@ -880,7 +882,7 @@ const Formulaire = ({ navigation, route}) => {
 
               {/* Products List Section */}
               <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Produits à commander</Text>
+                <Text style={styles.sectionTitle}>Produits commandable</Text>
                 <FlatList
                   data={produits}
                   keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
@@ -1377,15 +1379,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 10,
   },
-  mapContainer: {
-    width: '100%',
-    height: 300,
-    marginTop: 20,
-    borderRadius: 10,
-    marginBottom: 45,
-    textAlign : "center",
-    
-  },
+
   map: {
     width: '100%',
     height: '100%',
@@ -1601,15 +1595,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
-  // Map Styles
   mapContainer: {
-    width: '100%',
     height: 250,
-    borderRadius: 10,
+    borderRadius: 12,
     overflow: 'hidden',
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#eee',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   map: {
     width: '100%',

@@ -275,23 +275,14 @@ const Profile = ({ navigation }) => {
             
             <ProfileOption
               title="Confidentialité"
-              onPress={() => navigation.navigate('Confidentialité')}
+              onPress={() => navigation.navigate('Confidentialite')}
             />
             
             <ProfileOption
               title="Sécurité de mes données"
-              onPress={() => navigation.navigate('Sécurité')}
+              onPress={() => navigation.navigate('ProtectionDonnee')}
             />
             
-            <ProfileOption
-              title="Notifications"
-              onPress={() => navigation.navigate('Notifications')}
-            />
-            
-            <ProfileOption
-              title="Aide et support"
-              onPress={() => navigation.navigate('Support')}
-            />
           </View>
         </View>
 

@@ -336,7 +336,7 @@ const Hub = ({ navigation }) => {
           >
             {renderFilterButton('all', 'Toutes', '📋')}
             {renderFilterButton('En préparation', 'En attente', '⏳')}
-            {renderFilterButton('En cours de livraison', 'En cours', '🔄')}
+            {renderFilterButton('En cours de livraison', 'En cours', '⏰​')}
             {renderFilterButton('Livré', 'Livrées', '✅')}
             {renderFilterButton('annulé', 'Annulées', '❌')}
 
@@ -452,12 +452,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     paddingVertical: 24,
-    backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-
+    marginLeft: 20,
+    marginRight: 20,
+    marginTop: 20,
+    borderRadius: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
@@ -470,11 +470,13 @@ const styles = StyleSheet.create({
     color: '#111',
     marginBottom: 4,
     letterSpacing: -0.5,
+    textAlign: "center"
   },
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(7, 7, 7, 0.8)',
     fontWeight: '500',
+    textAlign: "center"
   },
   quickActionsSection: {
     paddingHorizontal: 20,

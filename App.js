@@ -27,6 +27,8 @@ import Notification from './NotificationService';
 import ErrorBoundary from './components/ErrorBoundary';
 import mdp_oubli from './screens/sub_screens/mdp_oubli';
 import VerifyResetCode from './screens/sub_screens/verify_reset_code';
+import Confidentialite from './screens/sub_screens/Confidentialite';
+import ProtectionDonnee from './screens/sub_screens/ProtectionDonnee';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +64,8 @@ const App = () => {
             <Stack.Screen name="Notification" component={Notification} options={{ headerTitle : "Notification" }}/>
             <Stack.Screen name="mdp_oubli" component={mdp_oubli} options={{ headerShown: true, headerTitle : "Recouvrement"}}/>
             <Stack.Screen name="VerifyResetCode" component={VerifyResetCode} options={{ headerTitle: "Réinitialisation" }}/>
+            <Stack.Screen name="Confidentialite" component={Confidentialite} options={{ headerTitle: "Confidentialite" }}/>
+            <Stack.Screen name="ProtectionDonnee" component={ProtectionDonnee} options={{ headerTitle: "Donnée" }}/>
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>

@@ -461,7 +461,7 @@ const DetailCommande = ({ route, navigation }) => {
       console.log('PDF copied to:', finalPath);
 
       // Try to save to Media Library for better accessibility
-      try {a
+      try {
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status === 'granted') {
           const asset = await MediaLibrary.createAssetAsync(uri);
