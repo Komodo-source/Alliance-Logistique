@@ -157,8 +157,10 @@ const Produit = ({ navigation }) => {
       <Image 
           source = {require('../assets/Icons/Dark-Search.png')}
           style={styles.imageSearch}
-        />  
+        /> 
+       
     </View>
+    <Text style={styles.IndicationProduit}>* Les prix sont données à titre indicatif </Text>
 
       <FlatList
         data={produits}
@@ -226,6 +228,13 @@ const Produit = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  IndicationProduit : {
+    color: '#2E7D32',
+    marginLeft: 20,
+    marginBottom: 10,
+    fontSize: 14,
+    fontWeight: "500"
+  },
   container: {
     flex: 1,
     backgroundColor: '#F9F6EE',
@@ -351,7 +360,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
-    height: 40,
+    height: 50,
     borderWidth: 2.5,
     borderRadius: 5,
     width: '80%',
@@ -372,7 +381,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
+    
     justifyContent: 'space-around',
   },
 });

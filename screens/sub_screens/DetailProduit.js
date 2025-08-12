@@ -1,5 +1,10 @@
-import React from 'react';
-import { View, Text, Button, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet, Image, TouchableOpacity, FlatList} from 'react-native';
+import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import { debbug_log } from '../util/debbug';
+import { ScrollView } from 'react-native-gesture-handler';
+
 
 var headers = {
   'Accept' : 'application/json',
@@ -29,11 +34,147 @@ export const loadImages = (id_produit) => {
   }
 }
 
+
 const DetailProduit = ({ route, navigation }) => {
+  const [userLocation, setUserLocation] = useState(null);
+  const [fourni, setFourni] = useState(null);
+  const [estCharge, setFourniCharge] = useState(false);
+
     const { item } = route.params;
     console.log(item );
+
+
+  const getCurrentLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+      
+      const { latitude, longitude } = location.coords;
+      console.log("Current location:", latitude, longitude);
+      setUserLocation({ latitude, longitude });
+
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Error', 'Could not get your current location');
+    }
+  };
+
+
+
+  
+  const getFourni = async () => {
+    let data = {};
+    try {
+      
+      // va chercher la liste des fournisseurs produisant le même 
+      // produit afin de les comparer
+
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({id_produit: item.id_produit})
+      });
+      data = await response.json();
+      console.log("reçus du serveur:", data);
+      
+      setFourni(data);
+      setFourniCharge(true);
+      console.log("Fourni fetched:", data);
+
+    } catch (error) {
+      console.error("Erreur lors de la récupération des produits:", error);
+    }
+  };
+  
+
+  
+
+  const localisationToKm = (lat, long) => {
+
+    const radiusEarthKm = 6371.07103;
+    // Convert degrees to radians
+    const toRadians = deg => deg * (Math.PI / 180);
+
+    const latFrom = toRadians(lat);
+    const latTo = toRadians(userLocation.latitude);
+    const latDiff = latTo - latFrom;
+    const lngDiff = toRadians(userLocation.longitude - long);
+
+    // Haversine formula
+    const a = Math.sin(latDiff / 2) ** 2 +
+              Math.cos(latFrom) * Math.cos(latTo) *
+              Math.sin(lngDiff / 2) ** 2;
+
+    const c = 2 * Math.asin(Math.sqrt(a));
+    const distance = radiusEarthKm * c;
+    console.log(`Real distance from pointA to pointB is ${distance} km`);
+    return distance;
+  }
+
+const renderFourniChoix = ({ item: fourni, index }) => {
+  const isFirstSupplier = index === 0; // First supplier is cheapest
+  
   return (
-    <View style={styles.container}>
+    <ScrollView>
+      <TouchableOpacity 
+        style={[
+          styles.productCard,
+          isFirstSupplier && styles.cheapestCard
+        ]}
+        onPress={() => navigation.navigate('FicheFournisseur', {fourni})}
+      >
+        {/* Best Price Badge for first supplier */}
+        {isFirstSupplier && (
+          <View style={styles.bestPriceBadge}>
+            <Text style={styles.bestPriceText}>MEILLEUR PRIX</Text>
+          </View>
+        )}
+        
+        <View style={styles.supplierHeader}>
+          <View style={styles.supplierInfo}>
+            <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
+            <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.cartButton}
+            onPress={() => navigation.navigate("Formulaire")}
+          >
+            <Ionicons name="cart" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.supplierDetails}>
+          <View style={styles.detailRow}>
+            <Ionicons name="location-outline" size={16} color="#64748B" />
+            <Text style={styles.detailText}>
+              {fourni.localisation_orga !== null 
+                ? `${localisationToKm(fourni.localisation_orga).toFixed(1)} km`
+                : fourni.ville_organisation || 'Adresse non renseignée'
+              }
+            </Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Ionicons name="cube-outline" size={16} color="#64748B" />
+            <Text style={styles.detailText}>
+              Stock: {fourni.nb_produit_fourni} unités
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+};
+
+    useEffect(() => {
+    getCurrentLocation();
+    getFourni();
+  }, []);
+
+  return (
+    <ScrollView style={styles.container}>
       <View style={styles.main}>
             <View >
                 <Text style={styles.title}>{item.nom_produit}</Text>            
@@ -44,7 +185,7 @@ const DetailProduit = ({ route, navigation }) => {
         
 
         <Text style={styles.description}>Ceci est une description du produit le temps que l'on introduise la description du produit</Text>
-        <Text style={styles.price}>Prix facturée: {item.prix_produit} FCFA</Text>
+        {/*<Text style={styles.price}>Prix facturée: {item.prix_produit} FCFA</Text>
         <TouchableOpacity
         style={styles.LoginButton}
         onPress={() => navigation.navigate('Formulaire')}
@@ -53,7 +194,7 @@ const DetailProduit = ({ route, navigation }) => {
           Passer commande
         </Text>
 
-      </TouchableOpacity>
+      </TouchableOpacity>*/}
 
       <TouchableOpacity
         style={styles.Panier}
@@ -63,11 +204,47 @@ const DetailProduit = ({ route, navigation }) => {
           Ajouter à une commande récurrente
         </Text>
       </TouchableOpacity>
-    </View>
+
+      <ScrollView style={styles.listFourni}>
+        <Text style={styles.NbFourni}>Nombre de fournisseur produisant {item.nom_produit}: {item.nb_fournisseur}</Text>
+        {estCharge ? 
+          (<FlatList
+            data={fourni}
+            renderItem={renderFourniChoix}
+            keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
+            numColumns={1}
+            contentContainerStyle={styles.productGrid}
+          />) : (
+            <View style={styles.loadingContainer}>
+              <View style={styles.loadingSpinner}>
+                <Text style={styles.loadingEmoji}>⏳</Text>
+              </View>
+              <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
+            </View>
+          )        
+        
+        }
+
+      </ScrollView>
+    </ScrollView>
+    
   );
 };
 
+
+
 const styles = StyleSheet.create({
+  listFourni : {
+    marginBottom: 30
+  },
+  NbFourni : {
+    fontSize: 14,
+    fontWeight: '500', 
+    marginTop: 20,
+    marginLeft: 20,
+    color: "#64748B",
+    marginBottom: 10
+  },
     main : {
         display: 'flex',
         flexDirection: 'row',
@@ -145,6 +322,137 @@ const styles = StyleSheet.create({
         alignItems: 'center',
 
       },
+
+      loadingContainer: {
+        
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+      },
+
+        loadingSpinner: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: '#F1F5F9',
+        alignItems: 'center',
+        justifyContent: 'center',
+        
+      },
+        loadingEmoji: {
+          fontSize: 24,
+        },
+        loadingText: {
+          fontSize: 16,
+          color: '#64748B',
+          fontWeight: '600',
+        },
+
+        productCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 20,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    position: 'relative',
+  },
+  
+  cheapestCard: {
+    borderColor: '#2E7D32',
+    borderWidth: 2,
+    backgroundColor: '#F8FFF8',
+  },
+  
+  bestPriceBadge: {
+    position: 'absolute',
+    top: -8,
+    right: 16,
+    backgroundColor: '#2E7D32',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  
+  bestPriceText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  
+  supplierHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  
+  supplierInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  
+  supplierName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  
+  productPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  
+  cartButton: {
+    marginTop: 10,
+    backgroundColor: '#FF8C00', // Orange background
+    width: 44,
+    height: 44,
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FF8C00',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  
+  supplierDetails: {
+    gap: 8,
+  },
+  
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  
+  detailText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  
+  productGrid: {
+    paddingBottom: 20,
+  },
 })
 
 export default DetailProduit;

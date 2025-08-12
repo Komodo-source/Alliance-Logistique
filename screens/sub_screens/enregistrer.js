@@ -249,7 +249,9 @@ const enregistrer = ({route, navigation }) => {
       Email: await hash_256(Email),
       Tel: await hash_256(Tel),
       Password: await hash_256(Password),
-      data // pour savoir dans quelle table on l'insert
+      data, // pour savoir dans quelle table on l'insert
+      email_unhash: Email,
+      phone_unhash: Tel
     };
     return formData;
   };
@@ -320,7 +322,7 @@ const enregistrer = ({route, navigation }) => {
         if(formData.data == "fo"){
           navigation.navigate("fournisseur_produit");
         }else{
-          navigation.navigate('login');
+          navigation.navigate('Login');
         }
         
         try {
@@ -353,7 +355,7 @@ const enregistrer = ({route, navigation }) => {
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={{fontSize : 25, fontWeight : "800", marginLeft : 15, marginBottom : 5}}>S'enregistrer</Text>
+        <Text style={{fontSize : 25, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop: 20}}>S'enregistrer</Text>
         <Text style={{fontSize : 16, fontWeight : "500", marginLeft : 25, marginBottom : 45}}>Pour continuer veuillez vous enregistrer</Text>
 
         <Text style={styles.descInput}>Nom</Text>

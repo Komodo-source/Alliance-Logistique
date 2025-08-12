@@ -44,7 +44,6 @@ CREATE TABLE FOURNISSEUR(
     email_fournisseur VARCHAR(255) NOT NULL,
     telephone_fournisseur VARCHAR(255),
     mdp_fournisseur VARCHAR(255) NOT NULL,
-    localisation_fournisseur VARCHAR(100) ,
     CONSTRAINT pk_fourni PRIMARY KEY(id_fournisseur)
 );
 
@@ -63,6 +62,7 @@ CREATE TABLE COURSIER(
 CREATE TABLE ORGANISATION(
     id_orga INT,
     nom_orga VARCHAR(255) NOT NULL,
+    ville_organisation VARCHAR(255),
     localisation_orga VARCHAR(100),
     CONSTRAINT pk_orga PRIMARY KEY(id_orga)
 );
@@ -186,10 +186,11 @@ CREATE TABLE TEMP_CODE_RESET_PSSWD(
 
 CREATE TABLE ADRESSE(
     id_addresse INT,
-    ville_addresse VARCHAR(255) NOT NULL,
+    ville_addresse VARCHAR(255),
     code_postal_addresse VARCHAR(255),
     addresse_rue VARCHAR(255),
     complement_addresse VARCHAR(255),
+    localisation VARCHAR(255),
     CONSTRAINT pk_addresse PRIMARY KEY(id_addresse)
 );
 

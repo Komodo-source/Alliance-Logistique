@@ -42,6 +42,9 @@ try {
     //$Password = hash('sha256', $data['Password']);
     $Password = $data['Password'];
     $flag = $data['data'];
+
+    $email_unhash = $data['email_unhash'];
+    $phone_unhash = $data['phone_unhash'];
     
     // Validate user type
     if (!in_array($flag, ['cl', 'fo', 'co'])) {
@@ -65,8 +68,8 @@ try {
     
     // Prepare the appropriate insert statement
     if($flag == "cl"){
-        $stmt = $conn->prepare("INSERT INTO CLIENT(id_client, nom_client, prenom_client, email_client, telephone_client, mdp_client) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
+        $stmt = $conn->prepare("INSERT INTO CLIENT(id_client, nom_client, prenom_client, email_client, telephone_client, mdp_client, email_unhash_client, tel_unhash_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $email_unhash, $phone_unhash);
         $user_data = [
             'id_client' => $id,
             'nom_client' => $nom,
@@ -75,8 +78,8 @@ try {
             'telephone_client' => $Tel
         ];
     } else if($flag == "fo"){
-        $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);    
+        $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur, email_unhash_fournisseur, tel_unhash_fournisseur) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $email_unhash, $phone_unhash);    
         $user_data = [
             'id_fournisseur' => $id,
             'nom_fournisseur' => $nom,
@@ -85,6 +88,9 @@ try {
             'telephone_fournisseur' => $Tel
         ];
     } else {
+        // COURSIER n'est pas update 
+        //pour l'instant on ne s'occupe pas des coursier donc plein de chose ne
+        //sont pas update
         $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $occupied = 1;
         $stmt->bind_param("ssssssi", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);        

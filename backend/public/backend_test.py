@@ -3,10 +3,10 @@ import json
 
 # URL de ton backend (change-la par l'URL de ton API)
 #https://backend-logistique-api-latest.onrender.com/db.php
-url = "http://127.0.0.1:8000/reset_email.php"
+url = "http://127.0.0.1:8000/getFournisseurProduction.php"
 
 # Données à envoyer (modifie selon tes besoins)
-payload =  {'email': 'l@gmail.com'}
+payload =  {'id_produit': 1}
 
 # En-têtes HTTP
 headers = {
