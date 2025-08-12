@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, Image, TouchableOpacity, FlatList} from 'react-native';
+import { View, Text, Button, StyleSheet, Image, TouchableOpacity, FlatList, SafeAreaView, Alert } from 'react-native';
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debbug_log } from '../util/debbug';
-import { ScrollView } from 'react-native-gesture-handler';
 
 
 var headers = {
@@ -39,6 +38,7 @@ const DetailProduit = ({ route, navigation }) => {
   const [userLocation, setUserLocation] = useState(null);
   const [fourni, setFourni] = useState(null);
   const [estCharge, setFourniCharge] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(true);
 
     const { item } = route.params;
     console.log(item );
@@ -46,6 +46,14 @@ const DetailProduit = ({ route, navigation }) => {
 
   const getCurrentLocation = async () => {
     try {
+      // Request permission first
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required to calculate distances');
+        setLocationLoading(false);
+        return;
+      }
+
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
@@ -53,14 +61,14 @@ const DetailProduit = ({ route, navigation }) => {
       const { latitude, longitude } = location.coords;
       console.log("Current location:", latitude, longitude);
       setUserLocation({ latitude, longitude });
+      setLocationLoading(false);
 
     } catch (error) {
       console.log(error);
       Alert.alert('Error', 'Could not get your current location');
+      setLocationLoading(false);
     }
   };
-
-
 
   
   const getFourni = async () => {
@@ -88,10 +96,15 @@ const DetailProduit = ({ route, navigation }) => {
   };
   
 
-  
+  const localisationToKm = (loca) => {
+    // Return null if user location is not available
+    if (!userLocation) {
+      return null;
+    }
 
-  const localisationToKm = (lat, long) => {
-
+    let lat = parseFloat(loca.split(";")[0]);
+    let long = parseFloat(loca.split(";")[1]);
+    
     const radiusEarthKm = 6371.07103;
     // Convert degrees to radians
     const toRadians = deg => deg * (Math.PI / 180);
@@ -114,57 +127,57 @@ const DetailProduit = ({ route, navigation }) => {
 
 const renderFourniChoix = ({ item: fourni, index }) => {
   const isFirstSupplier = index === 0; // First supplier is cheapest
+  const distance = fourni.localisation_orga !== null ? localisationToKm(fourni.localisation_orga) : null;
   
   return (
-    <ScrollView>
-      <TouchableOpacity 
-        style={[
-          styles.productCard,
-          isFirstSupplier && styles.cheapestCard
-        ]}
-        onPress={() => navigation.navigate('FicheFournisseur', {fourni})}
-      >
-        {/* Best Price Badge for first supplier */}
-        {isFirstSupplier && (
-          <View style={styles.bestPriceBadge}>
-            <Text style={styles.bestPriceText}>MEILLEUR PRIX</Text>
-          </View>
-        )}
-        
-        <View style={styles.supplierHeader}>
-          <View style={styles.supplierInfo}>
-            <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
-            <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.cartButton}
-            onPress={() => navigation.navigate("Formulaire")}
-          >
-            <Ionicons name="cart" size={20} color="#fff" />
-          </TouchableOpacity>
+    // Removed ScrollView wrapper - this was causing the VirtualizedList warning
+    <TouchableOpacity 
+      style={[
+        styles.productCard,
+        isFirstSupplier && styles.cheapestCard
+      ]}
+      onPress={() => navigation.navigate('FicheFournisseur', {fourni})}
+    >
+      {/* Best Price Badge for first supplier */}
+      {isFirstSupplier && (
+        <View style={styles.bestPriceBadge}>
+          <Text style={styles.bestPriceText}>MEILLEUR PRIX</Text>
+        </View>
+      )}
+      
+      <View style={styles.supplierHeader}>
+        <View style={styles.supplierInfo}>
+          <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
+          <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
         </View>
         
-        <View style={styles.supplierDetails}>
-          <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color="#64748B" />
-            <Text style={styles.detailText}>
-              {fourni.localisation_orga !== null 
-                ? `${localisationToKm(fourni.localisation_orga).toFixed(1)} km`
-                : fourni.ville_organisation || 'Adresse non renseignée'
-              }
-            </Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Ionicons name="cube-outline" size={16} color="#64748B" />
-            <Text style={styles.detailText}>
-              Stock: {fourni.nb_produit_fourni} unités
-            </Text>
-          </View>
+        <TouchableOpacity 
+          style={styles.cartButton}
+          onPress={() => navigation.navigate("Formulaire")}
+        >
+          <Ionicons name="cart" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+      
+      <View style={styles.supplierDetails}>
+        <View style={styles.detailRow}>
+          <Ionicons name="location-outline" size={16} color="#64748B" />
+          <Text style={styles.detailText}>
+            {distance !== null && !locationLoading
+              ? `${distance.toFixed(1)} km`
+              : fourni.ville_organisation || 'Adresse non renseignée'
+            }
+          </Text>
         </View>
-      </TouchableOpacity>
-    </ScrollView>
+        
+        <View style={styles.detailRow}>
+          <Ionicons name="cube-outline" size={16} color="#64748B" />
+          <Text style={styles.detailText}>
+            Stock: {fourni.nb_produit_fourni} unités
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -174,7 +187,7 @@ const renderFourniChoix = ({ item: fourni, index }) => {
   }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.main}>
             <View >
                 <Text style={styles.title}>{item.nom_produit}</Text>            
@@ -185,16 +198,6 @@ const renderFourniChoix = ({ item: fourni, index }) => {
         
 
         <Text style={styles.description}>Ceci est une description du produit le temps que l'on introduise la description du produit</Text>
-        {/*<Text style={styles.price}>Prix facturée: {item.prix_produit} FCFA</Text>
-        <TouchableOpacity
-        style={styles.LoginButton}
-        onPress={() => navigation.navigate('Formulaire')}
-      >
-        <Text style={{color: "#fff", fontSize: 19, fontWeight: "500"}}>
-          Passer commande
-        </Text>
-
-      </TouchableOpacity>*/}
 
       <TouchableOpacity
         style={styles.Panier}
@@ -205,7 +208,7 @@ const renderFourniChoix = ({ item: fourni, index }) => {
         </Text>
       </TouchableOpacity>
 
-      <ScrollView style={styles.listFourni}>
+      <SafeAreaView style={styles.listFourni}>
         <Text style={styles.NbFourni}>Nombre de fournisseur produisant {item.nom_produit}: {item.nb_fournisseur}</Text>
         {estCharge ? 
           (<FlatList
@@ -214,6 +217,7 @@ const renderFourniChoix = ({ item: fourni, index }) => {
             keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
             numColumns={1}
             contentContainerStyle={styles.productGrid}
+            showsVerticalScrollIndicator={false}
           />) : (
             <View style={styles.loadingContainer}>
               <View style={styles.loadingSpinner}>
@@ -225,8 +229,8 @@ const renderFourniChoix = ({ item: fourni, index }) => {
         
         }
 
-      </ScrollView>
-    </ScrollView>
+      </SafeAreaView >
+    </SafeAreaView>
     
   );
 };
@@ -234,7 +238,12 @@ const renderFourniChoix = ({ item: fourni, index }) => {
 
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   listFourni : {
+    flex: 1,
     marginBottom: 30
   },
   NbFourni : {

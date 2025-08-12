@@ -14,6 +14,8 @@ import { getAlertRef } from './util/AlertService';
 import Snackbar from './util/SnackBar.js';
 import { useRef } from 'react';
 
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+
 
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
@@ -21,6 +23,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as debbug_lib from './util/debbug.js';
 import * as fileManager from './util/file-manager.js';
 import axios from 'axios';
+import { SafeAreaView } from 'react-native';
 
 
 const Formulaire = ({ navigation, route}) => {
@@ -97,6 +100,117 @@ const Formulaire = ({ navigation, route}) => {
     "default": TomateImage, 
   };
 
+  const iconMapping = {
+  // --- Poissons & Fruits de mer ---
+  "mérou": "fish",
+  "bar": "fish",
+  "carpe grise": "fish",
+  "carpe rouge": "fish",
+  "sol fibo": "fish",
+  "brochet": "fish",
+  "crabe de mer": "crab",
+  "crabe de rivière": "crab",
+  "carpe": "fish",
+  "dorade": "fish",
+  "silivie": "fish",
+  "cilure blanc": "fish",
+  "cilure noir": "fish",
+  "capitaine": "fish",
+  "crevette": "shrimp",
+  "gambas": "shrimp",
+  "langouste": "lobster",
+  "langoustine": "lobster",
+  "petite crevette": "shrimp",
+  "calamar": "octopus",
+
+  // --- Fruits ---
+  "orange": "fruit-citrus",
+  "citron": "fruit-citrus",
+  "avocat": "fruit-avocado",
+  "banane": "fruit-banana",
+  "pomme": "fruit-apple",
+  "capoti": "fruit-pineapple", // approximation
+  "corossol": "fruit-pineapple", // approximation
+  "mangue": "fruit-mango",
+  "papaye": "fruit-pineapple", // approximation
+  "goyave": "fruit-pineapple", // approximation
+  "ananas": "fruit-pineapple",
+  "banane plantin": "fruit-banana",
+  "banane sucrée": "fruit-banana",
+  "litchi": "fruit-grapes", // approximation
+  "carambole": "fruit-pineapple", // approximation
+  "grenade": "fruit-pomegranate",
+
+  // --- Légumes & Tubercules ---
+  "épinard (gboman)": "leaf",
+  "basilic africain (ch io)": "leaf",
+  "pomme de terre": "potato",
+  "manioc": "cassava", // approximation avec "leaf"
+  "ignam": "potato", // approximation
+  "riz": "rice",
+  "attiéke": "rice",
+  "oignon blanc": "onion",
+  "tapioka": "rice",
+  "oignon rouge": "onion",
+  "ail": "garlic",
+  "gingembre": "ginger-root",
+  "poivre": "pepper-hot",
+  "fotete": "leaf",
+  "curcuma": "ginger-root",
+  "gros piment vert frais": "chili-mild",
+  "clou de girofle": "flower",
+  "anis étoilé": "flower",
+  "gombo": "food-apple-outline", // approximation
+  "crincrin": "leaf",
+  "telibo (farine)": "sack",
+  "farine gari": "sack",
+  "riz glacé": "rice",
+  "riz parfumé": "rice",
+  "riz long": "rice",
+  "poivron": "pepper",
+  "aubergine": "food-apple-outline", // approximation
+  "betterave": "beet",
+  "navet": "food-apple-outline", // approximation
+  "maïs frais": "corn",
+  "salade": "leaf",
+  "carotte": "carrot",
+  "tomate": "food-apple-outline", // approximation
+
+  // --- Volailles & Viandes ---
+  "poulet local (bicyclette)": "food-drumstick",
+  "canard": "duck",
+  "pigeon": "bird",
+  "oeuf de caille": "egg",
+  "gésier": "food-drumstick",
+  "entrecôte": "cow",
+  "bavette aloyau": "cow",
+  "coeur de boeuf": "cow",
+  "viande porc générique": "pig",
+  "côte porc première": "pig",
+  "côte porc échine": "pig",
+  "pied boeuf": "cow",
+  "pied porc": "pig",
+  "tête boeuf": "cow",
+  "tête porc": "pig",
+  "langue boeuf": "cow",
+  "langue porc": "pig",
+  "agouti": "rodent", // approximation
+  "poulet cher": "food-drumstick",
+  "poulet léger": "food-drumstick",
+  "poulet lourd": "food-drumstick",
+  "pintade": "bird",
+  "lapin": "rabbit",
+  "oeuf palette(30)": "egg",
+  "caille": "bird",
+  "gigot agneau": "sheep",
+  "boeuf morceau": "cow",
+  "côte de porc": "pig",
+
+  // --- Défaut ---
+  "default": "basket"
+};
+
+
   const [mapInteracting, setMapInteracting] = useState(false);
   const snackBarRef = useRef();
 
@@ -149,6 +263,8 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
+  
+
   const readProductFile = async () => {
     try {
       console.log('lecture du fichier:', fileUri);
@@ -187,10 +303,35 @@ const Formulaire = ({ navigation, route}) => {
       const filtered = produit.filter(item =>
         item.nom_produit && 
         typeof item.nom_produit === 'string' && 
-        item.nom_produit.toLowerCase().includes(text.toLowerCase())
+        item.nom_produit.toLowerCase().includes(text.toLowerCase()) || 
+        item.nom_categorie.toLowerCase().includes(text.toLowerCase()) 
       );
       setProduits(filtered);
     }
+  };
+
+  // Get unit label based on type_vendu
+  const getUnitLabel = (product) => {
+    if (product && product.type_vendu) {
+      if (product.type_vendu === 'poids') {
+        return 'kg';
+      } else if (product.type_vendu === 'pièce') {
+        return 'unité(s)';
+      }
+    }
+    return 'unité(s)'; // default
+  };
+
+  // Get quantity label for modal
+  const getQuantityLabel = (product) => {
+    if (product && product.type_vendu) {
+      if (product.type_vendu === 'poids') {
+        return 'Quantité (en kg):';
+      } else if (product.type_vendu === 'pièce') {
+        return 'Quantité (nombre de pièces):';
+      }
+    }
+    return 'Quantité (nombre de pièces):'; // default
   };
 
   // Fixed date formatting function
@@ -285,36 +426,56 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
-  // Simplified product list rendering
-  const renderProductItem = ({ item }) => {
-    // Add safety check for nom_produit
-    const productName = item.nom_produit || 'Produit sans nom';
-    const imageKey = typeof item.nom_produit === 'string' 
-      ? item.nom_produit.toLowerCase() 
-      : 'default';
-    
-    return (
-      <TouchableOpacity
-        style={styles.productItem}
-        onPress={() => {
-          setSelectedProduct({
-            id: item.id_produit,
-            key: productName,
-            originalItem: item
-          });
-          setModalVisible(true);
-        }}
-      >
-        <View style={styles.productItemContent}>
-          <Image
-            style={styles.smallProductIcon}
-            source={dic_image_name[imageKey] || dic_image_name['tomate']} // fallback to a default image
-          />
+
+  const getIconName = (productName) => {
+  if (!productName) return iconMapping.default;
+  const name = productName.toLowerCase();
+  
+  // Cherche correspondance exacte ou partielle
+  for (let key in iconMapping) {
+    if (name.includes(key)) {
+      return iconMapping[key];
+    }
+  }
+  
+  return iconMapping.default;
+};
+
+
+
+  // Modified product list rendering to limit to 10 items and show unit
+const renderProductItem = ({ item }) => {
+  const productName = item.nom_produit || 'Produit sans nom';
+  const unitLabel = getUnitLabel(item);
+  const iconName = getIconName(productName);
+
+  return (
+    <TouchableOpacity
+      style={styles.productItem}
+      onPress={() => {
+        setSelectedProduct({
+          id: item.id_produit,
+          key: productName,
+          originalItem: item
+        });
+        setModalVisible(true);
+      }}
+    >
+      <View style={styles.productItemContent}>
+        <MaterialCommunityIcons
+          name={iconName}
+          size={28}
+          color="#4CAF50"
+          style={{ marginRight: 8 }}
+        />
+        <View style={styles.productTextContainer}>
           <Text style={styles.productName}>{productName}</Text>
+          <Text style={styles.productUnit}>Vendu par {unitLabel}</Text>
         </View>
-      </TouchableOpacity>
-    );
-  };
+      </View>
+    </TouchableOpacity>
+  );
+};
 
   const set_product_rec = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
@@ -348,20 +509,18 @@ const Formulaire = ({ navigation, route}) => {
     }
   }
 
-  const add_product = (name, poids, nombre, id, originalItem = null, shouldBatch = false) => {
+  const add_product = (name, quantite, id, originalItem = null, shouldBatch = false) => {
     if (!shouldBatch) {
       setModalVisible(false);
     }
 
-
-    
     const newProduct = {
       id,
       name,
       productDetails: {
         ...(originalItem || {}),
-        nombre: nombre,
-        poids: poids
+        quantite: quantite,
+        type_vendu: originalItem?.type_vendu || 'pièce'
       }
     };
     
@@ -370,7 +529,6 @@ const Formulaire = ({ navigation, route}) => {
       return newProduct;
     } else {
       setProducts(prevProducts => [...prevProducts, newProduct]);
-      setPoids('');
       setNombre('');
       // Show snackbar
       snackBarRef.current?.show('Produit ajouté à la commande', 'info');
@@ -391,8 +549,7 @@ const Formulaire = ({ navigation, route}) => {
         
         const product = add_product(
           item.nom || item.nom_produit || 'Produit',
-          item.quantite || item.poids || 1,
-          item.quantite || item.nombre || 1,
+          item.quantite || 1,
           item.id || item.id_produit || Math.random().toString(),
           item,
           true // shouldBatch = true
@@ -598,7 +755,7 @@ const Formulaire = ({ navigation, route}) => {
       localisation_dmd: addresse !== '' ? addresse : `${selectedLocation.latitude};${selectedLocation.longitude}`,
       produit_contenu: products.map(product => ({
         id_produit: parseInt(product.id) || 1, // Ensure it's an integer
-        nb_produit: parseInt(product.productDetails.nombre) || 1,
+        nb_produit: parseFloat(product.productDetails.quantite) || 1,
         //ids_piece_produit: parseFloat(product.productDetails.poids) || 0
       }))
     };
@@ -869,7 +1026,7 @@ const Formulaire = ({ navigation, route}) => {
                 <TextInput
                   style={styles.inputTextSearch}
                   keyboardType="default"
-                  placeholder="Rechercher un produit"
+                  placeholder="Rechercher un produit ou une catégorie"
                   placeholderTextColor="#a2a2a9"
                   value={searchText}
                   onChangeText={handleSearchTextChange}
@@ -881,18 +1038,23 @@ const Formulaire = ({ navigation, route}) => {
               </View>
 
               {/* Products List Section */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Produits commandable</Text>
+            <SafeAreaView style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Produits commandable</Text>
+              <View style={styles.productListContainer}>
                 <FlatList
                   data={produits}
                   keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
                   renderItem={renderProductItem}
-                  scrollEnabled={false}
                   ListEmptyComponent={
                     <Text style={styles.emptyListText}>Aucun produit trouvé</Text>
                   }
+                  showsVerticalScrollIndicator={true}
+                  scrollEnabled={true}
+                  nestedScrollEnabled={true}
+                  style={styles.productFlatList}
                 />
               </View>
+            </SafeAreaView>
 
               {/* Selected Products - Enhanced with delete functionality */}
               {products.length > 0 && (
@@ -1111,7 +1273,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
     fontStyle: 'italic',
-    marginVertical: 20,
+    marginVertical: 40,
+    fontSize: 14,
   },
   datePickerCloseButton: {
     marginTop: 15,
@@ -1498,7 +1661,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    // Remove the fixed height: 600 that was limiting the container
   },
+
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -1527,6 +1692,7 @@ const styles = StyleSheet.create({
   productName: {
     fontSize: 15,
     color: '#444',
+    fontWeight: '500',
   },
   
   // Selected Products
@@ -1715,13 +1881,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   productItem: {
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderBottomColor: '#f5f5f5',
+    backgroundColor: '#fff',
+    marginVertical: 1,
+    marginHorizontal: 5,
+    borderRadius: 6,
   },
+  
   categoryText: {
     fontSize: 12,
     color: '#666',
@@ -2025,6 +2194,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#2E3192',
+  },
+    productListContainer: {
+    height: 250, // Fixed height for the scrollable area
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+    borderRadius: 8,
+    backgroundColor: '#fafafa',
+  },
+  
+  productFlatList: {
+    flex: 1,
+    paddingHorizontal: 5,
+  },
+   productTextContainer: {
+    flex: 1,
+  },
+    productUnit: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
 });
 

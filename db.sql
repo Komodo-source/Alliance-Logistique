@@ -208,12 +208,16 @@ INSERT INTO HUB VALUES(
     FALSE,
     1);
 
+    
+
 INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (1, "Légume");
 INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (2, "Viande");
 INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (3, "Poisson");
 INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (4, "Fruit");
 INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (5, "Féculent");
 INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (6, "Divers");
+INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (7, "Epice");
+INSERT INTO CATEGORIE(id_categorie, nom_categorie) VALUES (8, "Volaille");
 
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(1, "Salade", 1, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(2, "Carotte", 1, "poids");
@@ -222,11 +226,101 @@ INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(4,
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(5, "Poulet lourd", 2, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(6, "Pintade", 2, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(7, "Lapin", 2, "pièce");
-INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(8, "Oeuf palette(20)", 2, "pièce");
+INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(8, "Oeuf palette(30)", 2, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(9, "Caille", 2, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(10, "Gigot Agneau", 2, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(11, "Boeuf Morceau", 2, "pièce");
 INSERT INTO PRODUIT(id_produit, nom_produit, id_categorie, type_vendu) VALUES(12, "Cote de Porc", 2, "pièce");
+
+INSERT INTO PRODUIT (id_produit, nom_produit, id_categorie, type_vendu) VALUES
+(13, "Mérou", 3, "poids"),
+(14, "Bar", 3, "poids"),
+(15, "Carpe Grise", 3, "poids"),
+(16, "Carpe Rouge", 3, "poids"),
+(17, "Sol Fibo", 3, "poids"),
+(18, "Brochet", 3, "poids"),
+(19, "Crabe de Mer", 3, "poids"),
+(20, "Crabe de Rivière", 3, "poids"),
+
+(21, "Orange", 4, "pièce"),
+(22, "Citron", 4, "pièce"),
+(23, "Avocat", 4, "pièce"),
+(24, "Banane", 4, "pièce"),
+(25, "Pomme", 4, "pièce"),
+(26, "Capoti", 4, "pièce"),
+(27, "Corossol", 4, "pièce"),
+(28, "Mangue", 4, "pièce"),
+(29, "Papaye", 4, "pièce"),
+(30, "Épinard (Gboman)", 1, "poids"),
+(31, "Basilic Africain (Ch Io)", 1, "poids"),
+(32, "Pomme de Terre", 1, "poids"),
+(33, "Manioc", 5, "poids"),
+(34, "Ignam", 5, "poids"),
+(35, "Riz", 5, "poids"),
+(36, "Attieke", 5, "poids"),
+(37, "Oignon Blanc", 1, "poids"),
+(38, "Tapioka", 5, "poids"),
+(39, "Oignon Rouge", 1, "poids"),
+(40, "Ail", 7, "poids"),
+(41, "Gingembre", 7, "poids"),
+(42, "Poivre", 7, "poids"),
+(43, "Fotete", 1, "poids"),
+(44, "Curcuma", 7, "poids"),
+(45, "Gros Piment Vert Frais", 7, "poids"),
+(46, "Clou de Girofle", 7, "poids"),
+(47, "Anis Étoilé", 7, "poids"),
+(48, "Goyave", 4, "pièce"),
+(49, "Gombo", 1, "poids"),
+(50, "Crincrin", 1, "poids"),
+(51, "Telibo (Farine)", 5, "poids"),
+(52, "Farine Gari", 5, "poids"),
+(53, "Riz Glacé", 5, "poids"),
+(54, "Riz Parfumé", 5, "poids"),
+(55, "Riz Long", 5, "poids"),
+(56, "Ananas", 4, "pièce"),
+(57, "Banane Plantin", 4, "pièce"),
+(58, "Banane Sucrée", 4, "pièce"),
+(59, "Litchi", 4, "pièce"),
+(60, "Carambole", 4, "pièce"),
+(61, "Grenade", 4, "pièce"),
+
+(62, "Poulet Local (Bicyclette)", 8, "poids"),
+(63, "Canard", 8, "poids"),
+(64, "Pigeon", 8, "pièce"),
+(65, "Oeuf de Caille", 8, "pièce"),
+(66, "Gézier", 8, "poids"),
+
+(67, "Entrecôte", 2, "poids"),
+(68, "Bavette Aloyau", 2, "poids"),
+(69, "Coeur de Boeuf", 2, "poids"),
+(70, "Viande Porc Générique", 2, "poids"),
+(71, "Côte Porc Première", 2, "poids"),
+(72, "Côte Porc Échine", 2, "poids"),
+(73, "Pied Boeuf", 2, "poids"),
+(74, "Pied Porc", 2, "poids"),
+(75, "Tête Boeuf", 2, "poids"),
+(76, "Tête Porc", 2, "poids"),
+(77, "Langue Boeuf", 2, "poids"),
+(78, "Langue Porc", 2, "poids"),
+(79, "Carpe", 3, "poids"),
+(80, "Dorade", 3, "poids"),
+(81, "Silivie", 3, "poids"),
+(82, "Cilure Blanc", 3, "poids"),
+(83, "Cilure Noir", 3, "poids"),
+(84, "Capitaine", 3, "poids"),
+(85, "Crevette", 3, "poids"),
+(86, "Gambas", 3, "poids"),
+(87, "Langouste", 3, "poids"),
+(88, "Langoustine", 3, "poids"),
+(89, "Petite Crevette", 3, "poids"),
+(90, "Calamar", 3, "poids"),
+(91, "Poivron", 1, "poids"),
+(92, "Aubergine", 1, "poids"),
+(93, "Betterave", 1, "poids"),
+(94, "Navet", 1, "poids"),
+(95, "Mais frais", 1, "poids"),
+(96, "agouti", 2, "poids"),
+(97, "Poulet cher", 8, "poids"),
 
 
 

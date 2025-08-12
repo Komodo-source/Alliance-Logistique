@@ -13,7 +13,7 @@ $id_produit = $input['id_produit'];
 
 $sql = "SELECT 
             F.id_fournisseur, 
-            prix_produit, 
+            (prix_produit * 1.45), 
             nb_produit_fourni, 
             nom_orga, 
             ville_organisation, 

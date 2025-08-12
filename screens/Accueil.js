@@ -265,9 +265,6 @@ const Accueil = ({ navigation }) => {
               })()}
             </Text>
           </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '60%' }]} />
-          </View>
         </View>
       </TouchableOpacity>
     )
