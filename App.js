@@ -30,6 +30,7 @@ import VerifyResetCode from './screens/sub_screens/verify_reset_code';
 import Confidentialite from './screens/sub_screens/Confidentialite';
 import ProtectionDonnee from './screens/sub_screens/ProtectionDonnee';
 import ModifProfil from './screens/sub_screens/ModifProfil';
+import PublicProfile from './screens/sub_screens/ProfilPublic';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,6 +69,7 @@ const App = () => {
             <Stack.Screen name="Confidentialite" component={Confidentialite} options={{ headerTitle: "Confidentialite" }}/>
             <Stack.Screen name="ProtectionDonnee" component={ProtectionDonnee} options={{ headerTitle: "Donnée" }}/>
             <Stack.Screen name="ModifProfil" component={ModifProfil} options={{ headerTitle: "Modification de profil" }}/>
+            <Stack.Screen name="PublicProfile" component={PublicProfile}/>
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>

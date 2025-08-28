@@ -12,8 +12,24 @@ $type = $data['type'];
 $session_id = $data['session_id'];
 $id = getIdSession($session_id);
 
-$data_client = $conn->prepare("SELECT id_client, nom_client, prenom_client, telephone_client FROM CLIENT WHERE id_client = ?");
-$data_fournisseur = $conn->prepare("SELECT id_fournisseur, nom_fournisseur, prenom_fournisseur, telephone_fournisseur FROM FOURNISSEUR WHERE id_fournisseur = ?");
+$data_client = $conn->prepare("
+SELECT C.id_client, nom_client, prenom_client, note_client, nom_orga, ville_organisation,
+COUNT(CMD.id_client) as nb_commande
+FROM CLIENT C
+LEFT JOIN ORGANISATION O ON C.id_orga = O.id_orga
+INNER JOIN COMMANDE CMD ON C.id_client = CMD.id_client
+WHERE C.id_client = ?");
+
+$data_fournisseur = $conn->prepare(
+    "SELECT F.id_fournisseur, nom_fournisseur, prenom_fournisseur, nom_orga, ville_organisation, note_fourni
+        COUNT(CMD.id_fournisseur) as nb_commande,nb_produit_fourni, prix_produit, nom_produit
+        FROM FOURNISSEUR F
+        LEFT JOIN COMMANDE CMD ON F.id_fournisseur = CMD.id_fournisseur
+        INNER JOIN FOURNIR FR ON F.id_fournisseur = FR.id_fournisseur
+        INNER JOIN PRODUIT P ON P.id_produit = FR.id_produit
+        LEFT JOIN ORGANISATION O ON F.id_orga = O.id_orga
+        WHERE F.id_fournisseur = ?;");
+        
 $data_coursier = $conn->prepare("SELECT id_coursier, nom_coursier, prenom_coursier, telephone_coursier FROM COURSIER WHERE id_coursier = ?");
 try{
     if($type == "client"){

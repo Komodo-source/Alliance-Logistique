@@ -16,4 +16,8 @@ Alliance logistique
 	◦	Refresh les commandes
        - sinon get 1fois les commandes 
 	◦	regarder si on devrait store dans un json ou sql avec SQLite
+	◦ enlever les logs quand l'app est en prod
+	◦ fix les session_id 
+	◦ modifier le profil
+	◦ Update l'Accueil
 	
