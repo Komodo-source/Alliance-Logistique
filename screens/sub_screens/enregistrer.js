@@ -402,7 +402,7 @@ const enregistrer = ({route, navigation }) => {
         <TextInput
           style={styles.input}
           keyboardType="phone-pad"
-          placeholder="Téléphone ex: 0123456789"
+          placeholder="Téléphone ex: +22954234869"
           placeholderTextColor="#a2a2a9"
           value={Tel}
           onChangeText={setTel}
@@ -410,6 +410,23 @@ const enregistrer = ({route, navigation }) => {
 
         <View style={styles.checkboxContainer}>
           {/* Checkbox code here if needed */}
+        </View>
+
+        <View style={styles.condition}>
+          
+            <Text style={styles.condText}>
+              En vous inscrivant, vous acceptez nos 
+              
+              <TouchableOpacity 
+                onPress={() =>  {navigation.navigate('Confidentialite')}}
+              >
+              <Text style={styles.conditionBoutton}>
+                  Conditions générales
+                </Text>
+              </TouchableOpacity>.
+            </Text>
+   
+    
         </View>
 
         <TouchableOpacity 
@@ -427,6 +444,18 @@ const enregistrer = ({route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  conditionBoutton : {
+    fontWeight: "600",
+    color : '#1C35D4'
+  },
+  condition : {
+    marginLeft: "10%"
+  },
+
+  condText :{
+    fontWeight: "600",
+  },
+
   descInput : {
     fontSize: 14,
     marginLeft: '10%',

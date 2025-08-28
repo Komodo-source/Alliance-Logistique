@@ -1,12 +1,14 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Dimensions, ScrollView, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, 
+  Dimensions, ScrollView, StatusBar, RefreshControl } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-import * as FileSystem from 'expo-file-system';
+//import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
 import * as FileManager from './util/file-manager.js';
-const { width, height } = Dimensions.get('window');
-import axios from 'axios';
 import { debbug_log } from './util/debbug.js';
+//const { width, height } = Dimensions.get('window');
+//import axios from 'axios';
+//import { debbug_log } from './util/debbug.js';
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -16,6 +18,26 @@ const Accueil = ({ navigation }) => {
   const [isClient, setIsClient] = useState(true);
   // Update time every minute for dynamic greeting
   const [jours_restants, setJours_restants] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [data, setData] = useState(['Item 1', 'Item 2', 'Item 3']);
+
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Fetch commandes
+      await fetch_commande();
+      
+      // Update current time
+      setCurrentTime(new Date());
+
+    } catch (error) {
+      console.error("Error during refresh:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
 
   // Helper to calculate days difference
   const getDaysDifference = (dateString) => {
@@ -294,6 +316,7 @@ const Accueil = ({ navigation }) => {
       setJours_restants(getDaysDifference(commande[0].date_fin));
     }
   }, [commande, currentTime]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -302,6 +325,16 @@ const Accueil = ({ navigation }) => {
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#3B82F6']} // Android
+            tintColor="#3B82F6" // iOS
+            title="Pull to refresh" // iOS
+            titleColor="#64748B" // iOS
+          />
+        }
       >
         
         {/* Enhanced Header Section */}
@@ -522,6 +555,19 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+    container: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  item: {
+    padding: 20,
+    marginVertical: 8,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+  },
+  text: {
+    fontSize: 16,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',

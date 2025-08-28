@@ -167,6 +167,11 @@ import React, { useEffect, useState} from 'react';
       return response;
     }
 
+    const simpleCheck = async(url) => {
+      const response = await fetch(url);
+      return response;
+    }
+
     const check_first_time = async () => {  
       // Check if it's the first time the app is launched    
       const exists = await fileManager.is_file_existing("auto.json");
@@ -207,9 +212,13 @@ import React, { useEffect, useState} from 'react';
       //
       try {
         const response = await measureFetchSpeed('https://google.com');
+        //const response = await simpleCheck('https://google.com');
+        //A activer en prod
+
         if (response.ok) {
           debbug_lib.debbug_log("Connecté a Internet", "green");
           const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/product.php');
+          //const response_server = await simpleCheck('https://backend-logistique-api-latest.onrender.com/product.php');
           if (response_server.ok) {
             debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
             const dataUser = await fileManager.read_file("auto.json");

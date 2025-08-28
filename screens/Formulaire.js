@@ -16,7 +16,6 @@ import { useRef } from 'react';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-
 import * as Location from 'expo-location';
 import dayjs from 'dayjs';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -40,16 +39,16 @@ const Formulaire = ({ navigation, route}) => {
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState('date');
   const [date, setDate] = useState(new Date());
-  const [tempDate, setTempDate] = useState(dayjs()); // Temporary date for modal
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  //const [tempDate, setTempDate] = useState(dayjs()); // Temporary date for modal
+  //const [showDatePicker, setShowDatePicker] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [poids, setPoids] = useState('');
+  //const [open, setOpen] = useState(false);
+  //const [poids, setPoids] = useState('');
   const [nombre, setNombre] = useState('');
   const [commandeName, setCommandeName] = useState('');
   const [description, setDescription] = useState('');
-  const [childViews, setChildViews] = useState([]);
+  //const [childViews, setChildViews] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
@@ -57,8 +56,8 @@ const Formulaire = ({ navigation, route}) => {
   const [chargement, setChargement] = useState(false);
   const [isNameFocused, setIsNameFocused] = useState(false);
   const [isDescFocused, setIsDescFocused] = useState(false);
-  const [isNombreFocused, setIsNombreFocused] = useState(false);
-  const [isPoidsFocused, setIsPoidsFocused] = useState(false);
+  //const [isNombreFocused, setIsNombreFocused] = useState(false);
+  //const [isPoidsFocused, setIsPoidsFocused] = useState(false);
   const [produits, setProduits] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [region, setRegion] = useState({
@@ -68,6 +67,9 @@ const Formulaire = ({ navigation, route}) => {
     longitudeDelta: 0.822,
   });
   const [addresse, setAddresse] = useState('');
+
+  const [modalFourniVisible, setModalFourniVisible] = useState(false);
+  const [fourni, setFourni] = useState(null);
   
   // Ensure region is always valid
   const safeRegion = {
@@ -78,8 +80,8 @@ const Formulaire = ({ navigation, route}) => {
   };
   const [produit, setProduit] = useState([]);
   const fileUri = FileSystem.documentDirectory + 'product.json';
-  const [selectedTime, setSelectedTime] = useState(new Date());
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  //const [selectedTime, setSelectedTime] = useState(new Date());
+  //const [showTimePicker, setShowTimePicker] = useState(false);
   const [dataUser, setDataUser] = useState(null);
   const [userDataLoading, setUserDataLoading] = useState(true);
   //debbug_lib.debbug_log("dataUser"+ dataUser, "magenta");
@@ -116,19 +118,19 @@ const Formulaire = ({ navigation, route}) => {
   "cilure blanc": "fish",
   "cilure noir": "fish",
   "capitaine": "fish",
-  "crevette": "shrimp",
-  "gambas": "shrimp",
-  "langouste": "lobster",
-  "langoustine": "lobster",
-  "petite crevette": "shrimp",
-  "calamar": "octopus",
+  "crevette": "fish",
+  "gambas": "fish",
+  "langouste": "fish",
+  "langoustine": "fish",
+  "petite crevette": "fish",
+  "calamar": "fish",
 
   // --- Fruits ---
   "orange": "fruit-citrus",
   "citron": "fruit-citrus",
   "avocat": "fruit-avocado",
   "banane": "fruit-banana",
-  "pomme": "fruit-apple",
+  "pomme": "food-apple",
   "capoti": "fruit-pineapple", // approximation
   "corossol": "fruit-pineapple", // approximation
   "mangue": "fruit-mango",
@@ -139,7 +141,7 @@ const Formulaire = ({ navigation, route}) => {
   "banane sucrée": "fruit-banana",
   "litchi": "fruit-grapes", // approximation
   "carambole": "fruit-pineapple", // approximation
-  "grenade": "fruit-pomegranate",
+  "grenade": "fruit-citrus",
 
   // --- Légumes & Tubercules ---
   "épinard (gboman)": "leaf",
@@ -167,7 +169,7 @@ const Formulaire = ({ navigation, route}) => {
   "riz glacé": "rice",
   "riz parfumé": "rice",
   "riz long": "rice",
-  "poivron": "pepper",
+  "poivron": "chili-hot",
   "aubergine": "food-apple-outline", // approximation
   "betterave": "beet",
   "navet": "food-apple-outline", // approximation
@@ -243,6 +245,28 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
+    
+  const getFourni = async () => {
+    let data = {};
+    try {
+      
+      // va chercher la liste des fournisseurs produisant le même 
+      // produit afin de les comparer
+
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({id_produit: item.id_produit})
+      });
+      data = await response.json();      
+      setFourni(data);
+      console.log("Fourni fetched:", data);
+
+    } catch (error) {
+      console.error("Erreur lors de la récupération des produits:", error);
+    }
+  };
+
   const getProduct = async () => {
     let data = {};
     try {
@@ -263,6 +287,62 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
+
+  const renderFourniChoix = ({ item: fourni, index }) => {
+    const isFirstSupplier = index === 0; // First supplier is cheapest
+    const distance = fourni.localisation_orga !== null ? localisationToKm(fourni.localisation_orga) : null;
+    
+    return (
+      // Removed ScrollView wrapper - this was causing the VirtualizedList warning
+      <TouchableOpacity 
+        style={[
+          styles.productCard,
+          isFirstSupplier && styles.cheapestCard
+        ]}
+        onPress={() => navigation.navigate('FicheFournisseur', {fourni})}
+      >
+        {/* Best Price Badge for first supplier */}
+        {isFirstSupplier && (
+          <View style={styles.bestPriceBadge}>
+            <Text style={styles.bestPriceText}>MEILLEUR PRIX</Text>
+          </View>
+        )}
+        
+        <View style={styles.supplierHeader}>
+          <View style={styles.supplierInfo}>
+            <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
+            <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.cartButton}
+            onPress={() => navigation.navigate("Formulaire")}
+          >
+            <Ionicons name="cart" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.supplierDetails}>
+          <View style={styles.detailRow}>
+            <Ionicons name="location-outline" size={16} color="#64748B" />
+            <Text style={styles.detailText}>
+              {distance !== null && !locationLoading
+                ? `${distance.toFixed(1)} km`
+                : fourni.ville_organisation || 'Adresse non renseignée'
+              }
+            </Text>
+          </View>
+          
+          <View style={styles.detailRow}>
+            <Ionicons name="cube-outline" size={16} color="#64748B" />
+            <Text style={styles.detailText}>
+              Stock: {fourni.nb_produit_fourni} unités
+            </Text> 
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
   
 
   const readProductFile = async () => {
@@ -413,6 +493,7 @@ const Formulaire = ({ navigation, route}) => {
     };
 
     initializeApp();
+    getFourni();
   }, []);
 
   const handleMapPress = (e) => {
@@ -945,6 +1026,28 @@ const renderProductItem = ({ item }) => {
                   />
                 )}
               </View>
+
+              {/* Fournisseur Modal */}
+                <Modal
+                  animationType='fade'
+                  transparent={true}
+                  visible={modalFourniVisible}
+                  onRequestClose={() => setModalFourniVisible(false)}
+                >
+
+                  <FlatList
+                    data={fourni}
+                    renderItem={renderFourniChoix}
+                    keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
+                    numColumns={1}
+                    contentContainerStyle={styles.productGrid}
+                    showsVerticalScrollIndicator={false}
+                  />
+
+
+                </Modal>
+
+
 
               {/* Product Modal */}
               <Modal

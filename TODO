@@ -1,0 +1,19 @@
+Alliance logistique
+	◦	Notification 
+	◦	Message avertissement plus fourni loin plus le temps de livraison sera long
+	◦	Page profil
+	◦	Serveur ftp photo 
+	◦	Acceptation conditions d’utilisation register
+	◦	Organisation register
+	◦	Client doit payer avant la livraison ou pendant
+	x	Placeholder phone +22976…
+	◦	Ajout sponsorisé page accueil 
+	◦	Produit les plus commandés 
+	◦	Reinclure coursier 
+	◦	Système notification 
+	◦	Bool si fournir discount
+        - affiche des produits randoms discount 
+	◦	Refresh les commandes
+       - sinon get 1fois les commandes 
+	◦	regarder si on devrait store dans un json ou sql avec SQLite
+	
