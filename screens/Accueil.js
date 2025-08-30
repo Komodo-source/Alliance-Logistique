@@ -1,14 +1,15 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, 
-  Dimensions, ScrollView, StatusBar, RefreshControl } from 'react-native';
+  Dimensions, ScrollView, StatusBar, RefreshControl, useWindowDimensions } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 //import * as FileSystem from 'expo-file-system';
 import CarouselCards from './sub_screens/CarouselCards';
 import * as FileManager from './util/file-manager.js';
 import { debbug_log } from './util/debbug.js';
-//const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 //import axios from 'axios';
 //import { debbug_log } from './util/debbug.js';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -20,7 +21,12 @@ const Accueil = ({ navigation }) => {
   const [jours_restants, setJours_restants] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState(['Item 1', 'Item 2', 'Item 3']);
-
+  //fetch data
+  const [sponsorisedCommand, SetSponsorisedCommand] = useState([]);
+  const [bestCommand, SetBestCommand] = useState([]);
+  const [sponsoredProducts, setSponsoredProducts] = useState({});
+  const [bestProducts, setBestProducts] = useState({});
+  const { width } = useWindowDimensions();
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -103,6 +109,24 @@ const Accueil = ({ navigation }) => {
     } 
     setNbCommandeLivraison(val);
   };
+
+
+
+const getFileCommand = async () => {
+  const sponsorisedData = await FileManager.read_file("sponsorisedCommand.json");
+  const bestCommandData = await FileManager.read_file("mostCommandedProduct.json");
+
+  // Extract the actual data if wrapped in a structure
+  const bestProducts = bestCommandData?._j || bestCommandData;
+  const sponsoredProducts = sponsorisedData?._j || sponsorisedData;
+
+  SetSponsorisedCommand(sponsoredProducts);
+  SetBestCommand(bestProducts);
+
+  console.log("Sponsored Products:", sponsoredProducts);
+  console.log("Best Products:", bestProducts);
+};
+    
 
   const fetch_commande = async () => {
     try {
@@ -201,7 +225,91 @@ const Accueil = ({ navigation }) => {
       action: () => navigation.navigate('commande_reccurente')
     }
   ];
+
+const categorie_produit = [
+  {
+    id: 1,
+    title: "Légume",
+    action: () => navigation.navigate('Produit', { category: 'Légume' }),
+    icon: 'carrot'
+  },
+  {
+    id: 2,
+    title: "Viande",
+    action: () => navigation.navigate('Produit', { category: 'Viande' }),
+    icon: 'cow'
+  },
+  {
+    id: 3,
+    title: "Poisson/Fruit de mer",
+    action: () => navigation.navigate('Produit', { category: 'Poisson/Fruit de mer' }),
+    icon: 'fish'
+  },
+  {
+    id: 4,
+    title: "Fruit",
+    action: () => navigation.navigate('Produit', { category: 'Fruit' }),
+    icon: 'food-apple'
+  },
+  {
+    id: 5,
+    title: "Féculent",
+    action: () => navigation.navigate('Produit', { category: 'Féculent' }),
+    icon: 'pasta'
+  },
+  {
+    id: 6,
+    title: "Divers",
+    action: () => navigation.navigate('Produit', { category: 'Divers' }),
+    icon: 'minus-box'
+  },
+  {
+    id: 7,
+    title: "Epice",
+    action: () => navigation.navigate('Produit', { category: 'Epice' }),
+    icon: 'chili-mild'
+  },
+  {
+    id: 8,
+    title: "Volaille",
+    action: () => navigation.navigate('Produit', { category: 'Volaille' }),
+    icon: 'food-drumstick'
+  },
+];
   
+const renderCategorieChoice = ({item, index}) => (
+  <TouchableOpacity 
+    style={styles.categoryCard}
+    activeOpacity={0.8}
+    onPress={item.action}
+  >
+    <View style={styles.cardContent}>
+      {/* Icon Container */}
+      <View style={styles.iconContainer}>
+        <MaterialCommunityIcons
+          name={item.icon}
+          size={32}
+          color="#2773F5"
+        />
+      </View>
+      
+      {/* Title */}
+      <Text style={styles.categoryTitle} numberOfLines={2}>
+        {item.title}
+      </Text>
+      
+      {/* Optional badge for popular categories */}
+      {item.isPopular && (
+        <View style={styles.popularBadge}>
+          <Text style={styles.badgeText}>Popular</Text>
+        </View>
+      )}
+    </View>
+    
+    {/* Subtle shadow overlay */}
+    <View style={styles.shadowOverlay} />
+  </TouchableOpacity>
+);
 
   const renderQuickAction = ({ item, index }) => (
     <TouchableOpacity 
@@ -292,6 +400,65 @@ const Accueil = ({ navigation }) => {
     )
   }
 
+  const BestProductsCard = ({ item }) => {
+    return (
+      <TouchableOpacity 
+        style={styles.sponsoredCard}
+        //onPress={() => navigation.navigate('ProductDetails', { product: item })}
+      >
+        <View style={styles.sponsoredImageContainer}>
+          <Image
+            source={{ uri: item.image_url }}
+            style={styles.sponsoredImage}
+            resizeMode="cover"
+          />
+        </View>
+        <View style={styles.sponsoredInfo}>
+          <Text style={styles.sponsoredName} numberOfLines={1}>{item.nom_produit}</Text>
+          <Text style={styles.sponsoredSupplier} numberOfLines={1}>Commandés: {item.total_commandes} fois</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+
+    const SponsoredProductCard = ({ item }) => {
+    return (
+      <TouchableOpacity 
+        style={styles.sponsoredCard}
+        //onPress={() => navigation.navigate('ProductDetails', { product: item })}
+      >
+        <View style={styles.sponsoredImageContainer}>
+          <Image
+            source={{ uri: item.image_url }}
+            style={styles.sponsoredImage}
+            resizeMode="cover"
+          />
+        </View>
+        <View style={styles.sponsoredInfo}>
+          <Text style={styles.sponsoredName} numberOfLines={1}>{item.nom_produit}</Text>
+          <Text style={styles.sponsoredSupplier} numberOfLines={1}>{item.nom_orga}</Text>
+          <Text style={styles.sponsoredSupplier} numberOfLines={1}>{item.prenom_fournisseur}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const loadSponsoredData = async () => {
+    try {
+      const sponsoredData = await FileManager.read_file("sponsorisedCommand.json");
+      const bestProductsData = await FileManager.read_file("mostCommandedProduct.json");
+      
+      if (sponsoredData) {
+        setSponsoredProducts(sponsoredData);
+      }
+      if (bestProductsData) {
+        setBestProducts(bestProductsData);
+      }
+    } catch (error) {
+      console.error("Error loading sponsored data:", error);
+    }
+  };
 
   useEffect(() => {
     console.log('=== ACCUEIL: useEffect déclenché ===');
@@ -315,7 +482,13 @@ const Accueil = ({ navigation }) => {
     if (commande.length > 0) {
       setJours_restants(getDaysDifference(commande[0].date_fin));
     }
+    getFileCommand();
   }, [commande, currentTime]);
+
+  // Load sponsored data on mount
+  useEffect(() => {
+    loadSponsoredData();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -390,6 +563,30 @@ const Accueil = ({ navigation }) => {
           />
         </View>
 
+        {/* Sponsored Products Section */}
+        {Object.keys(sponsoredProducts).length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Produits Sponsorisés</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Produit')}>
+                <Text style={styles.seeAllText}>Voir tout</Text>
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={Array.isArray(sponsoredProducts) ? sponsoredProducts : [sponsoredProducts]}
+              renderItem={({ item }) => <SponsoredProductCard item={item} />}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sponsoredContainer}
+              snapToInterval={width * 0.75}
+              decelerationRate="fast"
+              pagingEnabled
+            />
+          </View>
+        )}
+
         {/* Next Delivery Highlight */}
         {commande.length > 0 && (
           <View style={styles.section}>
@@ -462,6 +659,45 @@ const Accueil = ({ navigation }) => {
             </View>
           )}
         </View>
+
+        { /* Category */}
+        <View>
+          <Text
+          style={styles.sectionTitle}
+          >Rechercher par catégorie</Text>
+            <FlatList
+              data={categorie_produit}
+              renderItem={renderCategorieChoice}
+              keyExtractor={(item) => item.id.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickActionsContainer}
+            />
+        </View>
+
+        {/* Best Product */}
+        {Object.keys(bestProducts).length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Produits les plus côtés</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Produit')}>
+                <Text style={styles.seeAllText}>Voir tout</Text>
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={Array.isArray(bestProducts) ? bestProducts : [bestProducts]}
+              renderItem={({ item }) => <BestProductsCard item={item} />}
+              keyExtractor={(item, index) => index.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.sponsoredContainer}
+              snapToInterval={width * 0.75}
+              decelerationRate="fast"
+              pagingEnabled
+            />
+          </View>
+        )}
 
         {/* Enhanced Carousel Section */}
         <View style={styles.section}>
@@ -539,7 +775,7 @@ const Accueil = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.navButton}
-          onPress={() => navigation.navigate('Profil')}
+          onPress={() => navigation.navigate('ProfilPublic', "2b2c3c745bf3f29c4275c317561261323d523d5e690c448b875bd507a9781d96")}
         >
           <View style={styles.iconContainer}>
             <Image
@@ -555,6 +791,66 @@ const Accueil = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  categoryCard: {
+    width: 120,
+    height: 120,
+    marginRight: 16,
+  },
+  cardContent: {
+    flex: 1,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4CAF50',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    shadowColor: '#4CAF50',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  categoryTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2D3436',
+    textAlign: 'center',
+    lineHeight: 18,
+    flex: 1,
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  shadowOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.02)',
+    pointerEvents: 'none',
+  },
     container: {
     flexGrow: 1,
     padding: 16,
@@ -693,7 +989,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: '800',
     color: '#1E293B',
     marginLeft: 20,
@@ -1112,6 +1408,64 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1A1A1A',
     textAlign: 'center',
+  },
+  sponsoredCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    width: width * 0.75,
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  sponsoredContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  sponsoredImageContainer: {
+    position: 'relative',
+    height: 150,
+  },
+  sponsoredImage: {
+    width: '100%',
+    height: '100%',
+  },
+  sponsoredBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(59, 130, 246, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  sponsoredBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  sponsoredInfo: {
+    padding: 16,
+  },
+  sponsoredName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  sponsoredPrice: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#3B82F6',
+    marginBottom: 4,
+  },
+  sponsoredSupplier: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
   },
 });
 

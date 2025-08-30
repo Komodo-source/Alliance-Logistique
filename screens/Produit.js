@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, FlatList, D
 //import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
+import * as FileManager from '../screens/util/file-manager.js'
+
 
 export const loadImages = (id_produit) => {
   switch(id_produit){
@@ -27,11 +29,14 @@ export const loadImages = (id_produit) => {
   }
 }
 
-const Produit = ({ navigation }) => {
+const Produit = ({ navigation, route}) => {
   const [produits, setProduits] = useState([]);
   const [allProduits, setAllProduits] = useState([]); 
   const [commandeName, setCommandeName] = useState('');
   const fileUri = FileSystem.documentDirectory + 'product.json';
+  
+
+
 /*
   const checkIfProductFileEmpty = async() => {
     //Obsolète
@@ -90,8 +95,9 @@ const Produit = ({ navigation }) => {
     try {
       // soit on get les produits depuis le fichier local, soit on les récupère depuis le serveur
       // normalement le fichier local est mis à jour par le serveur lors du login
-      const fileData = await readProductFile();
-      if (fileData && Object.keys(fileData).length > 0) {
+      //const fileData = await readProductFile();
+      const fileData = await FileManager.read_file("product.json");
+      if (fileData) {
         console.log("Lecture depuis le fichier local");
         data = fileData;
       } else {
@@ -107,21 +113,29 @@ const Produit = ({ navigation }) => {
     }
   };
 
+  // load products when the component mounts
   useEffect(() => {
-    const loadData = async () => {
-      await getProduct();
-
-    };
-    loadData();
+    getProduct();
   }, []);
 
+  // filter once products + params are ready
+  useEffect(() => {
+    if (allProduits.length > 0 && route.params?.category) {
+      const category = route.params.category;
+      setCommandeName(category);
+      researchProduct(category);
+    }
+  }, [allProduits, route.params]);
+
+    
   const researchProduct = (text) => {
     setCommandeName(text);
     if (text.trim() === "") {
       setProduits(allProduits);
     } else {
-      const filtered = allProduits.filter(item =>
-        item.nom_produit.toLowerCase().includes(text.toLowerCase())
+      const filtered = allProduits.filter(item => 
+        item.nom_produit.toLowerCase().includes(text.toLowerCase()) ||
+        item.nom_categorie.toLowerCase().includes(text.toLowerCase())
       );
       setProduits(filtered);
     }
@@ -150,7 +164,7 @@ const Produit = ({ navigation }) => {
         style={styles.input}
         keyboardType="default"
         placeholder="Rechercher un produit"
-        placeholderTextColor="#a2a2a9"
+        placeholderTextColor="#000000ff"
         value={commandeName}
         onChangeText={researchProduct}
       />      
@@ -362,14 +376,14 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 2.5,
-    borderRadius: 5,
+    borderRadius: 25,
     width: '80%',
     padding: 10,
-    color: '#111',
     marginBottom: 20,
     marginTop: 45,
     alignSelf: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#c5c5c5ff',
+    borderColor: "#c5c5c5ff"
   },
   imageSearch: {
     width: 30,

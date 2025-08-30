@@ -18,17 +18,19 @@ COUNT(CMD.id_client) as nb_commande
 FROM CLIENT C
 LEFT JOIN ORGANISATION O ON C.id_orga = O.id_orga
 INNER JOIN COMMANDE CMD ON C.id_client = CMD.id_client
-WHERE C.id_client = ?");
+WHERE C.id_client = ?
+GROUP BY C.id_client, nom_client, prenom_client, note_client, nom_orga, ville_organisation;");
 
 $data_fournisseur = $conn->prepare(
-    "SELECT F.id_fournisseur, nom_fournisseur, prenom_fournisseur, nom_orga, ville_organisation, note_fourni
-        COUNT(CMD.id_fournisseur) as nb_commande,nb_produit_fourni, prix_produit, nom_produit
-        FROM FOURNISSEUR F
-        LEFT JOIN COMMANDE CMD ON F.id_fournisseur = CMD.id_fournisseur
-        INNER JOIN FOURNIR FR ON F.id_fournisseur = FR.id_fournisseur
-        INNER JOIN PRODUIT P ON P.id_produit = FR.id_produit
-        LEFT JOIN ORGANISATION O ON F.id_orga = O.id_orga
-        WHERE F.id_fournisseur = ?;");
+    "SELECT F.id_fournisseur, nom_fournisseur, prenom_fournisseur, nom_orga, ville_organisation, note_fourni,
+COUNT(CMD.id_fournisseur) as nb_commande, nb_produit_fourni, prix_produit, nom_produit
+FROM FOURNISSEUR F
+LEFT JOIN COMMANDE CMD ON F.id_fournisseur = CMD.id_fournisseur
+INNER JOIN FOURNIR FR ON F.id_fournisseur = FR.id_fournisseur
+INNER JOIN PRODUIT P ON P.id_produit = FR.id_produit
+LEFT JOIN ORGANISATION O ON F.id_orga = O.id_orga
+WHERE F.id_fournisseur = ?
+GROUP BY F.id_fournisseur, nom_fournisseur, prenom_fournisseur, nom_orga, ville_organisation, note_fourni, nb_produit_fourni, prix_produit, nom_produit;");
         
 $data_coursier = $conn->prepare("SELECT id_coursier, nom_coursier, prenom_coursier, telephone_coursier FROM COURSIER WHERE id_coursier = ?");
 try{

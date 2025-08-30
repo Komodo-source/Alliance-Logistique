@@ -270,7 +270,7 @@ const Formulaire = ({ navigation, route}) => {
   const getProduct = async () => {
     let data = {};
     try {
-      const fileData = await readProductFile();
+      const fileData = await fileManager.read_file("product.json");
       if (fileData && Object.keys(fileData).length > 0) {
         console.log("Lecture depuis le fichier local");
         data = fileData;
@@ -293,7 +293,7 @@ const Formulaire = ({ navigation, route}) => {
     const distance = fourni.localisation_orga !== null ? localisationToKm(fourni.localisation_orga) : null;
     
     return (
-      // Removed ScrollView wrapper - this was causing the VirtualizedList warning
+    // Removed ScrollView wrapper - this was causing the VirtualizedList warning
       <TouchableOpacity 
         style={[
           styles.productCard,
@@ -1112,7 +1112,7 @@ const renderProductItem = ({ item }) => {
    
 
                           } else {
-                            Alert.alert('Err  eur', 'Veuillez remplir tous les champs');
+                            Alert.alert('Erreur', 'Veuillez remplir tous les champs');
                           }
                         }}
                       >

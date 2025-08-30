@@ -5,7 +5,7 @@ import React, { useEffect, useState} from 'react';
   import * as fileManager from './util/file-manager.js';
   import * as debbug_lib from './util/debbug.js';
   import * as Updates from 'expo-updates';
-
+  import { debbug_log } from './util/debbug.js';
   let hasNavigated = false; // outside the component
 
   
@@ -206,6 +206,70 @@ import React, { useEffect, useState} from 'react';
       }
     }
 
+
+      const fetch_sponsorised_supplier = async () => {
+        // a mettre dans le loading et récup dans un fichier ici
+        try {
+          const response = await fetch('https://backend-logistique-api-latest.onrender.com/sponsoriseProduit.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          debbug_log("== commande sponso ==", "cyan");
+          const data = await response.json();
+          await fileManager.save_storage_local_storage_data(data, "sponsorisedCommand.json");
+    
+          if (!response.ok) {
+            throw new Error(`Erreur réseau: ${response.status}`);
+          }
+        }catch (error) {
+          console.error("Error in fethc_sponsorised_supplier:", error);      
+        }
+      }
+
+      const fetch_product = async () => {
+        try {
+          const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          const data = await response.json();
+          await fileManager.save_storage_local_storage_data(data, "product.json");
+
+          if (!response.ok) {
+            throw new Error(`Erreur réseau: ${response.status}`);
+          }
+
+        }catch (error) {
+          console.error("Error in fetch_product:", error);      
+        }
+      }
+      
+      const fetch_best_product = async () => {
+        // a mettre dans le loading et récup dans un fichier ici
+        try {
+          const response = await fetch('https://backend-logistique-api-latest.onrender.com/produitPlusVendu.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          debbug_log("== Produit Plus Vendu ==", "cyan");
+          const data = await response.json();
+          await fileManager.save_storage_local_storage_data(data, "mostCommandedProduct.json");
+          if (!response.ok) {
+            throw new Error(`Erreur réseau: ${response.status}`);
+          }
+        }catch (error) {
+          console.error("Error in fetch_best_product:", error);      
+        }
+      }
+      
+
      const checkServer = async () => {
       // Check if internet is reachable
       // Check if the server is reachable
@@ -217,8 +281,9 @@ import React, { useEffect, useState} from 'react';
 
         if (response.ok) {
           debbug_lib.debbug_log("Connecté a Internet", "green");
-          const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/product.php');
+          const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/check_conn.php');
           //const response_server = await simpleCheck('https://backend-logistique-api-latest.onrender.com/product.php');
+          
           if (response_server.ok) {
             debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
             const dataUser = await fileManager.read_file("auto.json");
@@ -267,7 +332,11 @@ import React, { useEffect, useState} from 'react';
       try {
         check_update();
         check_first_time();
+        fetch_product();
+        fetch_best_product();
+        fetch_sponsorised_supplier();
         loading_check();
+
       } catch( error ) {
         debbug_lib.debbug_log("Error in useEffect: " + error.message, "red");
       }
