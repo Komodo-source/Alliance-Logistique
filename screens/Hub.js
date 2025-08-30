@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, Alert, ScrollView, Dimensions} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import * as FileManager from './util/file-manager.js';
 
@@ -176,7 +177,7 @@ const Hub = ({ navigation }) => {
         <View style={styles.cardContent}>
           <View style={styles.infoRow}>
             <View style={styles.iconContainer}>
-              <Text style={styles.iconText}>📅</Text>
+              <MaterialCommunityIcons name="calendar" size={20} color="#64748B" />
             </View>
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Livraison prévue</Text>
@@ -194,7 +195,7 @@ const Hub = ({ navigation }) => {
           {item.desc_dmd && (
             <View style={styles.infoRow}>
               <View style={styles.iconContainer}>
-                <Text style={styles.iconText}>📝</Text>
+                <MaterialCommunityIcons name="text" size={20} color="#64748B" />
               </View>
               <View style={styles.infoTextContainer}>
                 <Text style={styles.infoLabel}>Description</Text>
@@ -208,7 +209,7 @@ const Hub = ({ navigation }) => {
           <View style={styles.productsSection}>
             <View style={styles.productHeader}>
               <Text style={styles.productHeaderText}>
-                📦 Produits ({item.produits?.length || 0})
+                <MaterialCommunityIcons name="package-variant" size={18} color="#1E293B" /> Produits ({item.produits?.length || 0})
               </Text>
             </View>
             <View style={styles.productsList}>
@@ -235,14 +236,14 @@ const Hub = ({ navigation }) => {
         <View style={styles.cardFooter}>
           <TouchableOpacity style={styles.viewDetailsButton} onPress={handlePress}>
             <Text style={styles.viewDetailsText}>Voir détails</Text>
-            <Text style={styles.arrowIcon}>→</Text>
+            <MaterialCommunityIcons name="arrow-right" size={18} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
     )
   }
 
-  const renderFilterButton = (filterType, label, icon) => (
+  const renderFilterButton = (filterType, label, iconName) => (
     <TouchableOpacity
       style={[
         styles.filterButton,
@@ -250,7 +251,12 @@ const Hub = ({ navigation }) => {
       ]}
       onPress={() => setFilter(filterType)}
     >
-      <Text style={styles.filterIcon}>{icon}</Text>
+      <MaterialCommunityIcons 
+        name={iconName} 
+        size={16} 
+        color={filter === filterType ? '#FFFFFF' : '#64748B'} 
+        style={styles.filterIcon}
+      />
       <Text style={[
         styles.filterText,
         filter === filterType && styles.activeFilterText
@@ -263,7 +269,7 @@ const Hub = ({ navigation }) => {
   const EmptyState = () => (
     <View style={styles.emptyStateContainer}>
       <View style={styles.emptyStateIcon}>
-        <Text style={styles.emptyStateEmoji}>📦</Text>
+        <MaterialCommunityIcons name="package-variant" size={40} color="#64748B" />
       </View>
       <Text style={styles.emptyStateTitle}>
         {filter === 'all' ? 'Aucune commande' : 'Aucune commande dans cette catégorie'}
@@ -317,13 +323,13 @@ const Hub = ({ navigation }) => {
               }
             }}>
             <View style={styles.quickActionIcon}>
-              <Text style={styles.quickActionEmoji}>🔄</Text>
+              <MaterialCommunityIcons name="repeat" size={28} color="#3B82F6" />
             </View>
             <View style={styles.quickActionContent}>
               <Text style={styles.quickActionTitle}>Commandes récurrentes</Text>
               <Text style={styles.quickActionSubtitle}>Gérer vos abonnements</Text>
             </View>
-            <Text style={styles.quickActionArrow}>→</Text>
+            <MaterialCommunityIcons name="arrow-right" size={20} color="#64748B" />
           </TouchableOpacity>
         </View>
 
@@ -334,11 +340,11 @@ const Hub = ({ navigation }) => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersContainer}
           >
-            {renderFilterButton('all', 'Toutes', '📋')}
-            {renderFilterButton('En préparation', 'En attente', '⏳')}
-            {renderFilterButton('En cours de livraison', 'En cours', '⏰​')}
-            {renderFilterButton('Livré', 'Livrées', '✅')}
-            {renderFilterButton('annulé', 'Annulées', '❌')}
+            {renderFilterButton('all', 'Toutes', 'clipboard-text')}
+            {renderFilterButton('En préparation', 'En attente', 'clock')}
+            {renderFilterButton('En cours de livraison', 'En cours', 'truck-delivery')}
+            {renderFilterButton('Livré', 'Livrées', 'check-circle')}
+            {renderFilterButton('annulé', 'Annulées', 'close-circle')}
 
           </ScrollView>
           
@@ -349,7 +355,7 @@ const Hub = ({ navigation }) => {
           {loading ? (
             <View style={styles.loadingContainer}>
               <View style={styles.loadingSpinner}>
-                <Text style={styles.loadingEmoji}>⏳</Text>
+                <MaterialCommunityIcons name="loading" size={30} color="#3B82F6" />
               </View>
               <Text style={styles.loadingText}>Chargement de vos commandes...</Text>
             </View>
@@ -378,7 +384,7 @@ const Hub = ({ navigation }) => {
                 console.error("Navigation error:", error);
               }
             }}>
-            <Text style={styles.fabIcon}>+</Text>
+            <MaterialCommunityIcons name="plus" size={32} color="#FFFFFF" />
           </TouchableOpacity>
         )}
 
@@ -503,9 +509,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  quickActionEmoji: {
-    fontSize: 24,
-  },
   quickActionContent: {
     flex: 1,
   },
@@ -519,11 +522,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     fontWeight: '500',
-  },
-  quickActionArrow: {
-    fontSize: 18,
-    color: '#64748B',
-    fontWeight: '600',
   },
   filtersSection: {
     paddingVertical: 8,
@@ -553,7 +551,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   filterIcon: {
-    fontSize: 16,
     marginRight: 6,
   },
   filterText: {
@@ -640,9 +637,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  iconText: {
-    fontSize: 16,
-  },
   infoTextContainer: {
     flex: 1,
   },
@@ -723,11 +717,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginRight: 8,
   },
-  arrowIcon: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -742,9 +731,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
-  },
-  loadingEmoji: {
-    fontSize: 24,
   },
   loadingText: {
     fontSize: 16,
@@ -766,9 +752,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
-  },
-  emptyStateEmoji: {
-    fontSize: 36,
   },
   emptyStateTitle: {
     fontSize: 20,
@@ -816,11 +799,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
     zIndex: 10,
-  },
-  fabIcon: {
-    fontSize: 28,
-    color: '#FFFFFF',
-    fontWeight: '300',
   },
   navbar: {
     flexDirection: 'row',
@@ -880,5 +858,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
 export default Hub;

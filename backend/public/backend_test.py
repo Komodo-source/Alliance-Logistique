@@ -3,7 +3,7 @@ import json
 
 # URL de ton backend (change-la par l'URL de ton API)
 #https://backend-logistique-api-latest.onrender.com/db.php
-url = "http://127.0.0.1:8000/get_user_info.php"
+url = "https://backend-logistique-api-latest.onrender.com//get_user_info.php"
 
 # Données à envoyer (modifie selon tes besoins)
 payload =  {"type": "client","session_id" : "2b2c3c745bf3f29c4275c317561261323d523d5e690c448b875bd507a9781d96" }

@@ -9,23 +9,23 @@ import * as FileManager from '../screens/util/file-manager.js'
 export const loadImages = (id_produit) => {
   switch(id_produit){
       case "1":
-          return require('../assets/img_product/3.jpg'); 
+          return 'https://arena.ct.ws/product/3.jpg';
       case "2":
-          return require('../assets/img_product/2.jpg');
+          return 'https://arena.ct.ws/product/2.jpg';
       case "3":
-          return require('../assets/img_product/3.jpg');
+          return 'https://arena.ct.ws/product/3.jpg';
       case "4":
-          return require('../assets/img_product/4.jpg');        
+          return 'https://arena.ct.ws/product/4.jpg';        
       case "8":
-          return require('../assets/img_product/8.jpg');
+          return 'https://arena.ct.ws/product/8.jpg';
       case "10":
-          return require('../assets/img_product/10.jpg');
+          return 'https://arena.ct.ws/product/10.jpg';
       case "11":
-          return require('../assets/img_product/11.jpg');
+          return 'https://arena.ct.ws/product/11.jpg';
       case "12":
-          return require('../assets/img_product/12.jpg');
+          return 'https://arena.ct.ws/product/12.jpg';
       default:
-          return require('../assets/img_product/default.png');
+          return 'https://arena.ct.ws/product/default.jpg';
   }
 }
 
@@ -146,7 +146,7 @@ const Produit = ({ navigation, route}) => {
     onPress={() => navigation.navigate('DetailProduit', {item})}>
       
       <Image 
-        source = {loadImages(item.id_produit)}
+        source={{uri: loadImages(item.id_produit)}}
         style={styles.productImage}
       />          
       <View style={styles.productInfo}>
@@ -374,6 +374,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
+    paddingLeft: 20,
+    fontSize: 17,
+    fontWeight: "400",
     height: 50,
     borderWidth: 2.5,
     borderRadius: 25,

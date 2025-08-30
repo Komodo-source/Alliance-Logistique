@@ -775,7 +775,7 @@ const renderCategorieChoice = ({item, index}) => (
 
         <TouchableOpacity 
           style={styles.navButton}
-          onPress={() => navigation.navigate('ProfilPublic', "2b2c3c745bf3f29c4275c317561261323d523d5e690c448b875bd507a9781d96")}
+          onPress={() => navigation.navigate('Profil')}
         >
           <View style={styles.iconContainer}>
             <Image

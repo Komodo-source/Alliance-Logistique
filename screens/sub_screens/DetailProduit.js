@@ -13,23 +13,23 @@ var headers = {
 export const loadImages = (id_produit) => {
   switch(id_produit){
       case "1":
-          return require('../../assets/img_product/3.jpg');
+          return 'https://arena.ct.ws/product/3.jpg';
       case "2":
-          return require('../../assets/img_product/2.jpg');
+          return 'https://arena.ct.ws/product/2.jpg';
       case "3":
-          return require('../../assets/img_product/3.jpg');
+          return 'https://arena.ct.ws/product/3.jpg';
       case "4":
-          return require('../../assets/img_product/4.jpg');        
+          return 'https://arena.ct.ws/product/4.jpg';        
       case "8":
-          return require('../../assets/img_product/8.jpg');
+          return 'https://arena.ct.ws/product/8.jpg';
       case "10":
-          return require('../../assets/img_product/10.jpg');
+          return 'https://arena.ct.ws/product/10.jpg';
       case "11":
-          return require('../../assets/img_product/11.jpg');
+          return 'https://arena.ct.ws/product/11.jpg';
       case "12":
-          return require('../../assets/img_product/12.jpg');
+          return 'https://arena.ct.ws/product/12.jpg';
       default:
-          return require('../../assets/img_product/default.png');
+          return 'https://arena.ct.ws/product/default.jpg';
   }
 }
 
@@ -193,7 +193,8 @@ const renderFourniChoix = ({ item: fourni, index }) => {
                 <Text style={styles.title}>{item.nom_produit}</Text>            
                 <Text style={styles.categorie}>Catégorie: {item.nom_categorie}</Text>    
             </View>
-            <Image source={loadImages(item.id_produit)} style={styles.image} />
+            <Image 
+            source={{uri: loadImages(item.id_produit)}} style={styles.image} />
         </View>
         
 
