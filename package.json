@@ -17,6 +17,7 @@
     }
   },
   "dependencies": {
+    "@anttech/react-native-ftp": "^0.2.3",
     "@expo/dev-server": "^0.5.5",
     "@expo/metro-runtime": "~4.0.1",
     "@expo/vector-icons": "~14.0.4",
@@ -49,7 +50,9 @@
     "react-dom": "18.3.1",
     "react-native": "0.76.9",
     "react-native-elements": "^3.4.3",
+    "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-image-picker": "^8.2.1",
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-progress": "^5.0.1",
     "react-native-reanimated": "~3.16.7",

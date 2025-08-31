@@ -170,6 +170,15 @@ INSERT INTO `COMMANDE_PRODUIT` (`id_cmd`, `id_produit`, `nb_produit`) VALUES
 -- Structure de la table `CONTENANCE`
 --
 
+CREATE TABLE PHOTO_FOURNI (
+  id_photo int NOT NULL,
+  id_fournisseur int NOT NULL,
+  photo_path VARCHAR(255) NOT NULL,
+  CONSTRAINT PRIMARY KEY (id_photo),
+  CONSTRAINT FOREIGN KEY (id_fournisseur) REFERENCES FOURNISSEUR(id_fournisseur) 
+);
+
+
 CREATE TABLE `CONTENANCE` (
   `id_produit` int NOT NULL,
   `id_dmd` varchar(255) NOT NULL,

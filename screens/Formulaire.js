@@ -28,7 +28,7 @@ import { SafeAreaView } from 'react-native';
 const Formulaire = ({ navigation, route}) => {
   
   let pre_selected_item = null;
-  console.log(route);
+  console.log("route"+  route);
   if (route && route.params && route.params.produits) {
     pre_selected_item = route.params.produits;
     console.log("produit deja selec à partir d'un panier");
@@ -246,7 +246,7 @@ const Formulaire = ({ navigation, route}) => {
   };
 
     
-  const getFourni = async () => {
+  const getFourni = async (id_prod) => {
     let data = {};
     try {
       
@@ -256,7 +256,7 @@ const Formulaire = ({ navigation, route}) => {
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({id_produit: item.id_produit})
+        body: JSON.stringify({id_produit: id_prod})
       });
       data = await response.json();      
       setFourni(data);
@@ -290,7 +290,7 @@ const Formulaire = ({ navigation, route}) => {
 
   const renderFourniChoix = ({ item: fourni, index }) => {
     const isFirstSupplier = index === 0; // First supplier is cheapest
-    const distance = fourni.localisation_orga !== null ? localisationToKm(fourni.localisation_orga) : null;
+    const distance = fourni.localisation_orga !== null ? 1 : null; 
     
     return (
     // Removed ScrollView wrapper - this was causing the VirtualizedList warning
@@ -318,15 +318,26 @@ const Formulaire = ({ navigation, route}) => {
             style={styles.cartButton}
             onPress={() => navigation.navigate("Formulaire")}
           >
-            <Ionicons name="cart" size={20} color="#fff" />
+            
+            <MaterialCommunityIcons
+                name="cart"
+                size={20}
+                color="#FFF"              
+              />
           </TouchableOpacity>
         </View>
         
         <View style={styles.supplierDetails}>
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={16} color="#64748B" />
+            
+              <MaterialCommunityIcons
+                name="map-marker"
+                size={16}
+                color="#64748B"              
+              />
+
             <Text style={styles.detailText}>
-              {distance !== null && !locationLoading
+              {distance !== null
                 ? `${distance.toFixed(1)} km`
                 : fourni.ville_organisation || 'Adresse non renseignée'
               }
@@ -334,7 +345,12 @@ const Formulaire = ({ navigation, route}) => {
           </View>
           
           <View style={styles.detailRow}>
-            <Ionicons name="cube-outline" size={16} color="#64748B" />
+            
+            <MaterialCommunityIcons
+                name="cube-outline"
+                size={16}
+                color="#64748B"              
+              />
             <Text style={styles.detailText}>
               Stock: {fourni.nb_produit_fourni} unités
             </Text> 
@@ -463,6 +479,7 @@ const Formulaire = ({ navigation, route}) => {
 
   useEffect(() => {
     const initializeData = async () => {
+      console.log("1");
       try {
         setUserDataLoading(true);
         // Read user data asynchronously
@@ -493,7 +510,7 @@ const Formulaire = ({ navigation, route}) => {
     };
 
     initializeApp();
-    getFourni();
+    
   }, []);
 
   const handleMapPress = (e) => {
@@ -1108,7 +1125,9 @@ const renderProductItem = ({ item }) => {
                               nombre,
                               selectedProduct.id,
                               selectedProduct.originalItem
-                            );
+                            ); // CHECKER LE NB DE PARAM
+                            getFourni(selectedProduct.id);
+                            setModalFourniVisible(true)
    
 
                           } else {
@@ -1191,6 +1210,38 @@ const renderProductItem = ({ item }) => {
                   </View>
                 </View>
               )}
+
+              {/* Modal Fournisseur liste 
+
+              <Modal              
+                  animationType='fade'
+                  transparent={true}
+                  visible={modalFourniVisible}
+                  onRequestClose={() => setModalFourniVisible(false)}>
+
+                <SafeAreaView style={styles.listFourni}>
+                  <Text style={styles.NbFourni}>Nombre de fournisseur produisant {item.nom_produit}: {item.nb_fournisseur}</Text>
+                  {estCharge ? 
+                    (<FlatList
+                      data={fourni}
+                      renderItem={renderFourniChoix}
+                      keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
+                      numColumns={1}
+                      contentContainerStyle={styles.productGrid}
+                      showsVerticalScrollIndicator={false}
+                    />) : (
+                      <View style={styles.loadingContainer}>
+                        <View style={styles.loadingSpinner}>
+                          <Text style={styles.loadingEmoji}>⏳</Text>
+                        </View>
+                        <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
+                      </View>
+                    )        
+                  
+                  }
+          
+                </SafeAreaView >
+              </Modal>*/}
 
               {/* Delivery Section */}
               <View style={styles.sectionContainer}>
