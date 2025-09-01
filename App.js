@@ -31,6 +31,7 @@ import Confidentialite from './screens/sub_screens/Confidentialite';
 import ProtectionDonnee from './screens/sub_screens/ProtectionDonnee';
 import ModifProfil from './screens/sub_screens/ModifProfil';
 import ProfilPublic from './screens/sub_screens/ProfilPublic';
+import ProductPhotos from './screens/sub_screens/ProductPhotos';
 
 const Stack = createNativeStackNavigator();
 
@@ -70,6 +71,7 @@ const App = () => {
             <Stack.Screen name="ProtectionDonnee" component={ProtectionDonnee} options={{ headerTitle: "Donnée" }}/>
             <Stack.Screen name="ModifProfil" component={ModifProfil} options={{ headerTitle: "Modification de profil" }}/>
             <Stack.Screen name="ProfilPublic" component={ProfilPublic} options={{ headerShown: false }}/>
+            <Stack.Screen name="ProductPhotos" component={ProductPhotos} options={{ headerShown: false }}/>
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>

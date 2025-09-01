@@ -289,7 +289,7 @@ const Formulaire = ({ navigation, route}) => {
 
 
   const renderFourniChoix = ({ item: fourni, index }) => {
-    const isFirstSupplier = index === 0; // First supplier is cheapest
+    const isFirstSupplier = index === 0; 
     const distance = fourni.localisation_orga !== null ? 1 : null; 
     
     return (
@@ -1060,8 +1060,6 @@ const renderProductItem = ({ item }) => {
                     contentContainerStyle={styles.productGrid}
                     showsVerticalScrollIndicator={false}
                   />
-
-
                 </Modal>
 
 
@@ -2369,6 +2367,113 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+
+  productCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 20,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    position: 'relative',
+  },
+  
+  cheapestCard: {
+    borderColor: '#2E7D32',
+    borderWidth: 2,
+    backgroundColor: '#F8FFF8',
+  },
+  
+  bestPriceBadge: {
+    position: 'absolute',
+    top: -8,
+    right: 16,
+    backgroundColor: '#2E7D32',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  
+  bestPriceText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  
+  supplierHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  
+  supplierInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  
+  supplierName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  
+  productPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+  },
+  
+  cartButton: {
+    marginTop: 10,
+    backgroundColor: '#FF8C00', // Orange background
+    width: 44,
+    height: 44,
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FF8C00',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  
+  supplierDetails: {
+    gap: 8,
+  },
+  
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  
+  detailText: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  
+  productGrid: {
+    paddingBottom: 20,
+  },
+
 });
 
 export default Formulaire;  

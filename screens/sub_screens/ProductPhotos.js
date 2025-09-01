@@ -4,10 +4,12 @@ import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import RNFS from 'react-native-fs';
 import FtpService from '@anttech/react-native-ftp';
 import { debbug_log } from '../util/debbug.js';
+import { getAlertRef } from '../util/AlertService.js';
 
-const ProductPhotos = ({ navigation }) => {
+const ProductPhotos = ({ navigation, route }) => {
     const [photos, setPhotos] = useState([]);
     const list_photos = [];
+    const session_id  = route.params.id;
 
     const savePhotoLocally = async (uri) => {
         try {
@@ -36,7 +38,7 @@ const ProductPhotos = ({ navigation }) => {
 
     const upload_db = async (photoPath, fournisseurId) => {
         try {
-            const response = await fetch('http://your-backend-url/upload_photo.php', {
+            const response = await fetch('http://backend-logistique-api-latest.onrender.com/upload_photo.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -50,6 +52,13 @@ const ProductPhotos = ({ navigation }) => {
             const result = await response.json();
             if (result.success) {
                 debbug_log('Photo uploaded to DB successfully', 'green');
+                getAlertRef().current?.showAlert(
+                    'Succès', 
+                    'Les photos ont été transmises avec succès. Vous pouvez désormais utilisez l\'application',
+                    true,
+                    "continuer",
+                    () => navigation.navigate("Accueil")
+                );
             } else {
                 debbug_log('Failed to upload photo to DB: ' + result.message, 'red');
             }
@@ -59,11 +68,11 @@ const ProductPhotos = ({ navigation }) => {
     };
 
     const transferLocalToFtp = async (fournisseurId) => {
-        const host = 'ftp.yourserver.com';
+        const host = '	ftpupload.net';
         const port = 21;
-        const username = 'your_ftp_username';
-        const password = 'your_ftp_password';
-        const remoteFolder = '/remote/photos/';
+        const username = 'if0_37377007';
+        const password = 'bujsYxINZZBY4';
+        const remoteFolder = '/arena.ct.ws/htdocs/photo_fourni';
 
         try {
             await FtpService.setup(host, port, username, password);
@@ -142,9 +151,15 @@ const ProductPhotos = ({ navigation }) => {
                 style={styles.saveButton}
                 onPress={() => {
                     if (photos.length > 5) {
-                        Alert.alert('Erreur', 'Vous ne pouvez télécharger que 5 photos au maximum.');
+                        getAlertRef().current?.showAlert(
+                            'Erreur', 
+                            'Vous ne pouvez télécharger que 5 photos au maximum.',
+                            true,
+                            "OK",
+                            null
+                        );
                     } else {
-                        transferLocalToFtp(1); // Replace `1` with the actual fournisseur ID
+                        transferLocalToFtp(session_id);
                     }
                 }}
             >

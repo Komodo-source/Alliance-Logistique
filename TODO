@@ -7,17 +7,17 @@ Alliance logistique
 	◦	Client doit payer avant la livraison ou pendant
 	x	Placeholder phone +22976…
 	◦	Ajout sponsorisé page accueil 
-	◦	Produit les plus commandés 
+	x	Produit les plus commandés 
 	◦	Reinclure coursier 
 	◦	Système notification 
-	◦	Bool si fournir discount
+	x	Bool si fournir discount
         - affiche des produits randoms discount 
 	x	Refresh les commandes
        - sinon get 1fois les commandes 
 	x	regarder si on devrait store dans un json ou sql avec SQLite
 	◦ enlever les logs quand l'app est en prod
-	◦ fix les session_id 
+	x fix les session_id 
 	◦ modifier le profil
-	◦ Update l'Accueil
+	x Update l'Accueil
 	◦ optimiser le loading, utilisé une fonction à la place de plusieurs
 	
