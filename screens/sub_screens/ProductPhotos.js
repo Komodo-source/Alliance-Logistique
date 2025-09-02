@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, FlatList } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import RNFS from 'react-native-fs';
-import FtpService from '@anttech/react-native-ftp';
+//import RNFS from 'react-native-fs';
+//import FtpService from '@anttech/react-native-ftp';
 import { debbug_log } from '../util/debbug.js';
 import { getAlertRef } from '../util/AlertService.js';
 
@@ -11,27 +11,24 @@ const ProductPhotos = ({ navigation, route }) => {
     const list_photos = [];
     const session_id  = route.params.id;
 
-    const savePhotoLocally = async (uri) => {
+  const savePhotoInMemory = async (uri) => {
         try {
-            const folderPath = `${RNFS.DocumentDirectoryPath}/product_photos`;
-            const fileName = `photo_${Date.now()}.jpg`;
-            const filePath = `${folderPath}/${fileName}`;
+            // Generate a unique identifier for the photo
+            const photoId = `photo_${Date.now()}`;
+            
+            // Store the original URI and metadata
+            const photoData = {
+                id: photoId,
+                uri: uri, // Keep the original URI from image picker
+                timestamp: new Date().toISOString(),
+            };
 
-            // Ensure the folder exists
-            const folderExists = await RNFS.exists(folderPath);
-            if (!folderExists) {
-                await RNFS.mkdir(folderPath);
-            }
-
-            list_photos.push(filePath);
-
-            // Copy the photo to the local folder
-            await RNFS.copyFile(uri, filePath);
-            return filePath;
+            list_photos.push(photoData);
+            return photoData;
 
         } catch (error) {
-            console.error('Error saving photo locally:', error);
-            Alert.alert('Error', 'Failed to save the photo.');
+            console.error('Error processing photo:', error);
+            Alert.alert('Error', 'Failed to process the photo.');
             return null;
         }
     };
@@ -68,7 +65,7 @@ const ProductPhotos = ({ navigation, route }) => {
     };
 
     const transferLocalToFtp = async (fournisseurId) => {
-        const host = '	ftpupload.net';
+        const host = 'ftpupload.net';
         const port = 21;
         const username = 'if0_37377007';
         const password = 'bujsYxINZZBY4';
@@ -106,7 +103,7 @@ const ProductPhotos = ({ navigation, route }) => {
         const result = await launchCamera({ mediaType: 'photo', saveToPhotos: false });
         if (result.assets && result.assets.length > 0) {
             const photoUri = result.assets[0].uri;
-            const savedPath = await savePhotoLocally(photoUri);
+            const savedPath = await savePhotoInMemory(photoUri);
             if (savedPath) {
                 setPhotos((prevPhotos) => [...prevPhotos, savedPath]);
             }
@@ -117,7 +114,7 @@ const ProductPhotos = ({ navigation, route }) => {
         const result = await launchImageLibrary({ mediaType: 'photo', selectionLimit: 0 });
         if (result.assets && result.assets.length > 0) {
             for (const asset of result.assets) {
-                const savedPath = await savePhotoLocally(asset.uri);
+                const savedPath = await savePhotoInMemory(asset.uri);
                 if (savedPath) {
                     setPhotos((prevPhotos) => [...prevPhotos, savedPath]);
                 }

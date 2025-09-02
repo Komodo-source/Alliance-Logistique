@@ -84,6 +84,9 @@ const Formulaire = ({ navigation, route}) => {
   //const [showTimePicker, setShowTimePicker] = useState(false);
   const [dataUser, setDataUser] = useState(null);
   const [userDataLoading, setUserDataLoading] = useState(true);
+  var fournisseur_liste = [];
+  // tt les id fournisseurs si choisis par def = null
+
   //debbug_lib.debbug_log("dataUser"+ dataUser, "magenta");
 
   const dic_image_name = {
@@ -261,6 +264,8 @@ const Formulaire = ({ navigation, route}) => {
       data = await response.json();      
       setFourni(data);
       console.log("Fourni fetched:", data);
+      if (data.length === 0 ) {
+        return 1;}
 
     } catch (error) {
       console.error("Erreur lors de la récupération des produits:", error);
@@ -287,20 +292,34 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
+  
+    const renderFourniChoix = ({ item: fourni, index }) => {
+      const isFirstSupplier = index === 0; 
+      const distance = fourni.localisation_orga !== null ? 1 : null; 
+      
+      return (
+        <TouchableOpacity 
+          style={[
+            styles.productCard,
+            isFirstSupplier && styles.cheapestCard
+          ]}
+          onPress={() => {
+            fournisseur_liste.push(fourni.id_fournisseur);
+            setModalFourniVisible(false);
 
-  const renderFourniChoix = ({ item: fourni, index }) => {
-    const isFirstSupplier = index === 0; 
-    const distance = fourni.localisation_orga !== null ? 1 : null; 
-    
-    return (
-    // Removed ScrollView wrapper - this was causing the VirtualizedList warning
-      <TouchableOpacity 
-        style={[
-          styles.productCard,
-          isFirstSupplier && styles.cheapestCard
-        ]}
-        onPress={() => navigation.navigate('FicheFournisseur', {fourni})}
-      >
+            // Add product with selected supplier's price
+            if (selectedProduct) {
+              add_product(
+                selectedProduct.key,
+                nombre,
+                selectedProduct.id,
+                selectedProduct.originalItem,
+                fourni.prix_produit // Pass the price
+              );
+            }
+          }}
+        >
+
         {/* Best Price Badge for first supplier */}
         {isFirstSupplier && (
           <View style={styles.bestPriceBadge}>
@@ -314,17 +333,7 @@ const Formulaire = ({ navigation, route}) => {
             <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
           </View>
           
-          <TouchableOpacity 
-            style={styles.cartButton}
-            onPress={() => navigation.navigate("Formulaire")}
-          >
-            
-            <MaterialCommunityIcons
-                name="cart"
-                size={20}
-                color="#FFF"              
-              />
-          </TouchableOpacity>
+
         </View>
         
         <View style={styles.supplierDetails}>
@@ -607,31 +616,33 @@ const renderProductItem = ({ item }) => {
     }
   }
 
-  const add_product = (name, quantite, id, originalItem = null, shouldBatch = false) => {
-    if (!shouldBatch) {
-      setModalVisible(false);
-    }
+  const add_product = (name, quantite, id, originalItem = null, price = null, shouldBatch = false) => {
+  if (!shouldBatch) {
+    setModalVisible(false);
+  }
 
-    const newProduct = {
-      id,
-      name,
-      productDetails: {
-        ...(originalItem || {}),
-        quantite: quantite,
-        type_vendu: originalItem?.type_vendu || 'pièce'
-      }
-    };
-    
-    if (shouldBatch) {
-      // Return the product instead of setting state immediately
-      return newProduct;
-    } else {
-      setProducts(prevProducts => [...prevProducts, newProduct]);
-      setNombre('');
-      // Show snackbar
-      snackBarRef.current?.show('Produit ajouté à la commande', 'info');
+  // Use the provided price or fall back to the product's default price
+  const productPrice = price || originalItem?.prix_produit || 0;
+
+  const newProduct = {
+    id,
+    name,
+    productDetails: {
+      ...(originalItem || {}),
+      quantite: parseFloat(quantite) || 1,
+      prix: productPrice, // Add price to product details
+      type_vendu: originalItem?.type_vendu || 'pièce'
     }
   };
+
+  if (shouldBatch) {
+    return newProduct;
+  } else {
+    setProducts(prevProducts => [...prevProducts, newProduct]);
+    setNombre('');
+    snackBarRef.current?.show('Produit ajouté à la commande', 'info');
+  }
+};
 
   const set_product_rec_alternative = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
@@ -1045,22 +1056,113 @@ const renderProductItem = ({ item }) => {
               </View>
 
               {/* Fournisseur Modal */}
+                             
                 <Modal
                   animationType='fade'
                   transparent={true}
                   visible={modalFourniVisible}
                   onRequestClose={() => setModalFourniVisible(false)}
                 >
+                <View style={styles.modalOverlay}> 
+                  <View style={[styles.modalContent, {alignItems: ''}]}>
+                    <TouchableOpacity
+                    onPress={() => setModalFourniVisible(false)}
+                    style={{marginLeft: 15}}
+                    >
+                      <MaterialCommunityIcons
+                        name="close"
+                        size={32}
+                        color="#111"
+                      />
+                    </TouchableOpacity>
 
-                  <FlatList
-                    data={fourni}
-                    renderItem={renderFourniChoix}
-                    keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
-                    numColumns={1}
-                    contentContainerStyle={styles.productGrid}
-                    showsVerticalScrollIndicator={false}
-                  />
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "600",
+                        marginTop: 15,
+                        marginBottom: 15,
+                        textAlign: "center"
+                      }}
+                    >
+                      Choisissez le livreur le plus proche
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                          setModalFourniVisible(false);
+                          if (selectedProduct) {
+                              add_product(
+                                  selectedProduct.key,
+                                  nombre,
+                                  selectedProduct.id,
+                                  selectedProduct.originalItem,
+                                  fourni[0]?.prix_produit || 0 // Use the first supplier's price or default to 0
+                              );
+                          }
+                      }}
+                      activeOpacity={0.8}
+                      style={{ marginTop: 15, marginBottom: 15 }}
+                  >
+                      <View
+                          style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "#4CAF50",
+                              paddingVertical: 15,
+                              paddingHorizontal: 20,
+                              borderRadius: 15,
+                              shadowColor: "#000",
+                              shadowOffset: { width: 0, height: 3 },
+                              shadowOpacity: 0.3,
+                              shadowRadius: 4,
+                              elevation: 5,
+                          }}
+                      >
+                          <MaterialCommunityIcons
+                              name="truck-fast-outline"
+                              size={28}
+                              color="#fff"
+                              style={{ marginRight: 10 }}
+                          />
+                          <Text
+                              style={{
+                                  fontSize: 16,
+                                  fontWeight: "600",
+                                  color: "#fff",
+                                  textTransform: "uppercase",
+                                  letterSpacing: 1,
+                              }}
+                          >
+                              Livraison Éclair
+                          </Text>
+                      </View>
+                  </TouchableOpacity>
+                    
+                    <View style={styles.orDivider}>
+                    <View style={styles.dividerLine}></View>
+                    <Text style={styles.orText}>OU</Text>
+                    <View style={styles.dividerLine}></View>
+                  </View>
+
+
+                    <Text
+                    style={{fontSize: 18, fontWeight: "500", marginTop: 15, marginBottom: 15, textAlign: "center"}}
+                    >Choisissez parmi la liste des fournisseurs</Text>
+
+                    <FlatList
+                      data={fourni}
+                      renderItem={renderFourniChoix}
+                      keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
+                      numColumns={1}
+                      contentContainerStyle={styles.productGrid}
+                      showsVerticalScrollIndicator={false}
+                    />
+                    </View>
+                  </View>
                 </Modal>
+              
 
 
 
@@ -1079,6 +1181,14 @@ const renderProductItem = ({ item }) => {
                     <Text style={styles.modalTextSelected}>
                       {selectedProduct?.key}
                     </Text>
+                    
+                    {/* Add price display if available */}
+                    {selectedProduct?.originalItem?.prix_produit && (
+                      <Text style={styles.modalPrice}>
+                        Prix Moyen : ~{selectedProduct.originalItem.prix_produit} FCFA
+                        {selectedProduct.originalItem.type_vendu === 'poids' ? ' / kg' : ' / unité'}
+                      </Text>
+                    )}
 
                     <Text style={styles.modalText}>
                       Quantité (nombre de pièces):
@@ -1112,21 +1222,33 @@ const renderProductItem = ({ item }) => {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.modalButtonOK}
-                        onPress={() => {
+                        onPress={async() => {
                           
                           
                           if (nombre ) {
-                            add_product(
-                              selectedProduct.key,
-                              //poids,
-                              1,
-                              nombre,
-                              selectedProduct.id,
-                              selectedProduct.originalItem
-                            ); // CHECKER LE NB DE PARAM
-                            getFourni(selectedProduct.id);
-                            setModalFourniVisible(true)
-   
+                            //add_product(
+                            //  selectedProduct.key,
+                            //  //poids,
+                            //  1,
+                            //  nombre,
+                            //  selectedProduct.id,
+                            //  selectedProduct.originalItem
+                            //); // CHECKER LE NB DE PARAM
+                            if (await getFourni(selectedProduct.id) === 1){
+                              setModalVisible(false)
+                              getAlertRef().current?.showAlert(
+                                  'Aïe', 
+                                  'Oups! Aucun fournisseur ne peut remplir votre commande. Revenez plus tard',
+                                  true,
+                                  "continuer",
+                                  null
+                              );
+                            }else{
+                              setModalVisible(false)
+                              setModalFourniVisible(true)
+                            }
+                            
+
 
                           } else {
                             Alert.alert('Erreur', 'Veuillez remplir tous les champs');
@@ -1181,30 +1303,50 @@ const renderProductItem = ({ item }) => {
                 <View style={styles.sectionContainer}>
                   <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
                   <View style={styles.selectedProductsContainer}>
-                  {products.map((product, index) => (
-                    <View key={`${product.name}-${index}`} style={styles.containerProduct}>
-                      <View style={styles.productInfo}>
-                        <Text style={styles.productInfoText}>
-                          {product.productDetails.nombre}x {product.name} - {/*{product.productDetails.poids}g/pièce*/}
-                        </Text>
-                        <Text style={styles.categoryText}>
-                          ({product.productDetails.nom_categorie || 'Catégorie non définie'})
-                        </Text>
-                      </View>
-                      <View style={styles.productActions}>
-                        <Image
-                          style={{marginRight: 25}}
-                          source={dic_image_name[typeof product.name === 'string' ? product.name.toLowerCase() : 'tomate']}
-                        />
-                        <TouchableOpacity
-                          style={styles.deleteButton}
-                          onPress={() => removeProduct(product.id)}
-                        >
-                          <Text style={{fontSize: 20, color: '#000'}}>✕</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                    ))}
+                    {products.map((product, index) => {
+                      const quantity = parseFloat(product.productDetails.quantite) || 1;
+                      const price = parseFloat(product.productDetails.prix) || 0;
+                      const lineTotal = quantity * price;
+                      
+                      return (
+                        <View key={`${product.name}-${index}`} style={styles.containerProduct}>
+                          <View style={styles.productInfo}>
+                            <Text style={styles.productInfoText}>
+                              {quantity}x {product.name}
+                            </Text>
+                            <Text style={styles.productPriceText}>
+                              {price.toLocaleString()} FCFA x {quantity} = {lineTotal.toLocaleString()} FCFA
+                            </Text>
+                            <Text style={styles.categoryText}>
+                              ({product.productDetails.nom_categorie || 'Catégorie non définie'})
+                            </Text>
+                          </View>
+                          <View style={styles.productActions}>
+                            <Image
+                              style={{marginRight: 25}}
+                              source={dic_image_name[typeof product.name === 'string' ? product.name.toLowerCase() : 'tomate']}
+                            />
+                            <TouchableOpacity
+                              style={styles.deleteButton}
+                              onPress={() => removeProduct(product.id)}
+                            >
+                              <Text style={{fontSize: 20, color: '#000'}}>✕</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                  
+                  {/* Add Total Calculation */}
+                  <View style={styles.totalContainer}>
+                    <Text style={styles.totalText}>
+                      Total: {products.reduce((sum, product) => {
+                        const quantity = parseFloat(product.productDetails.quantite) || 1;
+                        const price = parseFloat(product.productDetails.prix) || 0;
+                        return sum + (quantity * price);
+                      }, 0).toLocaleString()} FCFA
+                    </Text>
                   </View>
                 </View>
               )}
@@ -1393,6 +1535,17 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  fourniList : {    
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    backgroundColor: "#FFF"
+  },
   datePicker: {
     width: '100%',
     marginVertical: 20,
@@ -1578,21 +1731,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalContent: {
-    width: '80%',
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
+
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -2473,6 +2612,46 @@ const styles = StyleSheet.create({
   productGrid: {
     paddingBottom: 20,
   },
+  bouttonExpress : {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    shadowColor: '#585755ff',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+    borderWidth: 2,
+    borderRadius: 15,
+    width: "80%",
+  },
+  productPriceText: {
+    fontSize: 14,
+    color: '#2E7D32',
+    fontWeight: '500',
+    marginVertical: 2,
+  },
+  totalContainer: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    alignItems: 'flex-end',
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E3192',
+  },
+  modalPrice: {
+  fontSize: 16,
+  fontWeight: 'bold',
+  color: '#2E7D32',
+  marginBottom: 15,
+},
 
 });
 

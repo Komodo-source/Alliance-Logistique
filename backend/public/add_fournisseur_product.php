@@ -46,7 +46,7 @@ try{
             $stmt->bind_param("idii", $qte_produit[$i], $prix_produit[$i], $id_fournisseur, $list_produit[$i]);
         } else {
             // Insert new record
-            $sql = "INSERT INTO FOURNIR (id_fournisseur, id_produit, prix_produit, nb_produit_fourni) VALUES (?, ?, ?, ?)";
+            $sql = " FOURNIR (id_fournisseur, id_produit, prix_produit, nb_produit_fourni) VALUES (?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("iidi", $id_fournisseur, $list_produit[$i], $prix_produit[$i], $qte_produit[$i]);
         }
