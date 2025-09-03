@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, Image, TouchableOpacity, FlatList, SafeAreaView, Alert } from 'react-native';
-import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debbug_log } from '../util/debbug';
-
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 var headers = {
   'Accept' : 'application/json',
@@ -210,26 +210,40 @@ const renderFourniChoix = ({ item: fourni, index }) => {
       </TouchableOpacity>
 
       <SafeAreaView style={styles.listFourni}>
-        <Text style={styles.NbFourni}>Nombre de fournisseur produisant {item.nom_produit}: {item.nb_fournisseur}</Text>
-        {estCharge ? 
-          (<FlatList
+        <Text style={styles.NbFourni}>Nombre de fournisseur produisant<Text style={{color: "#2757F5"}}> {item.nom_produit}</Text> : {item.nb_fournisseur}</Text>
+        {item.nb_fournisseur == 0 ? (
+          <View style={styles.card}>
+            <View style={styles.iconContainer}>
+              <MaterialCommunityIcons
+                name="truck-remove-outline"
+                size={48}
+                color="#94a3b8"
+              />
+            </View>
+            <Text style={styles.title}>Aucun fournisseur disponible</Text>
+            <Text style={styles.description}>
+              Aucun fournisseur ne peut actuellement remplir votre commande.
+              Veuillez réessayer ultérieurement.
+            </Text>
+          </View>
+        ) : estCharge ? (
+          <FlatList
             data={fourni}
             renderItem={renderFourniChoix}
             keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
             numColumns={1}
             contentContainerStyle={styles.productGrid}
             showsVerticalScrollIndicator={false}
-          />) : (
-            <View style={styles.loadingContainer}>
-              <View style={styles.loadingSpinner}>
-                <Text style={styles.loadingEmoji}>⏳</Text>
-              </View>
-              <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
+          />
+        ) : (
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingSpinner}>
+              <Text style={styles.loadingEmoji}>⏳</Text>
             </View>
-          )        
-        
-        }
-
+            <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
+          </View>
+        )}
+                
       </SafeAreaView >
     </SafeAreaView>
     
@@ -239,6 +253,36 @@ const renderFourniChoix = ({ item: fourni, index }) => {
 
 
 const styles = StyleSheet.create({
+ card: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+
+    
+  },
+  iconContainer: {
+    backgroundColor: '#f1f5f9',
+    width: "80%",
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    color: '#334155',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  description: {
+    color: '#64748b',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',

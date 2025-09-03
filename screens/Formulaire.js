@@ -866,7 +866,8 @@ const renderProductItem = ({ item }) => {
         id_produit: parseInt(product.id) || 1, // Ensure it's an integer
         nb_produit: parseFloat(product.productDetails.quantite) || 1,
         //ids_piece_produit: parseFloat(product.productDetails.poids) || 0
-      }))
+      })),
+      lliste_fourni: fournisseur_liste
     };
 
     // Additional validation
@@ -890,6 +891,7 @@ const renderProductItem = ({ item }) => {
       setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
     });
 
+    // Race between the fetch and timeout
     // Race between the fetch and timeout
     Promise.race([
       fetch('https://backend-logistique-api-latest.onrender.com/create_command.php', {
@@ -938,10 +940,12 @@ const renderProductItem = ({ item }) => {
 
       return Promise.race([
         fetch('https://backend-logistique-api-latest.onrender.com/assign.php', {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Accept': 'application/json',
-          }
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
         }),
         assignTimeoutPromise
       ]);
@@ -987,8 +991,9 @@ const renderProductItem = ({ item }) => {
       Alert.alert('Erreur', 'Une erreur est survenue lors de la création de la commande: ' + error.message);
       setChargement(false);
     });
-  };
-  
+  }
+
+
   return(
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={{flex: 1, position: 'relative'}}>

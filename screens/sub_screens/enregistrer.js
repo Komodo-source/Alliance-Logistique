@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, Button, StyleSheet, TextInput, TouchableOpacity, Platform, Alert, KeyboardAvoidingView, ScrollView} from 'react-native';
+import { View, Text, Button, StyleSheet, Image, TextInput, TouchableOpacity, Platform, Alert, KeyboardAvoidingView, ScrollView, ActivityIndicator} from 'react-native';
 import * as FileSystem from 'expo-file-system';
 //import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { response } from 'express';
@@ -12,15 +12,17 @@ import * as debbug_lib from '../util/debbug.js';
 //import id from 'dayjs/locale/id';
 //Limport { has } from 'lodash-es';
 import { getAlertRef } from '../util/AlertService';
+import LeafletMap from '../../components/LeafletMap'
+import * as Location from 'expo-location';
 
 var headers = {
   'Accept' : 'application/json',
   'Content-Type' : 'application/json'
 };
 
-//POUR TOUT LES LOGIN ET ID penser à utiliser un hash SHA-256
-//il faudra mettre une confirmation par email pour les nouveaux utilisateurs
-//on doit aussi checker que le mail/tel n'existe pas déjà dans la base de données
+// POUR TOUT LES LOGIN ET ID penser à utiliser un hash SHA-256
+// il faudra mettre une confirmation par email pour les nouveaux utilisateurs
+// on doit aussi checker que le mail/tel n'existe pas déjà dans la base de données
 
 const enregistrer = ({route, navigation }) => {
   const { data } = route.params;
@@ -29,10 +31,25 @@ const enregistrer = ({route, navigation }) => {
   const [Email, setEmail] = useState('');
   const [Tel, setTel] = useState('');
   const [Password, setPassword] = useState('');
+  const [organisation, setOrganisation] = useState('');
+  const [ville, setVille] = useState('');
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
   const id_choosen = Math.floor(Math.random() * 1000000);
-  
+  const [mapInteracting, setMapInteracting] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [region, setRegion] = useState({
+    latitude: 9.3077,
+    longitude: 2.3158,
+    latitudeDelta: 0.0421,
+    longitudeDelta: 0.822,
+  });
+  const [hasLocationPermission, setHasLocationPermission] = useState(false);
+
+  // Organization section should only show if data is "fo"
+  const showOrganizationSection = data === "fo";
+
   //const sha256 = new SHA256();
   
   const getDeviceId = async () => {
@@ -44,26 +61,9 @@ const enregistrer = ({route, navigation }) => {
   const getIP = () => {
     return "192.128.0.1";
   }
-/*}
-  const getIp = () => {
-    return new Promise((resolve, reject) => {
-      
-      NetworkInfo.getIPAddress(ip => {
-        console.log("IP:", ip);
-        resolve(ip);
-      });
-    });
-  } */
-  
+
   const AutoSave = async (form) => {
       try {
-        // Nouvelle on utilise le fs de expo donc obsolète
-        //
-        //await AsyncStorage.setItem('user_data', JSON.stringify({
-        //  id: id_choosen,
-        //  type: data,
-        //}));
- 
         await fileManager.modify_value_local_storage(
          "name", form.nom
          ,'auto.json');
@@ -72,10 +72,6 @@ const enregistrer = ({route, navigation }) => {
            "firstname", Prenom
            ,'auto.json');
         
-           //await fileManager.modify_value_local_storage(
-           //  "id", id_choosen
-           //  ,'auto.json');
-          
              await fileManager.modify_value_local_storage(
               "type", form.data
               ,'auto.json');
@@ -87,9 +83,6 @@ const enregistrer = ({route, navigation }) => {
 
   const save_storage = async (data, file) => {          
         try {
-          //je peux écrire dans un fichier mais je ne sais pas ou il se trouve
-          //intéressant comme feature
-          //je peux aussi le lire donc on va faire comme ca pour l'instant
             const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
             if (!dirInfo.exists) {
               console.log("Document directory doesn't exist");
@@ -134,9 +127,8 @@ const enregistrer = ({route, navigation }) => {
 
   const handle_user_log = async (id) => {
     try {
-      //const sha256 = new SHA256();
       const deviceId = await getDeviceId();
-      const ip =  getIp();
+      const ip =  getIP();
       
       const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
         {
@@ -189,8 +181,7 @@ const enregistrer = ({route, navigation }) => {
     }
   }
 
-
-  const validateForm = () => { //basiquement un check de tous les champs
+  const validateForm = () => {
     if (!nom.trim()) {
       getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre nom', true, "OK", null);
       return false;
@@ -201,12 +192,6 @@ const enregistrer = ({route, navigation }) => {
     }
     if (!Email.trim()) {
       let averti = false
-      //Alert.alert('Attention', 
-      //  'Attention si vous n\'entrez pas d\'email vous ne pourrez pas récupérer le mot de passe en cas de parte'
-      //, [{text: 'OK', onPress: () => averti = true }], 
-      //  [{text: 'Annuler', onPress: () => null }]);
-
-
       getAlertRef().current?.showAlert(
         '⚠️Attention',
         'Attention si vous n\'entrez pas d\'email vous ne pourrez pas récupérer le mot de passe en cas de parte',
@@ -218,9 +203,9 @@ const enregistrer = ({route, navigation }) => {
         null
       );
       
-        return averti; // Si l'utilisateur accepte de continuer sans email
+        return averti;
     }
-    if (!Email.includes('@') || !Email.includes('.')) {
+    if (Email && (!Email.includes('@') || !Email.includes('.'))) {
       getAlertRef().current?.showAlert('Attention', 'Veuillez entrer un email valide', true, "OK", null);
       return false;
     }
@@ -237,6 +222,17 @@ const enregistrer = ({route, navigation }) => {
       return false;
     }
 
+    // Additional validation for organization if data is "fo"
+    if (showOrganizationSection) {
+      if (!organisation.trim()) {
+        getAlertRef().current?.showAlert('Attention', 'Veuillez entrer le nom de votre organisation', true, "OK", null);
+        return false;
+      }
+      if (!ville.trim()) {
+        getAlertRef().current?.showAlert('Attention', 'Veuillez entrer la ville de votre organisation', true, "OK", null);
+        return false;
+      }
+    }
 
     return true;
   };
@@ -246,17 +242,26 @@ const enregistrer = ({route, navigation }) => {
       id: id_choosen,
       nom,
       Prenom,
-      Email: await hash_256(Email),
+      Email: Email ? await hash_256(Email) : '',
       Tel: await hash_256(Tel),
       Password: await hash_256(Password),
-      data, // pour savoir dans quelle table on l'insert
+      data,
       email_unhash: Email,
       phone_unhash: Tel
     };
+    
+    // Add organization data only if it's a "fo" (fournisseur)
+    if (showOrganizationSection) {
+      formData.organisation = organisation;
+      formData.ville = ville;
+      if (selectedLocation) {
+        formData.latitude = selectedLocation.latitude;
+        formData.longitude = selectedLocation.longitude;
+      }
+    }
+    
     return formData;
   };
-
-
 
   const register = async () => {
     if (!validateForm()) return;
@@ -264,7 +269,6 @@ const enregistrer = ({route, navigation }) => {
     setIsLoading(true);
   
     try {
-      // Build formData here, right when we need it
       const formData = await buildFormData();
       console.log("sent data : ", formData);
   
@@ -283,24 +287,20 @@ const enregistrer = ({route, navigation }) => {
       
       let data;
       try {
-        // Try to parse as JSON
         data = text ? JSON.parse(text) : {};
         
         if (!response.ok) {
-          // Handle HTTP errors 
           throw new Error(data.message || `HTTP error! status: ${response.status}`);
         }
       } catch (e) {
         console.error('JSON parse error:', e);
-        // If JSON parsing fails but we got text, include it in the error
         throw new Error(text || 'Invalid JSON response');
       }
   
       console.log('Parsed response:', data);
       if (data.status === 'success') {
         await AutoSave(formData);
-        // Save session id to auto.json
-
+        
         debbug_lib.debbug_log("formData: " + JSON.stringify(formData), "cyan");
         debbug_lib.debbug_log("data: " + JSON.stringify(data), "cyan");
         if (data.user_data) {
@@ -314,7 +314,7 @@ const enregistrer = ({route, navigation }) => {
         }
         getAlertRef().current?.showAlert(
           'Succès',
-          'Voitre compte a été créé avec succès',
+          'Votre compte a été créé avec succès',
           true,
           'OK',
           null
@@ -336,7 +336,7 @@ const enregistrer = ({route, navigation }) => {
       }
     } catch (error) {
       console.error('Error details:', error);
-      if (error.message.includes("already")){ // Retourne erreur si l'email est déjà utilisé
+      if (error.message.includes("already")){
         Alert.alert('Erreur', "Cet email a déja été utilisé pour un autre compte. Veuillez en choisir un autre.");  
       }
       Alert.alert('Erreur', "Une erreur est survenue lors de la création de l'enregistrement");
@@ -345,18 +345,80 @@ const enregistrer = ({route, navigation }) => {
     }
   }
 
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status === 'granted') {
+        setHasLocationPermission(true);
+        return true; // ✅ Do NOT call getCurrentLocation here
+      } else {
+        setHasLocationPermission(false);
+        getAlertRef().current?.showAlert(
+          "Permission refusée",
+          "Vous devez autoriser la localisation",
+          true,
+          "Autoriser",
+          null,
+        );
+        setIsLocationLoading(false);
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      setIsLocationLoading(false);
+      return false;
+    }
+  };
+
+
+    const getCurrentLocation = async () => {
+    if (!hasLocationPermission) {
+      const permissionGranted = await requestLocationPermission();
+      if (!permissionGranted) {
+        setIsLocationLoading(false);
+        return;
+      }
+    }
+
+    setIsLocationLoading(true);
+
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const { latitude, longitude } = location.coords;
+      console.log("Current location:", latitude, longitude);
+
+      setSelectedLocation({ latitude, longitude });
+      setRegion({
+        latitude,
+        longitude,
+        latitudeDelta: region.latitudeDelta,
+        longitudeDelta: region.longitudeDelta,
+      });
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Erreur', 'Impossible d\'obtenir votre position actuelle');
+    } finally {
+      setIsLocationLoading(false);
+    }
+  };
+
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0} // adjust as needed
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
       <ScrollView
         contentContainerStyle={styles.container}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={{fontSize : 25, fontWeight : "800", marginLeft : 15, marginBottom : 5, marginTop: 20}}>S'enregistrer</Text>
-        <Text style={{fontSize : 16, fontWeight : "500", marginLeft : 25, marginBottom : 45}}>Pour continuer veuillez vous enregistrer</Text>
+        <Text style={styles.title}>S'enregistrer</Text>
+        <Text style={styles.subtitle}>Pour continuer veuillez vous enregistrer</Text>
 
         <Text style={styles.descInput}>Nom</Text>
         <TextInput
@@ -406,27 +468,89 @@ const enregistrer = ({route, navigation }) => {
           placeholderTextColor="#a2a2a9"
           value={Tel}
           onChangeText={setTel}
-        />    
+        />
 
-        <View style={styles.checkboxContainer}>
-          {/* Checkbox code here if needed */}
-        </View>
+        {/* Conditionally render organization section */}
+        {showOrganizationSection && (
+          <>
+            <Text style={styles.sectionTitle}>Information sur votre Organisation</Text>        
+
+            <Text style={styles.descInput}>Nom de votre Organisation</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="default"
+              placeholder="Nom Organisation"
+              placeholderTextColor="#a2a2a9"
+              value={organisation}
+              onChangeText={setOrganisation}
+            />
+
+            <Text style={styles.descInput}>Ville de l'organisation</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="default"
+              placeholder="Ville Organisation ex: Cotonou"
+              placeholderTextColor="#a2a2a9"
+              value={ville}
+              onChangeText={setVille}
+            />  
+            
+            <View style={styles.orDivider}>
+              <View style={styles.dividerLine}></View>
+              <Text style={styles.orText}>OU</Text>
+              <View style={styles.dividerLine}></View>
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.locationButton, isLocationLoading && styles.locationButtonDisabled]}
+              onPress={() => getCurrentLocation()}
+              disabled={isLocationLoading}
+            >
+              <Image 
+                source={require('../../assets/Icons/location-icon.png')} 
+                style={[styles.locationIcon, isLocationLoading && {opacity: 0.5}]}
+              />
+              {isLocationLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.locationButtonText}>Veuillez patientez</Text>
+                </View>
+              ) : (
+                <Text style={styles.locationButtonText}>Utiliser ma position</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.mapContainer}>
+              <LeafletMap
+                latitude={selectedLocation?.latitude || region.latitude}
+                longitude={selectedLocation?.longitude || region.longitude}
+                selectable={true}
+                onLocationChange={(coords) => setSelectedLocation(coords)}
+                onMapTouchStart={() => setMapInteracting(true)}
+                onMapTouchEnd={() => setMapInteracting(false)}
+              />
+              {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
+                <View style={styles.coordinatesContainer}>
+                  <Image 
+                    source={require('../../assets/Icons/marker-icon.png')} 
+                    style={styles.markerIcon}
+                  />
+                  <Text style={styles.coordinatesText}>
+                    {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
 
         <View style={styles.condition}>
-          
-            <Text style={styles.condText}>
-              En vous inscrivant, vous acceptez nos 
-              
-              <TouchableOpacity 
-                onPress={() =>  {navigation.navigate('Confidentialite')}}
-              >
-              <Text style={styles.conditionBoutton}>
-                  Conditions générales
-                </Text>
-              </TouchableOpacity>.
-            </Text>
-   
-    
+          <Text style={styles.condText}>
+            En vous inscrivant, vous acceptez nos 
+            <TouchableOpacity onPress={() => navigation.navigate('Confidentialite')}>
+              <Text style={styles.conditionBoutton}>Conditions générales</Text>
+            </TouchableOpacity>.
+          </Text>
         </View>
 
         <TouchableOpacity 
@@ -434,9 +558,14 @@ const enregistrer = ({route, navigation }) => {
           onPress={register}
           disabled={isLoading}
         >
-          <Text style={{color: "#fff", fontSize: 19, fontWeight: "500"}}>
-            {isLoading ? 'Inscription en cours...' : 'S\'enregistrer'}
-          </Text>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.buttonText}>Inscription en cours...</Text>
+            </View>
+          ) : (
+            <Text style={styles.buttonText}>S'enregistrer</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -444,19 +573,64 @@ const enregistrer = ({route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  conditionBoutton : {
+  container: {
+    paddingBottom: 30,
+  },
+  title: {
+    fontSize: 25, 
+    fontWeight: "800", 
+    marginLeft: 15, 
+    marginBottom: 5, 
+    marginTop: 20
+  },
+  subtitle: {
+    fontSize: 16, 
+    fontWeight: "500", 
+    marginLeft: 25, 
+    marginBottom: 25
+  },
+  sectionTitle: {
+    fontWeight: "600", 
+    fontSize: 18, 
+    textAlign: "center", 
+    marginTop: 25,
+    marginBottom: 25
+  },
+  sectionSubtitle: {
+    fontWeight: "600", 
+    fontSize: 14, 
+    marginBottom: 25, 
+    textAlign: "center"
+  },
+  orDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 15,
+    width: '100%',
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#eee',
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  conditionBoutton: {
     fontWeight: "600",
-    color : '#1C35D4'
+    color: '#1C35D4'
   },
-  condition : {
-    marginLeft: "10%"
+  condition: {
+    marginLeft: "10%",
+    marginTop: 15,
   },
-
-  condText :{
+  condText: {
     fontWeight: "600",
   },
-
-  descInput : {
+  descInput: {
     fontSize: 14,
     marginLeft: '10%',
     fontWeight: "500"
@@ -468,14 +642,14 @@ const styles = StyleSheet.create({
     width: '80%',
     padding: 10,
     color: '#111',
-     borderColor: '#666',
+    borderColor: '#666',
     marginBottom: 20,
     marginTop: 5,
     alignSelf: 'center',
     backgroundColor: '#fff',
   },
-  button : {
-    height: 40,
+  button: {
+    height: 50,
     borderRadius: 7,
     width: '80%',
     backgroundColor: '#000',
@@ -484,7 +658,12 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 25,
+    marginBottom: 35
+  },
+  buttonText: {
+    color: "#fff", 
+    fontSize: 19, 
+    fontWeight: "500"
   },
   buttonDisabled: {
     backgroundColor: '#666',
@@ -505,7 +684,94 @@ const styles = StyleSheet.create({
   },
   checked: {
     backgroundColor: '#000',
-  }
+  },
+  mapContainer: {
+    height: 250,
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  mapControlButton: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  controlIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#2E3192',
+  },
+  coordinatesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    padding: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 5,
+  },
+  markerIcon: {
+    width: 14,
+    height: 14,
+    tintColor: '#2E3192',
+    marginRight: 6,
+  },
+  coordinatesText: {
+    fontSize: 12,
+    color: '#555',
+  },
+  locationButton: {
+    backgroundColor: '#45b308',
+    padding: 12,
+    borderRadius: 7,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '80%',
+    alignSelf: 'center',
+  },
+  locationButtonDisabled: {
+    backgroundColor: '#7ec452',
+  },
+  locationIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 10,
+    tintColor: '#fff',
+  },
+  locationButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
 
 export default enregistrer;

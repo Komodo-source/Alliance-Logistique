@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 include_once('db.php'); 
+include_once('lib/get_session_info.php');
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
@@ -8,7 +9,14 @@ error_reporting(E_ALL);
 // Ce script traite les demmandes de HUB non traités et crée pour chaque commande de HUB
 // une COMMANDE avec les produits associés (divisé par catégorie), en choisissant le meilleur fournisseur et le meilleur coursier.
 
+
+/// fix les id envoyé sont des session id alors que l'on implémente des 
+/// dans COMMANDE des id direct
+
 try {
+    $input = file_get_contents("php://input");
+    $data = json_decode($input, true);
+    $list_fourni = $data['list_fourni'];
 
     function calculate_dist($x, $y) {
         // Ensure both inputs are non-empty strings
@@ -89,21 +97,28 @@ try {
             $products_by_category[$cat][] = $row;
         }
 
+        $count_product = 0;
         // 3. For each category, create a COMMANDE and link products
         foreach ($products_by_category as $category_id => $products) {
             // Find best supplier for this category
-            $best_supplier = null;
-            $min_distance = PHP_FLOAT_MAX;
-            if (isset($suppliers_by_category[$category_id])) {
-                foreach ($suppliers_by_category[$category_id] as $supplier) {
-                    $distance = calculate_dist($hub_location, $supplier['localisation_fournisseur']);
-                    if ($distance < $min_distance) {
-                        $min_distance = $distance;
-                        $best_supplier = $supplier;
+            if($list_fourni[$count_product] == null){
+                //le fournisseur est par defaut
+                $best_supplier = null;
+                $min_distance = PHP_FLOAT_MAX;
+                if (isset($suppliers_by_category[$category_id])) {
+                    foreach ($suppliers_by_category[$category_id] as $supplier) {
+                        $distance = calculate_dist($hub_location, $supplier['localisation_fournisseur']);
+                        if ($distance < $min_distance) {
+                            $min_distance = $distance;
+                            $best_supplier = $supplier;
+                        }
                     }
                 }
+                if (!$best_supplier) continue;
+            }else {
+                //sinon on prend le fournisseur que l'user a choisi                
+                $best_supplier = getIdSession($list_fourni[$count_product]);
             }
-            if (!$best_supplier) continue;
 
             // Find best courier
             $best_courier = null;
@@ -118,6 +133,8 @@ try {
                 }
             }
             if (!$best_courier) continue;
+
+            $count_product += 1;
 
             // Insert COMMANDE row for this category
             $cmd_id = rand(0, 99999);

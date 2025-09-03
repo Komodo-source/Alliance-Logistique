@@ -30,7 +30,7 @@ const choixType = ({ navigation }) => {
         </TouchableOpacity>
 
         {/* You can uncomment and use this if needed */}
-        {/* 
+        
         <TouchableOpacity
           style={styles.roleButton}
           onPress={() => navigation.navigate('enregistrer', { data: 'co' })}
@@ -41,7 +41,7 @@ const choixType = ({ navigation }) => {
           />
           <Text style={styles.roleText}>Coursier</Text>
         </TouchableOpacity>
-        */}
+        
       </View>
     </SafeAreaView>
   );

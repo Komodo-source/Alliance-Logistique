@@ -152,7 +152,7 @@ const Produit = ({ navigation, route}) => {
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.nom_produit}</Text>
         <Text style={styles.productPrice}>{item.prix_produit} FCFA</Text>
-        <Text style={styles.deliveryTime}>~3h</Text>
+        {/*<Text style={styles.deliveryTime}>~3h</Text>*/}
       </View>
     </TouchableOpacity>
   );
@@ -174,7 +174,7 @@ const Produit = ({ navigation, route}) => {
         /> 
        
     </View>
-    <Text style={styles.IndicationProduit}>* Les prix sont données à titre indicatif </Text>
+    <Text style={styles.IndicationProduit}>* Les prix peuvent changer par fournisseurs </Text>
 
       <FlatList
         data={produits}

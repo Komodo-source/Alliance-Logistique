@@ -203,8 +203,8 @@ const fournisseur_produit = ({ navigation }) => {
                 "Produit ajouté à votre liste",
                 true,
                 "OK",
-                () => navigation.navigate("ProductPhotos", {id: session_id}),
-        
+                //() => navigation.navigate("ProductPhotos", {id: session_id}),*/}
+                () => navigation.navigate("Accueil")
               ); 
                 
             } else {
