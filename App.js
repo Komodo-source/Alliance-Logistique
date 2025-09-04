@@ -23,7 +23,7 @@ import first_page from './screens/first/first_page';
 import fournisseur_produit from './screens/sub_screens/fournisseur_produit';
 import payement from './screens/sub_screens/payement'
 import ParentAlert from './screens/util/ParentAlert';
-import Notification from './NotificationService';
+import NotificationService from './NotificationService';
 import ErrorBoundary from './components/ErrorBoundary';
 import mdp_oubli from './screens/sub_screens/mdp_oubli';
 import VerifyResetCode from './screens/sub_screens/verify_reset_code';
@@ -64,7 +64,7 @@ const App = () => {
             <Stack.Screen name="first_page" component={first_page} options={{ headerShown: false }}/>
             <Stack.Screen name="fournisseur_produit" component={fournisseur_produit} options={{ headerShown: false }}/>
             <Stack.Screen name="payement" component={payement} options={{ headerTitle : "Payement" }}/>
-            <Stack.Screen name="Notification" component={Notification} options={{ headerTitle : "Notification" }}/>
+            <Stack.Screen name="NotificationService" component={NotificationService} options={{ headerShown: false }}/>
             <Stack.Screen name="mdp_oubli" component={mdp_oubli} options={{ headerShown: true, headerTitle : "Recouvrement"}}/>
             <Stack.Screen name="VerifyResetCode" component={VerifyResetCode} options={{ headerTitle: "Réinitialisation" }}/>
             <Stack.Screen name="Confidentialite" component={Confidentialite} options={{ headerTitle: "Confidentialite" }}/>

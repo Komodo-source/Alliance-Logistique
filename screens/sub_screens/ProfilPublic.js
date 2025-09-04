@@ -27,7 +27,7 @@ const ProfilPublic = ({ route }) => {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ session_id: id, type: type})
+        body: JSON.stringify({ session_id: id, type: type, is_session: false})
       });
 
       const data = await response.json();

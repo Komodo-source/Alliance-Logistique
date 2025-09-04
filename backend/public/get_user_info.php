@@ -9,8 +9,12 @@ include_once('lib/get_session_info.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
 $type = $data['type'];
-$session_id = $data['session_id'];
-$id = getIdSession($session_id);
+if($data['is_session']){
+    $session_id = $data['session_id']; //ici le vrai id
+}else{
+    $session_id = $data['session_id'];
+    $id = getIdSession($session_id);
+}
 
 $data_client = $conn->prepare("
 SELECT C.id_client, nom_client, prenom_client, note_client, nom_orga, ville_organisation,

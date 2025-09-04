@@ -280,7 +280,7 @@ const Profile = ({ navigation }) => {
             
             <ProfileOption
               title="Sécurité de mes données"
-              onPress={() => navigation.navigate('ProtectionDonnee')}
+              onPress={() => navigation.navigate('NotificationService')}
             />
             
           </View>

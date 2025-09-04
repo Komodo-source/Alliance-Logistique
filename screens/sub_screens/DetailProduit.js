@@ -136,7 +136,7 @@ const renderFourniChoix = ({ item: fourni, index }) => {
         styles.productCard,
         isFirstSupplier && styles.cheapestCard
       ]}
-      onPress={() => navigation.navigate('FicheFournisseur', {fourni})}
+      onPress={() => navigation.navigate('ProfilPublic', {id: fourni.id_fournisseur, type: "fournisseur"})}
     >
       {/* Best Price Badge for first supplier */}
       {isFirstSupplier && (

@@ -77,7 +77,7 @@ try {
 
     // Vérification des résultats et envoi de la réponse appropriée
     if ($client_data) {
-        delete_other_session();
+        delete_other_session($conn, $client_data['id_client']);
         $session_id = create_session($conn, $client_data['id_client']);
         $user_data = $client_data;
         $user_data['session_id'] = $session_id;
@@ -88,7 +88,7 @@ try {
             'user_data' => $user_data
         ]);
     } else if ($fournisseur_data) {
-        delete_other_session();
+        delete_other_session($conn, $fournisseur_data['id_fournisseur']);
         $session_id = create_session($conn, $fournisseur_data['id_fournisseur']);
         $user_data = $fournisseur_data;
         $user_data['session_id'] = $session_id;
@@ -99,7 +99,7 @@ try {
             'user_data' => $user_data
         ]);
     } else if ($coursier_data) {
-        delete_other_session();
+        delete_other_session($conn, $coursier_data['id_coursier']);
         $session_id = create_session($conn, $coursier_data['id_coursier']);
         $user_data = $coursier_data;
         $user_data['session_id'] = $session_id;

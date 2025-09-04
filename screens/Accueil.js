@@ -242,7 +242,7 @@ const categorie_produit = [
   {
     id: 3,
     title: "Poisson/Fruit de mer",
-    action: () => navigation.navigate('Produit', { category: 'Poisson/Fruit de mer' }),
+    action: () => navigation.navigate('Produit', { category: 'Poisson' }),
     icon: 'fish'
   },
   {
