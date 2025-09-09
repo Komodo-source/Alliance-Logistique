@@ -1,23 +1,24 @@
 Alliance logistique
 	◦	Message avertissement plus fourni loin plus le temps de livraison sera long
 	◦	Page profil
-	◦	Serveur ftp photo 
+	◦	Serveur ftp photo
 	x	Acceptation conditions d’utilisation register
 	x	Organisation register
 	◦	Client doit payer avant la livraison ou pendant
 	x	Placeholder phone +22976…
-	◦	Ajout sponsorisé page accueil 
-	x	Produit les plus commandés 
-	◦	Reinclure coursier 
-	◦	Système notification 
+	◦	Ajout sponsorisé page accueil
+	x	Produit les plus commandés
+	◦	Reinclure coursier
+	◦	Système notification
 	x	Bool si fournir discount
-        - affiche des produits randoms discount 
+        - affiche des produits randoms discount
 	x	Refresh les commandes
-       - sinon get 1fois les commandes 
+       - sinon get 1fois les commandes
 	x	regarder si on devrait store dans un json ou sql avec SQLite
 	◦ enlever les logs quand l'app est en prod
-	x fix les session_id 
+	x fix les session_id
 	◦ modifier le profil
 	x Update l'Accueil
 	◦ optimiser le loading, utilisé une fonction à la place de plusieurs
-	
+	◦ checker pour remove id in auto.json
+
