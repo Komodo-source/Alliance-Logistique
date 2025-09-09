@@ -26,7 +26,7 @@ import { SafeAreaView } from 'react-native';
 
 
 const Formulaire = ({ navigation, route}) => {
-  
+
   let pre_selected_item = null;
   console.log("route"+  route);
   if (route && route.params && route.params.produits) {
@@ -34,7 +34,7 @@ const Formulaire = ({ navigation, route}) => {
     console.log("produit deja selec à partir d'un panier");
     console.log(route.params.produits);
   }
-  
+
   // Fixed date state management
   const [showPicker, setShowPicker] = useState(false);
   const [pickerMode, setPickerMode] = useState('date');
@@ -70,7 +70,7 @@ const Formulaire = ({ navigation, route}) => {
 
   const [modalFourniVisible, setModalFourniVisible] = useState(false);
   const [fourni, setFourni] = useState(null);
-  
+
   // Ensure region is always valid
   const safeRegion = {
     latitude: region.latitude || 9.3077,
@@ -92,7 +92,7 @@ const Formulaire = ({ navigation, route}) => {
   const dic_image_name = {
     "tomate": TomateImage,
     "salade": SaladeImage,
-    "carotte": CarotteImage, 
+    "carotte": CarotteImage,
     "poulet léger": ChickenImage,
     "poulet lourd": ChickenImage,
     "pintade": ChickenImage,
@@ -102,7 +102,7 @@ const Formulaire = ({ navigation, route}) => {
     "gigot agneau": BoeufImage,
     "cote de porc": BoeufImage,
     "boeuf morceau": BoeufImage,
-    "default": TomateImage, 
+    "default": TomateImage,
   };
 
   const iconMapping = {
@@ -223,7 +223,7 @@ const Formulaire = ({ navigation, route}) => {
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status === 'granted') {
         setHasLocationPermission(true);
         getCurrentLocation();
@@ -238,8 +238,8 @@ const Formulaire = ({ navigation, route}) => {
           true,
           "Autoriser",
           null,
-  
-        ); 
+
+        );
         return false;
       }
     } catch (err) {
@@ -248,12 +248,12 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
-    
+
   const getFourni = async (id_prod) => {
     let data = {};
     try {
-      
-      // va chercher la liste des fournisseurs produisant le même 
+
+      // va chercher la liste des fournisseurs produisant le même
       // produit afin de les comparer
 
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
@@ -261,7 +261,7 @@ const Formulaire = ({ navigation, route}) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({id_produit: id_prod})
       });
-      data = await response.json();      
+      data = await response.json();
       setFourni(data);
       console.log("Fourni fetched:", data);
       if (data.length === 0 ) {
@@ -292,13 +292,13 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
-  
+
     const renderFourniChoix = ({ item: fourni, index }) => {
-      const isFirstSupplier = index === 0; 
-      const distance = fourni.localisation_orga !== null ? 1 : null; 
-      
+      const isFirstSupplier = index === 0;
+      const distance = fourni.localisation_orga !== null ? 1 : null;
+
       return (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.productCard,
             isFirstSupplier && styles.cheapestCard
@@ -326,23 +326,23 @@ const Formulaire = ({ navigation, route}) => {
             <Text style={styles.bestPriceText}>MEILLEUR PRIX</Text>
           </View>
         )}
-        
+
         <View style={styles.supplierHeader}>
           <View style={styles.supplierInfo}>
             <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
             <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
           </View>
-          
+
 
         </View>
-        
+
         <View style={styles.supplierDetails}>
           <View style={styles.detailRow}>
-            
+
               <MaterialCommunityIcons
                 name="map-marker"
                 size={16}
-                color="#64748B"              
+                color="#64748B"
               />
 
             <Text style={styles.detailText}>
@@ -352,40 +352,40 @@ const Formulaire = ({ navigation, route}) => {
               }
             </Text>
           </View>
-          
+
           <View style={styles.detailRow}>
-            
+
             <MaterialCommunityIcons
                 name="cube-outline"
                 size={16}
-                color="#64748B"              
+                color="#64748B"
               />
             <Text style={styles.detailText}>
               Stock: {fourni.nb_produit_fourni} unités
-            </Text> 
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
     );
   };
-  
+
 
   const readProductFile = async () => {
     try {
       console.log('lecture du fichier:', fileUri);
-  
+
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
       if (!fileInfo.exists) {
         console.warn('Fichier inexistant:', fileUri);
         return null;
       }
-  
+
       const fileContents = await FileSystem.readAsStringAsync(fileUri);
       console.log('Contenu du fichier:', fileContents);
-  
+
       const parsedData = JSON.parse(fileContents);
       console.log('Parse du json:', parsedData);
-      
+
       return parsedData;
     } catch (error) {
       console.error('Error reading product.json:', error);
@@ -394,7 +394,7 @@ const Formulaire = ({ navigation, route}) => {
       } else if (error.code === 'ENOENT') {
         console.error('File not found - path may be incorrect');
       }
-      
+
       return null;
     }
   }
@@ -406,10 +406,10 @@ const Formulaire = ({ navigation, route}) => {
       setProduits(produit);
     } else {
       const filtered = produit.filter(item =>
-        item.nom_produit && 
-        typeof item.nom_produit === 'string' && 
-        item.nom_produit.toLowerCase().includes(text.toLowerCase()) || 
-        item.nom_categorie.toLowerCase().includes(text.toLowerCase()) 
+        item.nom_produit &&
+        typeof item.nom_produit === 'string' &&
+        item.nom_produit.toLowerCase().includes(text.toLowerCase()) ||
+        item.nom_categorie.toLowerCase().includes(text.toLowerCase())
       );
       setProduits(filtered);
     }
@@ -464,12 +464,12 @@ const Formulaire = ({ navigation, route}) => {
       ); */
       return;
     }
-    
+
     try {
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-      
+
       const { latitude, longitude } = location.coords;
       console.log("Current location:", latitude, longitude);
       setUserLocation({ latitude, longitude });
@@ -508,8 +508,8 @@ const Formulaire = ({ navigation, route}) => {
         await initializeData();
         await requestLocationPermission();
         await getProduct();
-        
-        debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");  
+
+        debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");
         if (pre_selected_item != null && pre_selected_item !== undefined) {
           set_product_rec();
         }
@@ -519,7 +519,7 @@ const Formulaire = ({ navigation, route}) => {
     };
 
     initializeApp();
-    
+
   }, []);
 
   const handleMapPress = (e) => {
@@ -537,14 +537,14 @@ const Formulaire = ({ navigation, route}) => {
   const getIconName = (productName) => {
   if (!productName) return iconMapping.default;
   const name = productName.toLowerCase();
-  
+
   // Cherche correspondance exacte ou partielle
   for (let key in iconMapping) {
     if (name.includes(key)) {
       return iconMapping[key];
     }
   }
-  
+
   return iconMapping.default;
 };
 
@@ -586,18 +586,18 @@ const renderProductItem = ({ item }) => {
 
   const set_product_rec = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
-    
+
     // Check if pre_selected_item is an array
     if (pre_selected_item && Array.isArray(pre_selected_item)) {
       // Collect all new products first
       const newProducts = [];
-      
+
       for(let i = 0; i < pre_selected_item.length; i++){
         const item = pre_selected_item[i];
         if (!item) continue; // Skip if item is null/undefined
-        
+
         debbug_lib.debbug_log(item, "blue");
-        
+
         const newProduct = {
           id: item.id || item.id_produit || Math.random().toString(),
           name: item.nom || item.nom_produit || 'Produit',
@@ -607,10 +607,10 @@ const renderProductItem = ({ item }) => {
             poids: item.quantite || item.poids || 1
           }
         };
-        
+
         newProducts.push(newProduct);
       }
-      
+
       // Set all products at once
       setProducts(prevProducts => [...prevProducts, ...newProducts]);
     }
@@ -646,16 +646,16 @@ const renderProductItem = ({ item }) => {
 
   const set_product_rec_alternative = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
-    
+
     if (pre_selected_item && Array.isArray(pre_selected_item)) {
       const newProducts = [];
-      
+
       for(let i = 0; i < pre_selected_item.length; i++){
         const item = pre_selected_item[i];
         if (!item) continue; // Skip if item is null/undefined
-        
+
         debbug_lib.debbug_log(item, "blue");
-        
+
         const product = add_product(
           item.nom || item.nom_produit || 'Produit',
           item.quantite || 1,
@@ -663,10 +663,10 @@ const renderProductItem = ({ item }) => {
           item,
           true // shouldBatch = true
         );
-        
+
         newProducts.push(product);
       }
-      
+
       // Set all products at once
       setProducts(prevProducts => [...prevProducts, ...newProducts]);
     }
@@ -689,9 +689,9 @@ const renderProductItem = ({ item }) => {
         // Show snackbar
         snackBarRef.current?.show('Produit supprimé de la commande', 'info');
       },
-    ); 
+    );
 
-    
+
   };
 
 
@@ -762,7 +762,7 @@ const renderProductItem = ({ item }) => {
       "Annuler",
       () => console.log('Annulation'),
 
-    ); 
+    );
   }
 
   const testServerConnection = async () => {
@@ -776,10 +776,10 @@ const renderProductItem = ({ item }) => {
         fetch('https://backend-logistique-api-latest.onrender.com/check_conn.php'),
         testTimeoutPromise
       ]);
-      
+
       const responseText = await response.text();
       console.log('Test server response:', responseText);
-      
+
       try {
         const data = JSON.parse(responseText);
         console.log('Server test successful:', data);
@@ -798,14 +798,14 @@ const renderProductItem = ({ item }) => {
   const handleSubmit = () => {
     console.log("La commande a été soumise");
     setChargement(true);
-    
+
     // Test server connection first, but don't block if it fails
     testServerConnection().then(isConnected => {
       if (!isConnected) {
         console.warn('Server connection test failed, but continuing with form submission...');
         // Don't block the form submission, just log the warning
       }
-      
+
       // Continue with form submission regardless
       submitForm();
     }).catch(error => {
@@ -870,6 +870,29 @@ const renderProductItem = ({ item }) => {
       lliste_fourni: fournisseur_liste
     };
 
+    let cate = [];
+    //nous permet de check si l'utlisateur
+    //souhaite réellement des commandes de différentes catégories
+    for(let i=0; i<products.length();i++){
+      if(!cate.includes(products[i])){
+        if(cate.length() > 1){
+            let a_quitter = false;
+            getAlertRef().current?.showAlert(
+                "Attention",
+                "Vous avez décidez de choisir des produits de catégories différents, les livraisons peuvent être à date différentes.",
+                true,
+                "Continuer",
+                null,
+                true,
+                "Annuler",
+                a_quitter = true
+                ,
+              );
+            if( a_quitter){return;}else{break;}
+        }else{cate.push(products[i]);}
+      }
+    }
+
     // Additional validation
     if (!formData.nom_dmd) {
       Alert.alert('Erreur', 'Le nom de la commande ne peut pas être vide');
@@ -885,7 +908,7 @@ const renderProductItem = ({ item }) => {
 
     console.log('Form data to send:', JSON.stringify(formData, null, 2));
     console.log('Sending request to:', 'https://backend-logistique-api-latest.onrender.com/create_command.php');
-    
+
     // Create a timeout promise
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
@@ -904,20 +927,20 @@ const renderProductItem = ({ item }) => {
       }),
       timeoutPromise
     ])
-    .then(async response => { 
+    .then(async response => {
       console.log('Response status:', response.status);
       console.log('Response headers:', response.headers);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('HTTP Error Response:', errorText);
         throw new Error(`Erreur réseau: ${response.status} - ${errorText.substring(0, 200)}`);
       }
-      
+
       // Get the response text first to debug
       const responseText = await response.text();
       console.log('Server response:', responseText);
-      
+
       // Try to parse as JSON
       try {
         return JSON.parse(responseText);
@@ -927,12 +950,12 @@ const renderProductItem = ({ item }) => {
         throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
       }
     })
-    .then(data => {      
+    .then(data => {
       console.log('Succès commande:', data);
-      
+
       // Call assign.php and wait for it to complete
       console.log('Calling assign.php...');
-      
+
       // Create a timeout promise for assign.php
       const assignTimeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Assign request timeout')), 15000); // 15 second timeout
@@ -952,7 +975,7 @@ const renderProductItem = ({ item }) => {
     })
     .then(async response => {
       console.log('Assign response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.warn('Erreur lors de l\'assignation des commandes:', response.status, errorText);
@@ -974,8 +997,8 @@ const renderProductItem = ({ item }) => {
       getAlertRef().current?.showAlert(
         "Succès",
         "Commande créée avec succès! La Préparation est en cours.",
-      ); 
-      
+      );
+
       // Reset form
       setCommandeName('');
       setDescription('');
@@ -1000,7 +1023,7 @@ const renderProductItem = ({ item }) => {
         <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={!mapInteracting}>
           <View style={styles.container}>
             <Text style={styles.textH1}>Nouvelle Commande</Text>
-            
+
             <View style={styles.form}>
               {/* Name Input */}
               <View style={styles.inputContainer}>
@@ -1036,15 +1059,15 @@ const renderProductItem = ({ item }) => {
               {/* Date Picker */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Date de livraison</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.datePickerButton}
                   onPress={openDatePicker}
                 >
                   <Text style={styles.datePickerButtonText}>
                     {dayjs(date).format('DD/MM/YYYY HH:mm')}
                   </Text>
-                  <Image 
-                    source={require('../assets/Icons/calendar-icon.png')} 
+                  <Image
+                    source={require('../assets/Icons/calendar-icon.png')}
                     style={styles.calendarIcon}
                   />
                 </TouchableOpacity>
@@ -1061,14 +1084,14 @@ const renderProductItem = ({ item }) => {
               </View>
 
               {/* Fournisseur Modal */}
-                             
+
                 <Modal
                   animationType='fade'
                   transparent={true}
                   visible={modalFourniVisible}
                   onRequestClose={() => setModalFourniVisible(false)}
                 >
-                <View style={styles.modalOverlay}> 
+                <View style={styles.modalOverlay}>
                   <View style={[styles.modalContent, {alignItems: ''}]}>
                     <TouchableOpacity
                     onPress={() => setModalFourniVisible(false)}
@@ -1144,7 +1167,7 @@ const renderProductItem = ({ item }) => {
                           </Text>
                       </View>
                   </TouchableOpacity>
-                    
+
                     <View style={styles.orDivider}>
                     <View style={styles.dividerLine}></View>
                     <Text style={styles.orText}>OU</Text>
@@ -1167,7 +1190,7 @@ const renderProductItem = ({ item }) => {
                     </View>
                   </View>
                 </Modal>
-              
+
 
 
 
@@ -1181,12 +1204,12 @@ const renderProductItem = ({ item }) => {
                 <View style={styles.modalOverlay}>
                   <View style={styles.modalContent}>
                     <Text style={styles.modalTitle}>
-                      Produit sélectionné: 
+                      Produit sélectionné:
                     </Text>
                     <Text style={styles.modalTextSelected}>
                       {selectedProduct?.key}
                     </Text>
-                    
+
                     {/* Add price display if available */}
                     {selectedProduct?.originalItem?.prix_produit && (
                       <Text style={styles.modalPrice}>
@@ -1228,8 +1251,8 @@ const renderProductItem = ({ item }) => {
                       <TouchableOpacity
                         style={styles.modalButtonOK}
                         onPress={async() => {
-                          
-                          
+
+
                           if (nombre ) {
                             //add_product(
                             //  selectedProduct.key,
@@ -1242,7 +1265,7 @@ const renderProductItem = ({ item }) => {
                             if (await getFourni(selectedProduct.id) === 1){
                               setModalVisible(false)
                               getAlertRef().current?.showAlert(
-                                  'Aïe', 
+                                  'Aïe',
                                   'Oups! Aucun fournisseur ne peut remplir votre commande. Revenez plus tard',
                                   true,
                                   "continuer",
@@ -1252,7 +1275,7 @@ const renderProductItem = ({ item }) => {
                               setModalVisible(false)
                               setModalFourniVisible(true)
                             }
-                            
+
 
 
                           } else {
@@ -1277,11 +1300,11 @@ const renderProductItem = ({ item }) => {
                   placeholderTextColor="#a2a2a9"
                   value={searchText}
                   onChangeText={handleSearchTextChange}
-                />      
-                <Image 
+                />
+                <Image
                   source={require('../assets/Icons/Dark-Search.png')}
                   style={styles.imageSearch}
-                />  
+                />
               </View>
 
               {/* Products List Section */}
@@ -1312,7 +1335,7 @@ const renderProductItem = ({ item }) => {
                       const quantity = parseFloat(product.productDetails.quantite) || 1;
                       const price = parseFloat(product.productDetails.prix) || 0;
                       const lineTotal = quantity * price;
-                      
+
                       return (
                         <View key={`${product.name}-${index}`} style={styles.containerProduct}>
                           <View style={styles.productInfo}>
@@ -1342,7 +1365,7 @@ const renderProductItem = ({ item }) => {
                       );
                     })}
                   </View>
-                  
+
                   {/* Add Total Calculation */}
                   <View style={styles.totalContainer}>
                     <Text style={styles.totalText}>
@@ -1356,9 +1379,9 @@ const renderProductItem = ({ item }) => {
                 </View>
               )}
 
-              {/* Modal Fournisseur liste 
+              {/* Modal Fournisseur liste
 
-              <Modal              
+              <Modal
                   animationType='fade'
                   transparent={true}
                   visible={modalFourniVisible}
@@ -1366,7 +1389,7 @@ const renderProductItem = ({ item }) => {
 
                 <SafeAreaView style={styles.listFourni}>
                   <Text style={styles.NbFourni}>Nombre de fournisseur produisant {item.nom_produit}: {item.nb_fournisseur}</Text>
-                  {estCharge ? 
+                  {estCharge ?
                     (<FlatList
                       data={fourni}
                       renderItem={renderFourniChoix}
@@ -1381,10 +1404,10 @@ const renderProductItem = ({ item }) => {
                         </View>
                         <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
                       </View>
-                    )        
-                  
+                    )
+
                   }
-          
+
                 </SafeAreaView >
               </Modal>*/}
 
@@ -1394,31 +1417,31 @@ const renderProductItem = ({ item }) => {
                 <Text style={styles.locationHelpText}>
                   Sélectionnez le lieu de livraison sur la carte ci-dessous
                 </Text>
-                
+
                 <View style={styles.locationButtons}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.locationButton}
                     onPress={getCurrentLocation}
                     disabled={!hasLocationPermission}
                   >
-                    <Image 
-                      source={require('../assets/Icons/location-icon.png')} 
+                    <Image
+                      source={require('../assets/Icons/location-icon.png')}
                       style={styles.locationIcon}
                     />
                     <Text style={styles.locationButtonText}>Utiliser ma position</Text>
                   </TouchableOpacity>
-                  
+
                   <View style={styles.orDivider}>
                     <View style={styles.dividerLine}></View>
                     <Text style={styles.orText}>OU</Text>
                     <View style={styles.dividerLine}></View>
                   </View>
-                  
+
                   <Text style={styles.tapInstruction}>
                     Touchez la carte pour choisir manuellement
                   </Text>
                 </View>
-                
+
                 {/* Map Section */}
                 <View style={styles.mapContainer}>
                   <LeafletMap
@@ -1431,8 +1454,8 @@ const renderProductItem = ({ item }) => {
                   />
                   {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
                     <View style={styles.coordinatesContainer}>
-                      <Image 
-                        source={require('../assets/Icons/marker-icon.png')} 
+                      <Image
+                        source={require('../assets/Icons/marker-icon.png')}
                         style={styles.markerIcon}
                       />
                       <Text style={styles.coordinatesText}>
@@ -1452,7 +1475,7 @@ const renderProductItem = ({ item }) => {
                   <TextInput
                     style={[styles.inputDesc, isDescFocused && styles.inputFocused, {height: 60}]}
                     placeholder="ex: 98JM+HPR, Cotonou, Bénin"
-                    placeholderTextColor="#a2a2a9"                
+                    placeholderTextColor="#a2a2a9"
                     numberOfLines={1}
                     maxLength={200}
                     value={addresse}
@@ -1461,7 +1484,7 @@ const renderProductItem = ({ item }) => {
                     onBlur={() => setIsDescFocused(false)}
                   />
               </View>
-            
+
               {/* Submit Button */}
               <TouchableOpacity
                 style={[styles.submitButton, (chargement || userDataLoading) && styles.submitButtonDisabled]}
@@ -1482,11 +1505,11 @@ const renderProductItem = ({ item }) => {
                 onPress={async () => {
                   const isConnected = await testServerConnection();
                   Alert.alert(
-                    'Test Serveur', 
+                    'Test Serveur',
                     isConnected ? 'Serveur accessible' : 'Erreur de connexion au serveur'
                   );
                 }}
-              > 
+              >
                 <Text style={styles.testButtonText}>Tester la connexion serveur</Text>
               </TouchableOpacity>*/}
             </View>
@@ -1506,7 +1529,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    
+
   },
   categoryText: {
     fontSize: 12,
@@ -1540,7 +1563,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  fourniList : {    
+  fourniList : {
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -1616,7 +1639,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   descInput: {
-    
+
     color: "#000",
     marginBottom: 10,
     marginLeft: '10%',
@@ -1659,8 +1682,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
-  inputDesc: {  
-    verticalAlign: "top",  
+  inputDesc: {
+    verticalAlign: "top",
     height: 80,
     borderWidth: 2.5,
     borderRadius: 7,
@@ -1671,8 +1694,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: '#f8f8f8',
     borderColor: '#666',
-    
-    
+
+
   },
   datePickerContainer: {
     alignItems: 'center',
@@ -1704,7 +1727,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: "#B8E0FF",
     padding: 15,
-    
+
   },
   titleProd: {
     fontSize: 18,
@@ -1804,7 +1827,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  
+
   productText: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -1882,7 +1905,7 @@ const styles = StyleSheet.create({
   form: {
     marginTop: 15,
   },
-  
+
   // Header
   textH1: {
     fontSize: 24,
@@ -1891,7 +1914,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  
+
   // Input Fields
   inputContainer: {
     marginBottom: 20,
@@ -1912,7 +1935,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  inputDesc: {  
+  inputDesc: {
     height: 100,
     borderWidth: 1,
     borderRadius: 8,
@@ -1923,7 +1946,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: 15,
   },
-  
+
   // Date Picker
   datePickerButton: {
     height: 50,
@@ -1945,7 +1968,7 @@ const styles = StyleSheet.create({
     height: 20,
     tintColor: '#555',
   },
-  
+
   // Section Styles
   sectionContainer: {
     backgroundColor: '#fff',
@@ -1969,7 +1992,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  
+
   // Product List
   productItem: {
     paddingVertical: 12,
@@ -1990,7 +2013,7 @@ const styles = StyleSheet.create({
     color: '#444',
     fontWeight: '500',
   },
-  
+
   // Selected Products
   selectedProductsContainer: {
     marginTop: 10,
@@ -2003,7 +2026,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: '#45b308',
   },
-  
+
   // Location Section
   locationHelpText: {
     color: '#666',
@@ -2056,7 +2079,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
   },
-  
+
   mapContainer: {
     height: 250,
     borderRadius: 12,
@@ -2115,8 +2138,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#555',
   },
-  
-  
+
+
   submitButton: {
     backgroundColor: "#45b308",
     padding: 16,
@@ -2186,7 +2209,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     borderRadius: 6,
   },
-  
+
   categoryText: {
     fontSize: 12,
     color: '#666',
@@ -2260,8 +2283,8 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     fontSize: 15,
   },
-  inputDesc: {  
-    verticalAlign: "top",  
+  inputDesc: {
+    verticalAlign: "top",
     height: 100,
     borderWidth: 1,
     borderRadius: 8,
@@ -2498,7 +2521,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fafafa',
   },
-  
+
   productFlatList: {
     flex: 1,
     paddingHorizontal: 5,
@@ -2530,13 +2553,13 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9',
     position: 'relative',
   },
-  
+
   cheapestCard: {
     borderColor: '#2E7D32',
     borderWidth: 2,
     backgroundColor: '#F8FFF8',
   },
-  
+
   bestPriceBadge: {
     position: 'absolute',
     top: -8,
@@ -2547,39 +2570,39 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     zIndex: 1,
   },
-  
+
   bestPriceText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
-  
+
   supplierHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  
+
   supplierInfo: {
     flex: 1,
     marginRight: 12,
   },
-  
+
   supplierName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1E293B',
     marginBottom: 4,
   },
-  
+
   productPrice: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2E7D32',
   },
-  
+
   cartButton: {
     marginTop: 10,
     backgroundColor: '#FF8C00', // Orange background
@@ -2597,23 +2620,23 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
   },
-  
+
   supplierDetails: {
     gap: 8,
   },
-  
+
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  
+
   detailText: {
     fontSize: 14,
     color: '#64748B',
     fontWeight: '500',
   },
-  
+
   productGrid: {
     paddingBottom: 20,
   },
@@ -2660,4 +2683,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default Formulaire;  
+export default Formulaire;

@@ -5,9 +5,9 @@ export const create_file = async (file_name, content = "") => {
   // Crée un fichier avec un nom ("doit être fourni sino null")
   try {
     const fileUri = FileSystem.documentDirectory + file_name;
-    
+
     await FileSystem.writeAsStringAsync(fileUri, content); // This creates or overwrites the file
-    
+
     debbug_lib.debbug_log("[FM] File created: " + file_name, "green");
   } catch (error) {
     debbug_lib.debbug_log("[FM] Error in file creation: " + error.message, "red");
@@ -16,13 +16,13 @@ export const create_file = async (file_name, content = "") => {
 
 export const is_file_existing = async (file_name) => {
   // check si un fichier existe
-  const fileUri = FileSystem.documentDirectory + file_name; 
+  const fileUri = FileSystem.documentDirectory + file_name;
   const fileInfo = await FileSystem.getInfoAsync(fileUri);
-  
+
   if (!fileInfo.exists) {
     console.warn('Fichier inexistant:', fileUri);
     return false;
-  }return true;
+  } return true;
 }
 
 export const delete_file = async (file_name) => {
@@ -31,20 +31,20 @@ export const delete_file = async (file_name) => {
     const fileUri = FileSystem.documentDirectory + file_name;
     await FileSystem.deleteAsync(fileUri);
     debbug_lib.debbug_log("[FM] File has been deleted Succefully", "green");
-  }catch (error){
+  } catch (error) {
     debbug_lib.debbug_log("[FM] File " + file_name + " couldn't be deleted, err: " + error, "red");
   }
-  
+
 }
 
 export const replaceFileAndWrite = async (newContent, file_name) => {
-  try{
+  try {
     //remplace le contenu d'un fichier
     // Attention: This will overwrite the file if it exists
     const fileUri = FileSystem.documentDirectory + file_name;
     await FileSystem.writeAsStringAsync(fileUri, newContent);
     debbug_lib.debbug_log("[FM] rewrite file sucessfully");
-  }catch(error){
+  } catch (error) {
     debbug_lib.debbug_log("[FM] error in replaceFileAndWrite: " + error, "red");
   }
 };
@@ -69,7 +69,7 @@ export const listAllFiles = async (directory = FileSystem.documentDirectory) => 
     const files = await FileSystem.readDirectoryAsync(directory);
     console.log(`Files in ${directory}:`);
     console.log(files);
-    
+
     // Get detailed info for each file
     for (const file of files) {
       const filePath = `${directory}${file}`;
@@ -81,7 +81,7 @@ export const listAllFiles = async (directory = FileSystem.documentDirectory) => 
         modificationTime: fileInfo.modificationTime
       });
     }
-    
+
     return files;
   } catch (error) {
     console.error('Error listing files:', error);
@@ -95,13 +95,13 @@ export const listAllFilesRecursive = async (directory = FileSystem.documentDirec
     // Debbug: List files in subdirectories too
     const files = await FileSystem.readDirectoryAsync(directory);
     const indent = '  '.repeat(depth);
-    
+
     console.log(`${indent}Directory: ${directory}`);
-    
+
     for (const file of files) {
       const filePath = `${directory}${file}`;
       const fileInfo = await FileSystem.getInfoAsync(filePath);
-      
+
       if (fileInfo.isDirectory) {
         console.log(`${indent}📁 ${file}/`);
         await listAllFilesRecursive(filePath + '/', depth + 1);
@@ -109,7 +109,7 @@ export const listAllFilesRecursive = async (directory = FileSystem.documentDirec
         console.log(`${indent}📄 ${file} (${fileInfo.size} bytes)`);
       }
     }
-    
+
     return files;
   } catch (error) {
     console.error('Error listing files recursively:', error);
@@ -141,11 +141,11 @@ export const save_storage_local_storage_data = async (data, file_name) => {
       console.log("Document directory doesn't exist");
       return;
     }
-    
+
     const fileUri = FileSystem.documentDirectory + file_name;
     console.log('Data:', data);
     const jsonString = JSON.stringify(data);
-    
+
     console.log('Full file path:', fileUri);
     await FileSystem.writeAsStringAsync(fileUri, jsonString, {
       encoding: FileSystem.EncodingType.UTF8
@@ -163,11 +163,11 @@ export const save_storage_local_storage_data = async (data, file_name) => {
     console.error('Error during file operation:', error);
     if (error.message) console.error('Error message:', error.message);
     if (error.stack) console.error('Error stack:', error.stack);
-  }      
+  }
 };
 
 export const save_storage_local_storage_response = async (response, file_name) => {
-  try {    
+  try {
     // Enregistre la réponse d'une requête dans le stockage local
     debbug_lib.debbug_log("[FM] save_storage_local_storage_data", "yellow");
     const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
@@ -179,7 +179,7 @@ export const save_storage_local_storage_response = async (response, file_name) =
     const fileUri = FileSystem.documentDirectory + file_name;
     console.log('Data:', data);
     const jsonString = JSON.stringify(data);
-    
+
     console.log('Full file path:', fileUri);
     await FileSystem.writeAsStringAsync(fileUri, jsonString, {
       encoding: FileSystem.EncodingType.UTF8
@@ -197,7 +197,7 @@ export const save_storage_local_storage_response = async (response, file_name) =
     console.error('Error during file operation:', error);
     if (error.message) console.error('Error message:', error.message);
     if (error.stack) console.error('Error stack:', error.stack);
-  }      
+  }
 };
 
 // FIXED: Now actually modifies existing data instead of overwriting
@@ -292,24 +292,24 @@ export const add_value_to_local_storage = async (key, value, file_name) => {
 
 
 
-export const read_file = async (file_name, if_not_create=false) => {
+export const read_file = async (file_name, if_not_create = false) => {
   try {
     // Lecture d'un fichier JSON
     debbug_lib.debbug_log("[FM] read_file", "yellow");
-    const fileUri = FileSystem.documentDirectory + file_name; 
+    const fileUri = FileSystem.documentDirectory + file_name;
     console.log('lecture du fichier:', fileUri);
 
     const fileInfo = await FileSystem.getInfoAsync(fileUri);
-    
+
     if (!fileInfo.exists) {
       console.warn('Fichier inexistant:', fileUri);
-      if(if_not_create){
+      if (if_not_create) {
         await create_file(file_name);
         debbug_lib.debbug_log("[FM] created file", "yellow");
-      }else{
+      } else {
         return null;
       }
-      
+
     }
 
     const fileContents = await FileSystem.readAsStringAsync(fileUri);
@@ -317,7 +317,7 @@ export const read_file = async (file_name, if_not_create=false) => {
 
     const parsedData = JSON.parse(fileContents);
     console.log('Parse du json:', parsedData);
-    
+
     return parsedData;
   } catch (error) {
     console.error('Error reading file:', error);
@@ -326,7 +326,7 @@ export const read_file = async (file_name, if_not_create=false) => {
     } else if (error.code === 'ENOENT') {
       console.error('File not found - path may be incorrect');
     }
-    
+
     return null;
   }
 };
@@ -380,7 +380,7 @@ export const check_key_exists = async (key, file_name) => {
     debbug_lib.debbug_log("[FM] check_key_exists", "yellow");
     const data = await read_file(file_name);
     if (data === null) return false;
-    
+
     return data.hasOwnProperty(key);
   } catch (error) {
     console.error('Error checking if key exists:', error);
