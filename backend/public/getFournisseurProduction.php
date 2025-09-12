@@ -4,31 +4,31 @@ include_once('db.php');
 
 $input = json_decode(file_get_contents("php://input"), true);
 
-if (!isset($input['id_produit'])) {
-    echo json_encode(["error" => "Missing id_produit"]);
+if (!isset($input['id_fournisseur'])) {
+    echo json_encode(["error" => "Missing id_fournisseur"]);
     exit;
 }
 
-$id_produit = $input['id_produit'];
+$id_fournisseur = $input['id_fournisseur'];
 
-$sql = "SELECT 
-            F.id_fournisseur, 
-            ROUND(AVG(FR.prix_produit) * 1.45, 2) as prix_produit, 
-            nb_produit_fourni, 
-            nom_orga, 
-            ville_organisation, 
-            localisation_orga
-        FROM FOURNISSEUR F 
-        INNER JOIN FOURNIR FR ON F.id_fournisseur = FR.id_fournisseur
-        LEFT JOIN ORGANISATION O ON O.id_orga = F.id_orga
-        WHERE FR.id_produit = ?
-        ORDER BY prix_produit ASC";
+//--P.image_produit,
+$sql = "SELECT
+    P.id_produit,
+    P.nom_produit,
+    FR.nb_produit_fourni,
+    nom_orga,
+    ville_organisation,
+    ROUND(FR.prix_produit * 1.45, 2) AS prix_produit
+FROM FOURNIR FR
+INNER JOIN PRODUIT P ON FR.id_produit = P.id_produit
+INNER JOIN ORGANISATION O ON FR.id_fournisseur = O.id_fournisseur
+WHERE FR.id_fournisseur = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $id_produit);
+$stmt->bind_param("s", $id_fournisseur);
 $stmt->execute();
 
-$result = $stmt->get_result(); 
+$result = $stmt->get_result();
 $data = [];
 
 while ($row = $result->fetch_assoc()) {

@@ -2,19 +2,19 @@
 header('Content-Type: application/json');
 
 try {
-    include_once('db.php'); 
-    
+    include_once('db.php');
+
     // Get and validate input data
     $input = file_get_contents("php://input");
     if (empty($input)) {
         throw new Exception('No input data received');
     }
-    
+
     $data = json_decode($input, true);
     if (json_last_error() !== JSON_ERROR_NONE) {
         throw new Exception('Invalid JSON input: ' . json_last_error_msg());
     }
-    
+
     // Validate required fields
     $required = ['id', 'nom', 'Prenom', 'Email', 'Tel', 'Password', 'data'];
     foreach ($required as $field) {
@@ -31,7 +31,7 @@ try {
         $stmt->close();
         return $id_session;
     }
-    
+
     $id = $data['id'];
     $nom = $data['nom'];
     $Prenom = $data['Prenom'];
@@ -53,38 +53,38 @@ try {
         if($data["ville"]){
             $ville_organisation = $data["ville"];
             $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, ville_organisation) VALUES (?, ?, ?)");
-            $stmt2->bind_param("sss", $id_orga, $nom_organisation, $ville_organisation);    
+            $stmt2->bind_param("sss", $id_orga, $nom_organisation, $ville_organisation);
             $stmt2->execute();
 
         }else if($data["latitude"]){
             $loc_orga = $data["latitude"] + ";" + $data["longitude"];
             $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, localisation_orga) VALUES (?, ?, ?)");
-            $stmt2->bind_param("sss", $id_orga, $nom_organisation, $loc_orga);    
+            $stmt2->bind_param("sss", $id_orga, $nom_organisation, $loc_orga);
             $stmt2->execute();
         }
-        
+
     }
-    
+
     // Validate user type
     if (!in_array($flag, ['cl', 'fo', 'co'])) {
         throw new Exception('Invalid user type');
     }
-    
+
     // Check if email exists
-    $check_email = $conn->prepare("SELECT email_client FROM CLIENT WHERE email_client = ? 
-                                  UNION 
-                                  SELECT email_fournisseur FROM FOURNISSEUR WHERE email_fournisseur = ? 
-                                  UNION 
+    $check_email = $conn->prepare("SELECT email_client FROM CLIENT WHERE email_client = ?
+                                  UNION
+                                  SELECT email_fournisseur FROM FOURNISSEUR WHERE email_fournisseur = ?
+                                  UNION
                                   SELECT email_coursier FROM COURSIER WHERE email_coursier = ?");
     $check_email->bind_param("sss", $Email, $Email, $Email);
     $check_email->execute();
     $result = $check_email->get_result();
-    
+
     if ($result->num_rows > 0) {
         throw new Exception('Email already in use');
     }
     $check_email->close();
-    
+
     // Prepare the appropriate insert statement
     if($flag == "cl"){
         $stmt = $conn->prepare("INSERT INTO CLIENT(id_client, nom_client, prenom_client, email_client, telephone_client, mdp_client, email_unhash_client, tel_unhash_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -98,7 +98,7 @@ try {
         ];
     } else if($flag == "fo"){
         $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur, email_unhash_fournisseur, tel_unhash_fournisseur, id_orga) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $email_unhash, $phone_unhash, $id_orga);    
+        $stmt->bind_param("ssssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $email_unhash, $phone_unhash, $id_orga);
         $user_data = [
             'id_fournisseur' => $id,
             'nom_fournisseur' => $nom,
@@ -107,14 +107,14 @@ try {
             'telephone_fournisseur' => $Tel
         ];
 
-        
+
     } else {
-        // COURSIER n'est pas update 
+        // COURSIER n'est pas update
         //pour l'instant on ne s'occupe pas des coursier donc plein de chose ne
         //sont pas update
-        $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe, email_unhash_coursier, tel_unhash_coursier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $occupied = 1;
-        $stmt->bind_param("ssssssi", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);        
+        $stmt->bind_param("sssssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);
         $user_data = [
             'id_coursier' => $id,
             'nom_coursier' => $nom,
@@ -123,19 +123,19 @@ try {
             'telephone_coursier' => $Tel
         ];
     }
-    
+
     if (!$stmt->execute()) {
         throw new Exception('Insertion error: ' . $stmt->error);
     }
-    
+
     $session_id = create_session($conn, $id);
     $user_data['session_id'] = $session_id;
     echo json_encode([
-        'message' => 'Registration successful', 
+        'message' => 'Registration successful',
         'status' => 'success',
         'user_data' => $user_data
     ]);
-    
+
 } catch (Exception $e) {
     http_response_code(400);
     echo json_encode([

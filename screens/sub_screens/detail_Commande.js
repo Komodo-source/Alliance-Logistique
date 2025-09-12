@@ -8,6 +8,9 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import LeafletMap from '../../components/LeafletMap';
+import * as fileManager from '../util/file-manager.js';
+import { debbug_log } from '../util/debbug.js';
+import { getAlertRef } from '../util/AlertService';
 
 var headers = {
   'Accept': 'application/json',
@@ -45,7 +48,7 @@ const DetailCommande = ({ route, navigation }) => {
     latitudeDelta: 0.0421,
     longitudeDelta: 0.822,
   });
-  
+
   // Ensure region is always valid
   const safeRegion = {
     latitude: region.latitude || 9.3077,
@@ -59,7 +62,7 @@ const DetailCommande = ({ route, navigation }) => {
   const [isPaying, setIsPaying] = useState(false);
   const [mapInteracting, setMapInteracting] = useState(false);
   const [isAdresse, setIsAddresse] = useState(false);
-
+  const [typeUser, setTypeUser] = useState('');
   const [addresse, setAddress] = useState("");
   const [email, setEmail] = useState("");
 
@@ -67,8 +70,8 @@ const DetailCommande = ({ route, navigation }) => {
     return (
       <View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:'#fff'}}>
         <Text style={{color:'#2E3192', fontSize:18, fontWeight:'bold'}}>Aucune donnée de commande trouvée.</Text>
-        <TouchableOpacity 
-          style={{marginTop:20, backgroundColor:'#2E3192', padding:12, borderRadius:8}} 
+        <TouchableOpacity
+          style={{marginTop:20, backgroundColor:'#2E3192', padding:12, borderRadius:8}}
           onPress={() => {
             try {
               if (navigation && navigation.goBack) {
@@ -98,7 +101,7 @@ const DetailCommande = ({ route, navigation }) => {
   const showSavedPDFs = async () => {
     try {
       let downloadDir;
-      
+
       if (Platform.OS === 'android') {
         // For Android, check both document directory and Downloads
         downloadDir = `${FileSystem.documentDirectory}Download/`;
@@ -106,28 +109,28 @@ const DetailCommande = ({ route, navigation }) => {
         // For iOS, use document directory
         downloadDir = FileSystem.documentDirectory;
       }
-      
+
       // Check if directory exists
       const dirInfo = await FileSystem.getInfoAsync(downloadDir);
       if (!dirInfo.exists) {
         Alert.alert('Aucun PDF', 'Aucun dossier de téléchargement trouvé.');
         return;
       }
-      
+
       const files = await FileSystem.readDirectoryAsync(downloadDir);
       const pdfFiles = files.filter(file => file.toLowerCase().endsWith('.pdf'));
-      
+
       if (pdfFiles.length === 0) {
         Alert.alert('Aucun PDF', 'Aucun fichier PDF trouvé dans le dossier de téléchargement.');
         return;
       }
-  
+
       const fileList = pdfFiles.map((file, index) => `${index + 1}. ${file}`).join('\n');
-      
+
       Alert.alert('PDFs Sauvegardés', fileList, [
         { text: 'OK' },
-        { 
-          text: 'Ouvrir dossier', 
+        {
+          text: 'Ouvrir dossier',
           onPress: () => {
             if (Platform.OS === 'android') {
               // On Android, you might want to use an intent to open file manager
@@ -144,11 +147,11 @@ const DetailCommande = ({ route, navigation }) => {
 
   const createAndSavePDF = async () => {
     console.log('Generating and saving PDF...');
-    
+
     if (isGenerating) return; // Prevent multiple calls
-    
+
     setIsGenerating(true);
-    
+
     try {
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -355,11 +358,11 @@ const DetailCommande = ({ route, navigation }) => {
 
               <div class="company-section">
                   <h3>DESTINATAIRE</h3>
-                  <p><strong>${item.nom_dmd || 'Client'}</strong></p> 
-                  <p>${adresse || "pas d'adresse physique"}</p>              
+                  <p><strong>${item.nom_dmd || 'Client'}</strong></p>
+                  <p>${adresse || "pas d'adresse physique"}</p>
                   <p>Email: ${email || "pas d'adresse email"}</p>
-                  <p>Code commande: ${item.code_echange || 'N/A'}</p>
-              </div>              
+                  <p>Code commande: ${item.id_public_cmd || 'N/A'}</p>
+              </div>
           </div>
 
           <div class="products-section">
@@ -374,7 +377,7 @@ const DetailCommande = ({ route, navigation }) => {
                       </tr>
                   </thead>
                   <tbody>
-                      ${item.produits && item.produits.length > 0 
+                      ${item.produits && item.produits.length > 0
                         ? item.produits.map(produit => {
                             const prixUnitaire = produit.prix || 0;
                             const quantite = produit.quantite || 1;
@@ -435,17 +438,17 @@ const DetailCommande = ({ route, navigation }) => {
 
       // Determine save location based on platform
       let finalPath;
-      
+
       if (Platform.OS === 'android') {
         // For Android, try to save to Downloads folder
         const downloadDir = `${FileSystem.documentDirectory}Download/`;
-        
+
         // Create Download directory if it doesn't exist
         const downloadDirInfo = await FileSystem.getInfoAsync(downloadDir);
         if (!downloadDirInfo.exists) {
           await FileSystem.makeDirectoryAsync(downloadDir, { intermediates: true });
         }
-        
+
         finalPath = `${downloadDir}${fileName}`;
       } else {
         // For iOS, save to document directory
@@ -480,12 +483,12 @@ const DetailCommande = ({ route, navigation }) => {
 
       // Show success alert with sharing option
       Alert.alert(
-        'PDF Généré avec succès!', 
+        'PDF Généré avec succès!',
         `Le fichier "${fileName}" a été sauvegardé.\n\nEmplacement: ${finalPath}`,
         [
           { text: 'OK' },
-          { 
-            text: 'Partager', 
+          {
+            text: 'Partager',
             onPress: async () => {
               try {
                 const canShare = await Sharing.isAvailableAsync();
@@ -509,7 +512,7 @@ const DetailCommande = ({ route, navigation }) => {
     } catch (error) {
       console.error('PDF generation/saving error:', error);
       Alert.alert(
-        'Erreur', 
+        'Erreur',
         `Erreur lors de la génération du PDF: ${error.message}\n\nVeuillez réessayer.`
       );
     } finally {
@@ -518,20 +521,21 @@ const DetailCommande = ({ route, navigation }) => {
   };
 
   useEffect(() => {
+    getType();
     try {
       if (item && item.produits) {
         calculPrix(calcul(item.produits));
       }
       if ([...item.localisation_dmd].some(char => /[a-zA-Z]/.test(char))){ //check si il y a une lettre
         //donc si c'est une addresse
-        setIsAddresse(true);        
+        setIsAddresse(true);
       }else{
           if (item && item.localisation_dmd && typeof item.localisation_dmd === 'string') {
             const coords = item.localisation_dmd.split(';');
             if (coords.length >= 2) {
               const lat = parseFloat(coords[0]);
               const lng = parseFloat(coords[1]);
-              
+
               if (!isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0) {
                 setSelectedLocation({
                   latitude: lat,
@@ -552,6 +556,12 @@ const DetailCommande = ({ route, navigation }) => {
       console.error('Error in useEffect:', error);
     }
   }, [item]);
+
+  const getType = async() => {
+    const Type = await fileManager.read_file("auto.json");
+    setTypeUser(Type.type);
+    debbug_log("=== type: " + Type.type + " ===", "cyan");
+  }
 
   const zoomOut = () => {
     setRegion(prev => ({
@@ -574,7 +584,7 @@ const DetailCommande = ({ route, navigation }) => {
     2: "En cours de livraison",
     3: "Livré"
   }
-  
+
   const dic_status_color = {
     1: "#FFA726",
     2: "#0a75d3",
@@ -590,10 +600,10 @@ const DetailCommande = ({ route, navigation }) => {
         </View>
       );
     }
-    
+
     const statusColor = dic_status_color[item.id_status] || "#666666";
     const statusText = dic_status[item.id_status] || "Unknown";
-    
+
     return (
       <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
         <Text style={styles.statusText}>{statusText}</Text>
@@ -603,12 +613,12 @@ const DetailCommande = ({ route, navigation }) => {
 
   const renderPaymentBadge = () => {
     if (!item) return null;
-    
+
     const isPaid = item.est_paye === true || item.est_paye === 1;
     const paymentColor = isPaid ? "#06bd09" : "#FFA726";
     const paymentText = isPaid ? "Payé" : "Non payé";
     const paymentIcon = isPaid ? "✓" : "⏳";
-    
+
     return (
       <View style={[styles.paymentBadge, { backgroundColor: paymentColor }]}>
         <Text style={styles.paymentIcon}>{paymentIcon}</Text>
@@ -619,7 +629,7 @@ const DetailCommande = ({ route, navigation }) => {
 
   const renderPaymentInfo = () => {
     if (!item || !item.est_paye) return null;
-    
+
     return (
       <View style={styles.paymentInfoSection}>
         <Text style={styles.paymentInfoTitle}>Informations de paiement</Text>
@@ -670,6 +680,49 @@ const DetailCommande = ({ route, navigation }) => {
             </View>
           </View>
 
+          <View style={styles.container}>
+            {typeUser === "client" ? (
+              <View style={styles.card}>
+                <Text style={styles.title}>Obtenir votre code client</Text>
+                <Text style={styles.description}>Ce code servira à confirmer votre identité</Text>
+                <TouchableOpacity style={[styles.button, styles.clientButton]}
+                onPress={() => {getAlertRef().current?.showAlert(
+                     'Code Personnel',
+                     'Votre code client est: '+ item.code_echange,
+                     true,
+                     "OK",
+                     null
+                 )}}>
+                  <Text style={styles.buttonText}>Obtenir Code</Text>
+                </TouchableOpacity>
+              </View>
+            ) : typeUser === "fournisseur" ? (
+              <View style={styles.card}>
+                <Text style={styles.title}>Obtenir votre code fournisseur</Text>
+                <Text style={styles.description}>Ce code servira à confirmer votre identité</Text>
+                <TouchableOpacity style={[styles.button, styles.providerButton]}
+                onPress={() => {getAlertRef().current?.showAlert(
+                     'Code Personnel',
+                     'Votre code fournisseur est: '+ item.code_echange_fourni,
+                     true,
+                     "OK",
+                     null
+                 )}}>
+                  <Text style={styles.buttonText}>Obtenir Code</Text>
+                </TouchableOpacity>
+              </View>
+            ) : typeUser === "coursier" ? (
+              <View style={styles.card}>
+                <Text style={styles.title}>Information sur la course</Text>
+                <Text style={styles.description}>Consultez les détails de cette livraison</Text>
+                <TouchableOpacity style={[styles.button, styles.courierButton]}
+                onPress={() => {navigation.navigate("CoursierProcessScreen")}}>
+                  <Text style={styles.buttonText}>Voir les détails</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+          </View>
+
           {/* Order Info Section */}
           <View style={styles.infoSection}>
             <View style={styles.infoRow}>
@@ -686,9 +739,13 @@ const DetailCommande = ({ route, navigation }) => {
             </View>
             <View style={styles.infoRow}>
               <FontAwesome name="qrcode" size={20} color="#2E3192" />
-              <Text style={styles.infoText}>Code de commande: <Text style={styles.infoValue}>{item.code_echange || 'Code Introuvable'}</Text></Text>
+              <Text style={styles.infoText}>Code de commande: <Text style={styles.infoValue}>{(typeUser === "client" ?  item.code_echange : item.code_echange_fourni) || 'Code Introuvable'}</Text></Text>
             </View>
           </View>
+
+
+
+
 
           {/* Payment Info Section */}
           {renderPaymentInfo()}
@@ -717,27 +774,27 @@ const DetailCommande = ({ route, navigation }) => {
         </View>
         }
 
-        
+
           {/* Products Section */}
           <View style={styles.productsSection}>
             <Text style={styles.sectionTitle}>Produits Achetés</Text>
-            
+
             {item.produits && Array.isArray(item.produits) && item.produits.length > 0 ? (
               item.produits.map((produit, index) => (
                 <View key={index} style={styles.productItem}>
-                  <Image 
-                    source={loadImages(produit.id_produit?.toString() || '0')} 
-                    style={styles.productImage} 
+                  <Image
+                    source={loadImages(produit.id_produit?.toString() || '0')}
+                    style={styles.productImage}
                   />
                   <View style={styles.productDetails}>
                     <Text style={styles.productName}>{produit.nom_produit || 'Produit inconnu'}</Text>
                     <View style={styles.productMeta}>
                       <Text style={styles.productQuantity}>Qté: {produit.quantite || 1}</Text>
-                      
+
                       <Text style={styles.productPrice}>{((produit.prix || 0) * (produit.quantite || 1)).toLocaleString('fr-FR')} FCFA</Text>
                     </View>
                     <Text style={styles.productType}>{produit.prix || 0} FCFA/{produit.type_vendu || ''}</Text>
-                    
+
                   </View>
                 </View>
               ))
@@ -756,9 +813,9 @@ const DetailCommande = ({ route, navigation }) => {
 
       {/* Footer Buttons */}
       <View style={[styles.footer]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.invoiceButton, 
+            styles.invoiceButton,
             isGenerating && { opacity: 0.7 }
           ]}
           onPress={createAndSavePDF}
@@ -770,33 +827,47 @@ const DetailCommande = ({ route, navigation }) => {
           </Text>
         </TouchableOpacity>
 
-        {(!item.est_paye || item.est_paye === 0) && (
-          <TouchableOpacity 
+        {typeUser === "client" && (!item.est_paye || item.est_paye === 0) ? (
+          <TouchableOpacity
             style={[
-              styles.invoiceButton, 
+              styles.invoiceButton,
               isPaying && { opacity: 0.7 },
-              {backgroundColor: "#44c509",
-                marginTop: 10,
-              }
+              { backgroundColor: "#44c509", marginTop: 10 }
             ]}
-            onPress={() => navigation.navigate("payement", {command_data: item, amount: prix})}
+            onPress={() =>
+              navigation.navigate("payement", { command_data: item, amount: prix })
+            }
             disabled={isPaying}
           >
             <MaterialIcons name="attach-money" size={24} color="white" />
             <Text style={styles.invoiceButtonText}>
-              {isPaying ? 'Paiement en cours...' : 'Payer la commande'}
+              {isPaying ? "Paiement en cours..." : "Payer la commande"}
             </Text>
           </TouchableOpacity>
-        )}
+        ) : typeUser === "coursier" ? (
+          <TouchableOpacity
+            style={[
+              styles.invoiceButton,
+              isPaying && { opacity: 0.7 },
+              { backgroundColor: "#fa0985ff", marginTop: 10 }
+            ]}
+            onPress={() => {navigation.navigate("DetailCoursex")}}
+          >
+            <MaterialIcons name="truck-fast" size={24} color="white" />
+            <Text style={styles.invoiceButtonText}>
+              Information sur la course
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
-        {(item.est_paye === true || item.est_paye === 1) && (
+        {(typeUser === "client" && (item.est_paye === true || item.est_paye === 1)) && (
           <View style={styles.paidMessage}>
             <MaterialIcons name="check-circle" size={24} color="#06bd09" />
             <Text style={styles.paidMessageText}>Commande payée</Text>
           </View>
         )}
         {/*
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.invoiceButton, styles.secondaryButton]}
           onPress={showSavedPDFs}
         >
@@ -857,7 +928,7 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     alignSelf: 'flex-start',
-    
+
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 15,
@@ -1052,7 +1123,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eaeaea',
   },
-  
+
   productItem: {
     flexDirection: 'row',
     marginBottom: 15,
@@ -1177,6 +1248,52 @@ activeNavText: {
   color: '#007bff',
   fontWeight: '600',
 },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  description: {
+    fontSize: 14,
+    color: '#6B6B6B',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  button: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  clientButton: {
+    backgroundColor: '#06C167', // Uber Eats green
+  },
+  providerButton: {
+    backgroundColor: '#3D3DDB', // Uber purple
+  },
+  courierButton: {
+    backgroundColor: '#000000', // Uber black
+  },
 });
 
 export default DetailCommande;

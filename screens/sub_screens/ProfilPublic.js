@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Image, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
   ScrollView,
   SafeAreaView,
   ActivityIndicator,
+  FlatList,
   Dimensions,
   TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const ProfilPublic = ({ route }) => {
-  console.log(route.params);
-  const {id, type} = route.params;
-  
+  const { id, type } = route.params;
+
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   const getProfile = async () => {
     try {
@@ -27,7 +29,7 @@ const ProfilPublic = ({ route }) => {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ session_id: id, type: type, is_session: false})
+        body: JSON.stringify({ session_id: id, type: type, is_session: false })
       });
 
       const data = await response.json();
@@ -39,36 +41,66 @@ const ProfilPublic = ({ route }) => {
     }
   };
 
+  const getProducts = async () => {
+    try {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id_fournisseur: id })
+      });
+
+      const data = await response.json();
+      setProducts(data);
+      setLoadingProducts(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setLoadingProducts(false);
+    }
+  };
+
   useEffect(() => {
     getProfile();
+    getProducts();
   }, []);
 
   const renderStars = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
-    
+
     for (let i = 0; i < fullStars; i++) {
       stars.push(
         <Ionicons key={i} name="star" size={16} color="#FFD700" />
       );
     }
-    
+
     if (hasHalfStar) {
       stars.push(
         <Ionicons key="half" name="star-half" size={16} color="#FFD700" />
       );
     }
-    
+
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
         <Ionicons key={`empty-${i}`} name="star-outline" size={16} color="#FFD700" />
       );
     }
-    
+
     return stars;
   };
+
+  const renderProductCard = ({ item }) => (
+    <View style={styles.productCard}>
+      <Image source={{ uri: item.image_produit || 'https://via.placeholder.com/150' }} style={styles.productImage} />
+      <Text style={styles.productName}>{item.nom_produit}</Text>
+      <Text style={styles.productPrice}>€{item.prix_produit}</Text>
+      <Text style={styles.productDescription}>{item.description_produit}</Text>
+    </View>
+  );
 
   if (loading) {
     return (
@@ -99,7 +131,7 @@ const ProfilPublic = ({ route }) => {
           <Image
             style={styles.headerImage}
             source={{
-              uri: isSupplier 
+              uri: isSupplier
                 ? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=200&fit=crop'
                 : 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=200&fit=crop'
             }}
@@ -120,12 +152,12 @@ const ProfilPublic = ({ route }) => {
                 }}
               />
             </View>
-            
+
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>
                 {name} {prenom}
               </Text>
-              
+
               {userData.nom_orga && (
                 <View style={styles.locationContainer}>
                   <Ionicons name="location-outline" size={16} color="#666" />
@@ -134,7 +166,7 @@ const ProfilPublic = ({ route }) => {
                   </Text>
                 </View>
               )}
-              
+
               <View style={styles.ratingContainer}>
                 <View style={styles.starsContainer}>
                   {renderStars(rating)}
@@ -156,13 +188,13 @@ const ProfilPublic = ({ route }) => {
                 <Text style={styles.statNumber}>{userData.nb_produit_fourni || 0}</Text>
                 <Text style={styles.statLabel}>Products Supplied</Text>
               </View>
-              
+
               <View style={styles.statCard}>
                 <Ionicons name="pricetag-outline" size={24} color="#00B14F" />
                 <Text style={styles.statNumber}>€{userData.prix_produit || 0}</Text>
                 <Text style={styles.statLabel}>Avg. Price</Text>
               </View>
-              
+
               <View style={styles.statCard}>
                 <Ionicons name="receipt-outline" size={24} color="#00B14F" />
                 <Text style={styles.statNumber}>{userData.nb_commande || 0}</Text>
@@ -176,7 +208,7 @@ const ProfilPublic = ({ route }) => {
                 <Text style={styles.statNumber}>{userData.nb_commande || 0}</Text>
                 <Text style={styles.statLabel}>Orders Placed</Text>
               </View>
-              
+
               <View style={styles.statCard}>
                 <Ionicons name="star" size={24} color="#FFD700" />
                 <Text style={styles.statNumber}>{rating}</Text>
@@ -217,7 +249,7 @@ const ProfilPublic = ({ route }) => {
                 <Ionicons name="restaurant-outline" size={20} color="white" />
                 <Text style={styles.primaryButtonText}>View Menu</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity style={styles.secondaryButton}>
                 <Ionicons name="information-circle-outline" size={20} color="#00B14F" />
                 <Text style={styles.secondaryButtonText}>Store Info</Text>
@@ -228,6 +260,25 @@ const ProfilPublic = ({ route }) => {
               <Ionicons name="chatbubble-outline" size={20} color="white" />
               <Text style={styles.primaryButtonText}>Contact</Text>
             </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Products Section */}
+        <View style={styles.productsSection}>
+          <Text style={styles.sectionTitle}>Products by Supplier</Text>
+          {loadingProducts ? (
+            <ActivityIndicator size="large" color="#00B14F" />
+          ) : products.length > 0 ? (
+            <FlatList
+              data={products}
+              renderItem={renderProductCard}
+              keyExtractor={(item) => item.id_produit.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productsList}
+            />
+          ) : (
+            <Text style={styles.noProductsText}>No products available.</Text>
           )}
         </View>
       </ScrollView>
@@ -465,5 +516,52 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
+  productsSection: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+  },
+  productsList: {
+    paddingVertical: 10,
+  },
+  productCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
+    width: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  productImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1A1A1A',
+    marginBottom: 5,
+  },
+  productPrice: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#00B14F',
+    marginBottom: 5,
+  },
+  productDescription: {
+    fontSize: 12,
+    color: '#666',
+  },
+  noProductsText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
 });
+
 export default ProfilPublic;

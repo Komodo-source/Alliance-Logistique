@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-include_once('db.php'); 
+include_once('db.php');
 include_once('lib/get_session_info.php');
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 // une COMMANDE avec les produits associés (divisé par catégorie), en choisissant le meilleur fournisseur et le meilleur coursier.
 
 
-/// fix les id envoyé sont des session id alors que l'on implémente des 
+/// fix les id envoyé sont des session id alors que l'on implémente des
 /// dans COMMANDE des id direct
 
 try {
@@ -41,7 +41,7 @@ try {
     }
 
     // 2. Fournisseurs par catégorie
-    $suppliers_sql = "SELECT F.id_fournisseur, F.localisation_fournisseur, P.id_categorie 
+    $suppliers_sql = "SELECT F.id_fournisseur, F.localisation_fournisseur, P.id_categorie
                       FROM FOURNISSEUR F
                       INNER JOIN FOURNIR FO ON F.id_fournisseur = FO.id_fournisseur
                       INNER JOIN PRODUIT P ON FO.id_produit = P.id_produit";
@@ -71,7 +71,7 @@ try {
 
         // 1. Get all CONTENANCE rows for this HUB, joined with product and category
         $sql = "
-            SELECT 
+            SELECT
                 CO.id_produit,
                 CO.nb_produit,
                 CO.poids_piece_produit,
@@ -116,7 +116,7 @@ try {
                 }
                 if (!$best_supplier) continue;
             }else {
-                //sinon on prend le fournisseur que l'user a choisi                
+                //sinon on prend le fournisseur que l'user a choisi
                 $best_supplier = getIdSession($list_fourni[$count_product]);
             }
 
@@ -139,11 +139,12 @@ try {
             // Insert COMMANDE row for this category
             $cmd_id = rand(0, 99999);
             $public_id = uniqid("CMD_");
-            $exchange_code = rand(10000, 99999);
+            $exchange_code = rand(0, 99999);
+            $exchange_code_fourni = rand(0, 99999);
             $status_default = 1;
             $insert_sql = "
-                INSERT INTO COMMANDE(id_cmd, id_public_cmd, id_fournisseur, id_client, id_dmd, id_coursier, code_echange, id_status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                INSERT INTO COMMANDE(id_cmd, id_public_cmd, id_fournisseur, id_client, id_dmd, id_coursier, code_echange, id_status, code_echange_fourni)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($insert_sql);
             if (!$stmt) {
                 throw new Exception("Prepare failed for INSERT: " . $conn->error);
@@ -157,7 +158,8 @@ try {
                 $hub_id,
                 $best_courier['id_coursier'],
                 $exchange_code,
-                $status_default
+                $status_default,
+                $exchange_code_fourni
             );
             if ($stmt->execute()) {
                 $commands_created++;

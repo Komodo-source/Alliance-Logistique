@@ -36,8 +36,8 @@ const ModifProfil = ({route, navigation }) => {
             return;
         }else{
             try {
-                const id = await fileManager.read_file("auto.json")["session_id"];
-                const type = await fileManager.read_file("auto.json")["type"];
+
+                const data = await fileManager.read_file("auto.json");
                 const response = await fetch("https://backend-logistique-api-latest.onrender.com/change_user_mdp.php",
                     {
                     method: 'POST',
@@ -45,9 +45,9 @@ const ModifProfil = ({route, navigation }) => {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        session_id: id,
+                        session_id: data.id,
                         passwd: newPassword,
-                        type_user: type
+                        type_user: data.type
 
                     })
                     }

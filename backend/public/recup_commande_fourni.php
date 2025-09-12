@@ -1,7 +1,7 @@
 <?php
 
 header('Content-Type: application/json');
-include_once('db.php'); 
+include_once('db.php');
 include_once('lib/get_session_info.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
@@ -17,13 +17,13 @@ if (!$id) {
 }
 
 $data_commande = $conn->prepare(
-"SELECT 
+"SELECT
     HUB.*,
     COMMANDE.id_cmd,
     COMMANDE.id_public_cmd,
     COMMANDE.id_fournisseur,
     COMMANDE.id_coursier,
-    COMMANDE.code_echange,
+    COMMANDE.code_echange_fourni,
     COMMANDE.id_status,
     COMMANDE.est_paye,
     PAYEMENT.amount as montant_paye,
@@ -44,20 +44,20 @@ $data_commande = $conn->prepare(
         INNER JOIN FOURNIR FR ON FR.id_fournisseur = COMMANDE.id_fournisseur
         WHERE CP.id_cmd = COMMANDE.id_cmd
     ) AS produits
-FROM COMMANDE 
-INNER JOIN HUB ON HUB.id_dmd = COMMANDE.id_dmd        
+FROM COMMANDE
+INNER JOIN HUB ON HUB.id_dmd = COMMANDE.id_dmd
 LEFT JOIN (
-    SELECT 
-        id_cmd, 
-        MAX(amount) AS amount, 
-        MAX(date_payement) AS date_payement, 
+    SELECT
+        id_cmd,
+        MAX(amount) AS amount,
+        MAX(date_payement) AS date_payement,
         MAX(momo_number) AS momo_number
     FROM PAYEMENT
     GROUP BY id_cmd
 ) AS PAYEMENT ON PAYEMENT.id_cmd = COMMANDE.id_cmd
 WHERE COMMANDE.id_fournisseur = ?
 ORDER BY HUB.date_fin DESC");
-//lorsque cela sera implémenté il faudra rajouté 
+//lorsque cela sera implémenté il faudra rajouté
 // le status de la commande
 //et le prix total des produits
 
