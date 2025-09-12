@@ -3,10 +3,10 @@ import json
 
 # URL de ton backend (change-la par l'URL de ton API)
 #https://backend-logistique-api-latest.onrender.com/db.php
-url = "http://127.0.0.1:8000/get_itin_coursier.php"
+url = "http://127.0.0.1:8000/get_user_info.php"
 
 # Données à envoyer (modifie selon tes besoins)
-payload =  {"id_coursier" : "370838", 'id_cmd': '83289'}
+payload =  {"session_id" : "999325", "is_session": False, "type": "fournisseur"}
 
 # En-têtes HTTP
 headers = {

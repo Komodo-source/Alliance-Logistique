@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ScrollView, Alert, Platform } from 'react-native';
-//import MapView, { Marker } from 'react-native-maps';
+
 import { Ionicons, MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { printToFileAsync } from 'expo-print';
 import { shareAsync } from 'expo-sharing';
@@ -851,7 +851,7 @@ const DetailCommande = ({ route, navigation }) => {
               isPaying && { opacity: 0.7 },
               { backgroundColor: "#fa0985ff", marginTop: 10 }
             ]}
-            onPress={() => {navigation.navigate("DetailCoursex")}}
+            onPress={() => {navigation.navigate("CoursierProcessScreen")}}
           >
             <MaterialIcons name="truck-fast" size={24} color="white" />
             <Text style={styles.invoiceButtonText}>

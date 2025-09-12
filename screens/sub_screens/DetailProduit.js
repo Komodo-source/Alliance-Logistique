@@ -19,7 +19,7 @@ export const loadImages = (id_produit) => {
       case "3":
           return 'https://arena.ct.ws/product/3.jpg';
       case "4":
-          return 'https://arena.ct.ws/product/4.jpg';        
+          return 'https://arena.ct.ws/product/4.jpg';
       case "8":
           return 'https://arena.ct.ws/product/8.jpg';
       case "10":
@@ -57,7 +57,7 @@ const DetailProduit = ({ route, navigation }) => {
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-      
+
       const { latitude, longitude } = location.coords;
       console.log("Current location:", latitude, longitude);
       setUserLocation({ latitude, longitude });
@@ -70,22 +70,22 @@ const DetailProduit = ({ route, navigation }) => {
     }
   };
 
-  
+
   const getFourni = async () => {
     let data = {};
     try {
-      
-      // va chercher la liste des fournisseurs produisant le même 
+
+      // va chercher la liste des fournisseurs produisant le même
       // produit afin de les comparer
 
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_fournisseur_produit.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({id_produit: item.id_produit})
       });
       data = await response.json();
       console.log("reçus du serveur:", data);
-      
+
       setFourni(data);
       setFourniCharge(true);
       console.log("Fourni fetched:", data);
@@ -94,7 +94,7 @@ const DetailProduit = ({ route, navigation }) => {
       console.error("Erreur lors de la récupération des produits:", error);
     }
   };
-  
+
 
   const localisationToKm = (loca) => {
     // Return null if user location is not available
@@ -104,7 +104,7 @@ const DetailProduit = ({ route, navigation }) => {
 
     let lat = parseFloat(loca.split(";")[0]);
     let long = parseFloat(loca.split(";")[1]);
-    
+
     const radiusEarthKm = 6371.07103;
     // Convert degrees to radians
     const toRadians = deg => deg * (Math.PI / 180);
@@ -128,10 +128,10 @@ const DetailProduit = ({ route, navigation }) => {
 const renderFourniChoix = ({ item: fourni, index }) => {
   const isFirstSupplier = index === 0; // First supplier is cheapest
   const distance = fourni.localisation_orga !== null ? localisationToKm(fourni.localisation_orga) : null;
-  
+
   return (
     // Removed ScrollView wrapper - this was causing the VirtualizedList warning
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         styles.productCard,
         isFirstSupplier && styles.cheapestCard
@@ -144,21 +144,21 @@ const renderFourniChoix = ({ item: fourni, index }) => {
           <Text style={styles.bestPriceText}>MEILLEUR PRIX</Text>
         </View>
       )}
-      
+
       <View style={styles.supplierHeader}>
         <View style={styles.supplierInfo}>
           <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
           <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
         </View>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.cartButton}
           onPress={() => navigation.navigate("Formulaire")}
         >
           <Ionicons name="cart" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.supplierDetails}>
         <View style={styles.detailRow}>
           <Ionicons name="location-outline" size={16} color="#64748B" />
@@ -169,7 +169,7 @@ const renderFourniChoix = ({ item: fourni, index }) => {
             }
           </Text>
         </View>
-        
+
         <View style={styles.detailRow}>
           <Ionicons name="cube-outline" size={16} color="#64748B" />
           <Text style={styles.detailText}>
@@ -190,13 +190,13 @@ const renderFourniChoix = ({ item: fourni, index }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.main}>
             <View >
-                <Text style={styles.title}>{item.nom_produit}</Text>            
-                <Text style={styles.categorie}>Catégorie: {item.nom_categorie}</Text>    
+                <Text style={styles.title}>{item.nom_produit}</Text>
+                <Text style={styles.categorie}>Catégorie: {item.nom_categorie}</Text>
             </View>
-            <Image 
+            <Image
             source={{uri: loadImages(item.id_produit)}} style={styles.image} />
         </View>
-        
+
 
         <Text style={styles.description}>Ceci est une description du produit le temps que l'on introduise la description du produit</Text>
 
@@ -243,10 +243,10 @@ const renderFourniChoix = ({ item: fourni, index }) => {
             <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
           </View>
         )}
-                
+
       </SafeAreaView >
     </SafeAreaView>
-    
+
   );
 };
 
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
 
-    
+
   },
   iconContainer: {
     backgroundColor: '#f1f5f9',
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   },
   NbFourni : {
     fontSize: 14,
-    fontWeight: '500', 
+    fontWeight: '500',
     marginTop: 20,
     marginLeft: 20,
     color: "#64748B",
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
       },
 
       loadingContainer: {
-        
+
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 60,
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F1F5F9',
         alignItems: 'center',
         justifyContent: 'center',
-        
+
       },
         loadingEmoji: {
           fontSize: 24,
@@ -420,13 +420,13 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9',
     position: 'relative',
   },
-  
+
   cheapestCard: {
     borderColor: '#2E7D32',
     borderWidth: 2,
     backgroundColor: '#F8FFF8',
   },
-  
+
   bestPriceBadge: {
     position: 'absolute',
     top: -8,
@@ -437,39 +437,39 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     zIndex: 1,
   },
-  
+
   bestPriceText: {
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
-  
+
   supplierHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  
+
   supplierInfo: {
     flex: 1,
     marginRight: 12,
   },
-  
+
   supplierName: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1E293B',
     marginBottom: 4,
   },
-  
+
   productPrice: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2E7D32',
   },
-  
+
   cartButton: {
     marginTop: 10,
     backgroundColor: '#FF8C00', // Orange background
@@ -487,23 +487,23 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
   },
-  
+
   supplierDetails: {
     gap: 8,
   },
-  
+
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  
+
   detailText: {
     fontSize: 14,
     color: '#64748B',
     fontWeight: '500',
   },
-  
+
   productGrid: {
     paddingBottom: 20,
   },

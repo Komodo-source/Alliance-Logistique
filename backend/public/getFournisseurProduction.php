@@ -13,16 +13,15 @@ $id_fournisseur = $input['id_fournisseur'];
 
 //--P.image_produit,
 $sql = "SELECT
-    P.id_produit,
-    P.nom_produit,
-    FR.nb_produit_fourni,
-    nom_orga,
-    ville_organisation,
-    ROUND(FR.prix_produit * 1.45, 2) AS prix_produit
-FROM FOURNIR FR
-INNER JOIN PRODUIT P ON FR.id_produit = P.id_produit
-INNER JOIN ORGANISATION O ON FR.id_fournisseur = O.id_fournisseur
-WHERE FR.id_fournisseur = ?";
+            (prix_produit * 1.45) as prix_produit,
+            nb_produit_fourni,
+            P.nom_produit,
+            FR.id_produit
+        FROM FOURNISSEUR F
+INNER JOIN FOURNIR FR ON F.id_fournisseur = FR.id_fournisseur
+INNER JOIN PRODUIT P ON P.id_produit = FR.id_produit
+LEFT JOIN ORGANISATION O ON O.id_orga = F.id_orga
+WHERE F.id_fournisseur = ?";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $id_fournisseur);

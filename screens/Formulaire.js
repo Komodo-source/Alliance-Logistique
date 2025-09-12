@@ -8,7 +8,7 @@ import ChickenImage from '../assets/Icons/Dark-Chicken.png';
 import LapinImage from '../assets/Icons/Rabbit.png';
 import OeufImage from '../assets/Icons/Dark-oeuf.png';
 import BoeufImage from '../assets/Icons/Dark-beef.png';
-//import MapView,{Marker} from 'react-native-maps';
+
 import LeafletMap from '../components/LeafletMap';
 import { getAlertRef } from './util/AlertService';
 import Snackbar from './util/SnackBar.js';
@@ -256,7 +256,7 @@ const Formulaire = ({ navigation, route}) => {
       // va chercher la liste des fournisseurs produisant le même
       // produit afin de les comparer
 
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/getFournisseurProduction.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/d.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({id_produit: id_prod})

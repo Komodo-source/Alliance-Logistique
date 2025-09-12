@@ -29,10 +29,11 @@ const ProfilPublic = ({ route }) => {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ session_id: id, type: type, is_session: false })
+        body: JSON.stringify({ session_id: id, type: type, is_session: true })
       });
 
       const data = await response.json();
+      console.log("dataUser");
       setUserData(data);
       setLoading(false);
     } catch (error) {
@@ -62,8 +63,10 @@ const ProfilPublic = ({ route }) => {
   };
 
   useEffect(() => {
+
     getProfile();
-    getProducts();
+    if (type === "fournisseur"){getProducts();}
+
   }, []);
 
   const renderStars = (rating) => {
@@ -110,15 +113,8 @@ const ProfilPublic = ({ route }) => {
     );
   }
 
-  if (!userData) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Unable to load profile.</Text>
-      </View>
-    );
-  }
-
-  const rating = userData.note_client || userData.note_fourni || 0;
+  //const rating = userData.note_client || userData.note_fourni || 0;
+  const rating = 3;
   const name = userData.nom_client || userData.nom_fournisseur;
   const prenom = userData.prenom_client || userData.prenom_fournisseur;
   const isSupplier = userData.type === "fournisseur";
@@ -191,14 +187,14 @@ const ProfilPublic = ({ route }) => {
 
               <View style={styles.statCard}>
                 <Ionicons name="pricetag-outline" size={24} color="#00B14F" />
-                <Text style={styles.statNumber}>€{userData.prix_produit || 0}</Text>
-                <Text style={styles.statLabel}>Avg. Price</Text>
+                <Text style={styles.statNumber}>FCFA {userData.prix_produit || 0}</Text>
+                <Text style={styles.statLabel}>Prix Moy.</Text>
               </View>
 
               <View style={styles.statCard}>
                 <Ionicons name="receipt-outline" size={24} color="#00B14F" />
                 <Text style={styles.statNumber}>{userData.nb_commande || 0}</Text>
-                <Text style={styles.statLabel}>Total Orders</Text>
+                <Text style={styles.statLabel}>Total Commande</Text>
               </View>
             </>
           ) : (
@@ -206,13 +202,13 @@ const ProfilPublic = ({ route }) => {
               <View style={styles.statCard}>
                 <Ionicons name="receipt-outline" size={24} color="#00B14F" />
                 <Text style={styles.statNumber}>{userData.nb_commande || 0}</Text>
-                <Text style={styles.statLabel}>Orders Placed</Text>
+                <Text style={styles.statLabel}>Total Commande</Text>
               </View>
 
               <View style={styles.statCard}>
                 <Ionicons name="star" size={24} color="#FFD700" />
                 <Text style={styles.statNumber}>{rating}</Text>
-                <Text style={styles.statLabel}>Rating</Text>
+                <Text style={styles.statLabel}>Evaluation</Text>
               </View>
             </>
           )}
@@ -265,7 +261,7 @@ const ProfilPublic = ({ route }) => {
 
         {/* Products Section */}
         <View style={styles.productsSection}>
-          <Text style={styles.sectionTitle}>Products by Supplier</Text>
+          <Text style={styles.sectionTitle}>Produit par {userData.prenom_fournisseur || "le fournisseur"}</Text>
           {loadingProducts ? (
             <ActivityIndicator size="large" color="#00B14F" />
           ) : products.length > 0 ? (
@@ -278,7 +274,7 @@ const ProfilPublic = ({ route }) => {
               contentContainerStyle={styles.productsList}
             />
           ) : (
-            <Text style={styles.noProductsText}>No products available.</Text>
+            <Text style={styles.noProductsText}>Aucun porduit valide.</Text>
           )}
         </View>
       </ScrollView>
