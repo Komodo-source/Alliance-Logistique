@@ -256,7 +256,7 @@ const Formulaire = ({ navigation, route}) => {
       // va chercher la liste des fournisseurs produisant le même
       // produit afin de les comparer
 
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/d.php', {
+      const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_fournisseur_produit.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({id_produit: id_prod})

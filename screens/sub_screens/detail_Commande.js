@@ -551,6 +551,8 @@ const DetailCommande = ({ route, navigation }) => {
             }
           }
         }
+        debbug_log("=== item ===", 'cyan');
+        debbug_log(JSON.stringify(item), 'cyan');
       }
        catch (error) {
       console.error('Error in useEffect:', error);
@@ -716,7 +718,7 @@ const DetailCommande = ({ route, navigation }) => {
                 <Text style={styles.title}>Information sur la course</Text>
                 <Text style={styles.description}>Consultez les détails de cette livraison</Text>
                 <TouchableOpacity style={[styles.button, styles.courierButton]}
-                onPress={() => {navigation.navigate("CoursierProcessScreen")}}>
+                onPress={() => {navigation.navigate("CoursierProcessScreen", {item})}}>
                   <Text style={styles.buttonText}>Voir les détails</Text>
                 </TouchableOpacity>
               </View>
@@ -813,21 +815,23 @@ const DetailCommande = ({ route, navigation }) => {
 
       {/* Footer Buttons */}
       <View style={[styles.footer]}>
-        <TouchableOpacity
-          style={[
-            styles.invoiceButton,
-            isGenerating && { opacity: 0.7 }
-          ]}
-          onPress={createAndSavePDF}
-          disabled={isGenerating}
-        >
-          <MaterialIcons name="picture-as-pdf" size={24} color="white" />
-          <Text style={styles.invoiceButtonText}>
-            {isGenerating ? 'Génération en cours...' : 'Générer Facture PDF'}
-          </Text>
-        </TouchableOpacity>
-
         {typeUser === "client" && (!item.est_paye || item.est_paye === 0) ? (
+          <View>
+          {typeUser === "fournisseur" || typeUser === "client" ? (
+            <TouchableOpacity
+              style={[
+                styles.invoiceButton,
+                isGenerating && { opacity: 0.7 }
+              ]}
+              onPress={createAndSavePDF}
+              disabled={isGenerating}
+            >
+              <MaterialIcons name="picture-as-pdf" size={24} color="white" />
+              <Text style={styles.invoiceButtonText}>
+                {isGenerating ? 'Génération en cours...' : 'Générer Facture PDF'}
+              </Text>
+            </TouchableOpacity>
+      ): null}
           <TouchableOpacity
             style={[
               styles.invoiceButton,
@@ -844,6 +848,7 @@ const DetailCommande = ({ route, navigation }) => {
               {isPaying ? "Paiement en cours..." : "Payer la commande"}
             </Text>
           </TouchableOpacity>
+          </View>
         ) : typeUser === "coursier" ? (
           <TouchableOpacity
             style={[
@@ -851,7 +856,7 @@ const DetailCommande = ({ route, navigation }) => {
               isPaying && { opacity: 0.7 },
               { backgroundColor: "#fa0985ff", marginTop: 10 }
             ]}
-            onPress={() => {navigation.navigate("CoursierProcessScreen")}}
+            onPress={() => {navigation.navigate("CoursierProcessScreen", item)}}
           >
             <MaterialIcons name="truck-fast" size={24} color="white" />
             <Text style={styles.invoiceButtonText}>

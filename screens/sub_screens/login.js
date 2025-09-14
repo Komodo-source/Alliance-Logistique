@@ -69,11 +69,11 @@ const Login = ({ navigation }) => {
   }
 
   const handle_user_log = async (id) => {
-    try {      
+    try {
       const deviceId = await getDeviceId();
       const ip =  getIp();
-      
-      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
+
+      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php",
         {
           method: 'POST',
           headers: {
@@ -86,7 +86,7 @@ const Login = ({ navigation }) => {
           })
         }
       );
-      
+
       console.log("User log response:", await response.json());
     } catch (error) {
       debbug_lib.debbug_log("Erreur lors de l'enregistrement de l'utilisateur dans log", 'red');
@@ -111,12 +111,12 @@ const Login = ({ navigation }) => {
   const login = async () => {
     if (!validateForm()) return;
     setIsLoading(true);
-    
+
     try {
       // Build form data right when we need it
       const formData = await buildFormData();
       console.log("sent data : ", formData);
-      
+
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/login.php', {
         method: 'POST',
         headers: {
@@ -131,24 +131,26 @@ const Login = ({ navigation }) => {
 
       const data = await response.json();
       console.log('Succès:', data);
-      
+
       if (data.status === 'success') {
         // Save user data
-        await fileManager.modify_value_local_storage(
-          'id', data.user_data[`id_${data.user_type}`] // Fixed: use actual ID from response          
-        , 'auto.json');
+
+        //await fileManager.modify_value_local_storage(
+        //  'id', data.user_data[`id_${data.user_type}`] // Fixed: use actual ID from response
+        //, 'auto.json');
+        
         debbug_lib.debbug_log("data.user_data[`id_${data.user_type}`]: " + data.user_data[`id_${data.user_type}`], "magenta");
         debbug_lib.debbug_log("data.user_data: " + data.user_data, "magenta");
-        
+
         await fileManager.modify_value_local_storage(
-          'type', data.user_type // Fixed: use actual ID from response          
+          'type', data.user_type // Fixed: use actual ID from response
         , 'auto.json');
 
-        await fileManager.modify_value_local_storage(     
+        await fileManager.modify_value_local_storage(
           'name', data.user_data[`nom_${data.user_type}`]
         , 'auto.json');
 
-        await fileManager.modify_value_local_storage(     
+        await fileManager.modify_value_local_storage(
           'firstname', data.user_data[`prenom_${data.user_type}`]
         , 'auto.json');
 
@@ -186,7 +188,7 @@ const Login = ({ navigation }) => {
           "OK",
           () => navigation.navigate("Accueil")
 
-        );      
+        );
 
         try {
           // Use the actual user ID from the response
@@ -194,7 +196,7 @@ const Login = ({ navigation }) => {
         } catch (error) {
           console.log("[Catch] Error Log user: ", error);
         }
-        
+
       } else {
         getAlertRef().current?.showAlert(
           'Erreur',
@@ -232,7 +234,7 @@ const Login = ({ navigation }) => {
           placeholderTextColor="#a2a2a9"
           value={username}
           onChangeText={setUsername}
-        />        
+        />
       </View>
 
       <View style={styles.nom}>
@@ -243,8 +245,8 @@ const Login = ({ navigation }) => {
           placeholder="Mot de passe"
           placeholderTextColor="#a2a2a9"
           value={password}
-          onChangeText={setPassword}  
-        />        
+          onChangeText={setPassword}
+        />
       </View>
 
       <View style={styles.checkboxContainer}>
@@ -254,20 +256,20 @@ const Login = ({ navigation }) => {
             onValueChange={setSelection}
             color={isSelected ? '#2E3192' : undefined}
           />
-          
+
           <Text style={{fontSize : 15, fontWeight : "500", marginLeft : 10}}>Rester connecté</Text>
-          
+
       </View>
 
       <View style={styles.oubliVue}>
         <TouchableOpacity
         onPress={() => navigation.navigate("mdp_oubli")}
-        
+
         style={styles.BouttonOubli}>
           <Text style={styles.textOubli}>Mot de Passe Oublié?</Text>
         </TouchableOpacity>
       </View>
-      
+
 
       <TouchableOpacity
         style={[styles.LoginButton, isLoading && styles.buttonDisabled]}
@@ -289,7 +291,7 @@ const styles = StyleSheet.create({
       marginBottom: 20,
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'center',      
+      alignItems: 'center',
 
     },
     textOubli : {

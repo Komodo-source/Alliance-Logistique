@@ -21,9 +21,9 @@ const mdp_oubli = ({ route, navigation }) => {
             });
 
             console.log(JSON.stringify({ email: Identifiant}));
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 getAlertRef().current?.showAlert(
                     "Procédure de réintialisation",
@@ -80,7 +80,7 @@ const mdp_oubli = ({ route, navigation }) => {
                 value={Identifiant}
                 onChangeText={setIdentifiant}
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                 style={styles.button}
                 onPress={handleContinuer}>
                     <Text style={styles.buttonText}>Continuer</Text>

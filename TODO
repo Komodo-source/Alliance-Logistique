@@ -21,4 +21,6 @@ Alliance logistique
 	x Update l'Accueil
 	◦ optimiser le loading, utilisé une fonction à la place de plusieurs
 	◦ checker pour remove id in auto.json
+	◦ hasher les code
+	◦ ouvrir les loc dans une app (maps ...)
 

@@ -8,7 +8,7 @@ import React, { useEffect, useState} from 'react';
   import { debbug_log } from './util/debbug.js';
   let hasNavigated = false; // outside the component
 
-  
+
   const Loading = ({ navigation }) => {
     var is_first_time = false;
     //const [file_message, setFileMessage] = useState("");
@@ -43,17 +43,17 @@ import React, { useEffect, useState} from 'react';
     const check_update = async () => {
       try {
         const dataUser = await fileManager.read_file("auto.json");
-    
+
         const get_status = await fetch("https://api.jsonbin.io/v3/b/6875026b6063391d31ad7732", {
           method: 'GET',
           headers: {
             'X-Master-Key': '$2a$10$dBbVITXHjZD1X4jIevicPe1p8yYg.LtbFnyy4lidCYsNH/u27PPJS',
           },
         });
-    
+
         const responseJson = await get_status.json();
         const data = responseJson.record; // Adjust depending on JSONBin structure
-    
+
         if (data.version !== dataUser.version) {
           setisUpdating(true);
           setVersion(data.version)
@@ -62,7 +62,7 @@ import React, { useEffect, useState} from 'react';
           for (let i = 0; i < data.toUpdate.length; i++) {
             await get_file(data.toUpdate[i]); // Await file downloads
           }
-             
+
          await fileManager.modify_value_local_storage("version", data.version, "auto.json");
          debbug_lib.debbug_log("Update finished Successfully", "green");
         }
@@ -70,32 +70,32 @@ import React, { useEffect, useState} from 'react';
         debbug_lib.debbug_log("Error in update: " + error.message, 'red');
       }
     };
-    
+
     const get_file = async (file_name) => {
       debbug_lib.debbug_log("Getting file from GitHub: " + file_name, "cyan");
-    
+
       try {
         // Construct the raw GitHub URL dynamically
         const url = `https://github.com/LopoDistrict/Alliance-Logistique/raw/refs/heads/main/${file_name}`;
-    
+
         const response = await fetch(url);
         //if (!response.ok) throw new Error(`Failed to fetch ${file_name}: ${response.statusText}`);
-    
+
         const fileContent = await response.text();
-    
+
         console.log("File fetched:", file_name.replace("screens/", ""));
         //console.log(fileContent);
-    
+
 
         await fileManager.replaceFileAndWrite(fileContent, file_name.replace("screens/", ""));
-    
+
       } catch (error) {
         debbug_lib.debbug_log("Error fetching file: " + error.message, 'red');
       }
     }; */}
 
     const check_update = async() => {
-      
+
       try {
         debbug_lib.debbug_log("=== UPDATE SYSTEM CHECK ===", "cyan");
         console.log("Update Channel: ", Updates.channel);
@@ -117,7 +117,7 @@ import React, { useEffect, useState} from 'react';
         if (update.isAvailable) {
           setisUpdating(true);
           debbug_lib.debbug_log("Update available! Fetching...", "green");
-          
+
           try {
             // Fetch the update
             await Updates.fetchUpdateAsync();
@@ -146,20 +146,20 @@ import React, { useEffect, useState} from 'react';
       // Just a function to measure the speed of a fetch request
       // This function is for debbug only and will not be used in production
       const start = Date.now();
-    
+
       const response = await fetch(url);
       const data = await response.arrayBuffer();
-    
+
       const end = Date.now();
       const durationSec = (end - start) / 1000;
       const sizeBytes = data.byteLength;
-    
+
       const speedBps = sizeBytes / durationSec;
       const speedKbps = speedBps / 1024;
       const speedMbps = speedKbps / 1024;
-      
+
       debbug_lib.debbug_log("Delay of Connection from: "+ url+ " servers" , 'cyan');
-    
+
       console.log(`Downloaded ${sizeBytes} bytes in ${durationSec.toFixed(2)}s`);
       console.log(`Speed: ${speedBps.toFixed(2)} B/s`);
       console.log(`Speed: ${speedKbps.toFixed(2)} KB/s`);
@@ -172,8 +172,8 @@ import React, { useEffect, useState} from 'react';
       return response;
     }
 
-    const check_first_time = async () => {  
-      // Check if it's the first time the app is launched    
+    const check_first_time = async () => {
+      // Check if it's the first time the app is launched
       const exists = await fileManager.is_file_existing("auto.json");
       if (exists) {
         debbug_lib.debbug_log("not the first time", "blue");
@@ -195,14 +195,14 @@ import React, { useEffect, useState} from 'react';
       debbug_lib.debbug_log("v.0.4.1", "green");
       debbug_lib.debbug_log("admin version", "green");
       debbug_lib.debbug_log("loading main elements", "green");
-      try{  
-        debbug_lib.debbug_log("checking if persistant logging", "magenta");  
+      try{
+        debbug_lib.debbug_log("checking if persistant logging", "magenta");
         await stay_logged();
-        debbug_lib.debbug_log("checking servers", "magenta");      
+        debbug_lib.debbug_log("checking servers", "magenta");
         await checkServer();
       }catch(error){
         debbug_lib.debbug_log("Error in the initialisation", "red");
-        setTimeout(loading_check, 1000); // prevent stack overflow 
+        setTimeout(loading_check, 1000); // prevent stack overflow
       }
     }
 
@@ -219,12 +219,12 @@ import React, { useEffect, useState} from 'react';
           debbug_log("== commande sponso ==", "cyan");
           const data = await response.json();
           await fileManager.save_storage_local_storage_data(data, "sponsorisedCommand.json");
-    
+
           if (!response.ok) {
             throw new Error(`Erreur réseau: ${response.status}`);
           }
         }catch (error) {
-          console.error("Error in fethc_sponsorised_supplier:", error);      
+          console.error("Error in fethc_sponsorised_supplier:", error);
         }
       }
 
@@ -245,10 +245,10 @@ import React, { useEffect, useState} from 'react';
           }
 
         }catch (error) {
-          console.error("Error in fetch_product:", error);      
+          console.error("Error in fetch_product:", error);
         }
       }
-      
+
       const fetch_best_product = async () => {
         // a mettre dans le loading et récup dans un fichier ici
         try {
@@ -265,10 +265,10 @@ import React, { useEffect, useState} from 'react';
             throw new Error(`Erreur réseau: ${response.status}`);
           }
         }catch (error) {
-          console.error("Error in fetch_best_product:", error);      
+          console.error("Error in fetch_best_product:", error);
         }
       }
-      
+
 
      const checkServer = async () => {
       // Check if internet is reachable
@@ -283,7 +283,7 @@ import React, { useEffect, useState} from 'react';
           debbug_lib.debbug_log("Connecté a Internet", "green");
           const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/check_conn.php');
           //const response_server = await simpleCheck('https://backend-logistique-api-latest.onrender.com/product.php');
-          
+
           if (response_server.ok) {
             debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
             const dataUser = await fileManager.read_file("auto.json");
@@ -306,7 +306,7 @@ import React, { useEffect, useState} from 'react';
         } else {
           Alert.alert(
             'Erreur de connexion',
-            "Vous n'êtes pas connecté à Internet. Vérifiez votre connexion wifi ou vos données mobiles", 
+            "Vous n'êtes pas connecté à Internet. Vérifiez votre connexion wifi ou vos données mobiles",
             [{ text: 'Réessayer', onPress: () => checkServer() }],
             { cancelable: false },
           );
@@ -326,7 +326,7 @@ import React, { useEffect, useState} from 'react';
       }
     };
 
-    useEffect(() => {  
+    useEffect(() => {
       //fileManager.modify_value_local_storage("first_conn", false, "auto.json");
       //fileManager.delete_file("auto.json");
       try {
@@ -354,13 +354,13 @@ import React, { useEffect, useState} from 'react';
             style={styles.image}
             source={require('../assets/Icons/logo-Blue.jpeg')}
           />
-          
+
         </View>
-        {isUpdating ? 
-          <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text> 
-          : 
+        {isUpdating ?
+          <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text>
+          :
           <View></View>}
-        <Text style={styles.versionText}>Admin Beta 1.1.8</Text>
+        <Text style={styles.versionText}>Admin Beta 1.2.1</Text>
       </View>
     );
   };
