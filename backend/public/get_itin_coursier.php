@@ -29,7 +29,7 @@ $sql = "SELECT
     H.nom_dmd,
     H.date_debut,
     H.localisation_dmd,
-    O1.localisation_orga AS localisation_client,
+    O2.localisation_orga AS localisation_fourni,
     O1.nom_orga AS orga_client,
     O2.nom_orga AS orga_fourni
 FROM COMMANDE C

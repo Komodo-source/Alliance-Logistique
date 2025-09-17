@@ -65,14 +65,14 @@ const CoursierProcessScreen = ({ navigation, route }) => {
           prenom: data.prenom_fournisseur,
           organisation: data.orga_fourni,
           code_echange: data.code_echange_fourni,
-          localisation: data.localisation_client,
+          localisation: data.localisation_fourni,
           //telephone: "+33 1 23 45 67 89"
         },
         client: {
           nom: data.nom_client,
           organisation: data.orga_client,
           localisation: data.localisation_client,
-          code_echange_client: item.code_echange
+          code_echange_client: item.localisation_dmd
           //telephone: "+33 1 98 76 54 32"
         },
         produits: [
@@ -139,7 +139,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
   const handleClientCodeSubmit = () => {
   if (!commandData) return;
 
-  if (clientCode === commandData.client.code_echange) {  // ✅ Correct check
+  if (clientCode === commandData.client.code_echange) {  
     const updatedData = {
       ...commandData,
       produits: commandData.produits.map(produit => ({

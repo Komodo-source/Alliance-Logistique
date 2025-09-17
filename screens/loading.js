@@ -292,7 +292,7 @@ import React, { useEffect, useState} from 'react';
               await fileManager.modify_value_local_storage("first_conn", false, "auto.json");
               //navigation.reset({ index: 0, routes: [{ name: 'first_page' }] });
               navigation.navigate("first_page");
-            } else if (!dataUser || dataUser.id === "" || dataUser.id === undefined) {
+            } else if (!dataUser || dataUser.session_id === "" ) {
               //navigation.reset({ index: 0, routes: [{ name: 'HomePage' }] });
               navigation.navigate("HomePage");
             } else {

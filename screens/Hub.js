@@ -31,29 +31,29 @@ const Hub = ({ navigation }) => {
     try {
       const fileUri = FileSystem.documentDirectory + 'product.json';
       console.log('lecture du fichier:', fileUri);
-  
+
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
       if (!fileInfo.exists) {
         console.warn('Fichier inexistant:', fileUri);
         return null;
       }
-  
+
       const fileContents = await FileSystem.readAsStringAsync(fileUri);
       console.log('Contenu du fichier:', fileContents);
-  
+
       const parsedData = JSON.parse(fileContents);
       console.log('Parse du json:', parsedData);
-      
+
       return parsedData;
     } catch (error) {
       console.error('Error reading product.json:', error);
-      
+
       if (error instanceof SyntaxError) {
         console.error('Failed to parse JSON - file may be corrupted');
       } else if (error.code === 'ENOENT') {
         console.error('File not found - path may be incorrect');
       }
-      
+
       return null;
     }
   };
@@ -62,24 +62,24 @@ const Hub = ({ navigation }) => {
     try {
       setLoading(true);
       const data = await FileManager.read_file("auto.json");
-      if (!data || !data.id) {
+      if (!data) {
         setCommande([]);
         setLoading(false);
         return;
       }
       setUserData(data);
       const session_id = data.session_id;
-      
+
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({session_id})
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
       console.log("Commandes récupérées:", responseData);
       setCommande(Array.isArray(responseData) ? responseData : []);
@@ -121,20 +121,20 @@ const Hub = ({ navigation }) => {
 
   const filteredCommandes = commande.filter(item => {
     if (filter === 'all') return true;
-    
+
     const statusMap = {
       'En préparation': 1,
       'En cours de livraison': 2,
       'Livré': 3,
       'annulé': 4
     };
-    
+
     return item.id_status === statusMap[filter];
   });
 
   const renderCommande = ({item, index}) => {
     if (!item) return null;
-    
+
     const handlePress = () => {
       try {
         if (navigation && navigation.navigate) {
@@ -149,11 +149,11 @@ const Hub = ({ navigation }) => {
     const statusColor = getStatusColor(getStatusEquivalent[item.id_status]);
     const statusText = getStatusEquivalent[item.id_status];
     //console.log(getStatusEquivalent[item.id_status])
-    //console.log("Status text:", statusText, "Color:", statusColor); 
-    
+    //console.log("Status text:", statusText, "Color:", statusColor);
+
     return (
       <TouchableOpacity
-        style={[styles.commandeCard, { 
+        style={[styles.commandeCard, {
           transform: [{ scale: 1 }],
           opacity: 1
         }]}
@@ -217,7 +217,7 @@ const Hub = ({ navigation }) => {
                 <View key={prodIndex} style={styles.productItem}>
                   <View style={styles.productDot} />
                   <Text style={styles.productText} numberOfLines={1}>
-                    {produit.nom_produit || 'Produit'} 
+                    {produit.nom_produit || 'Produit'}
                     <Text style={styles.productQuantity}>
                       {' '}× {produit.quantite || 1} {produit.type_vendu || ''}
                     </Text>
@@ -251,10 +251,10 @@ const Hub = ({ navigation }) => {
       ]}
       onPress={() => setFilter(filterType)}
     >
-      <MaterialCommunityIcons 
-        name={iconName} 
-        size={16} 
-        color={filter === filterType ? '#FFFFFF' : '#64748B'} 
+      <MaterialCommunityIcons
+        name={iconName}
+        size={16}
+        color={filter === filterType ? '#FFFFFF' : '#64748B'}
         style={styles.filterIcon}
       />
       <Text style={[
@@ -275,13 +275,13 @@ const Hub = ({ navigation }) => {
         {filter === 'all' ? 'Aucune commande' : 'Aucune commande dans cette catégorie'}
       </Text>
       <Text style={styles.emptyStateSubtitle}>
-        {filter === 'all' 
+        {filter === 'all'
           ? 'Vous n\'avez passé aucune commande pour le moment'
           : 'Essayez de changer le filtre pour voir d\'autres commandes'
         }
       </Text>
       {isClient && filter === 'all' && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.emptyStateButton}
           onPress={() => {
             try {
@@ -335,8 +335,8 @@ const Hub = ({ navigation }) => {
 
         {/* Filter Section */}
         <View style={styles.filtersSection}>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.filtersContainer}
           >
@@ -347,7 +347,7 @@ const Hub = ({ navigation }) => {
             {renderFilterButton('annulé', 'Annulées', 'close-circle')}
 
           </ScrollView>
-          
+
         </View>
 
         {/* Commands List */}
@@ -375,7 +375,7 @@ const Hub = ({ navigation }) => {
 
         {/* Floating Action Button */}
         {isClient && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.fab}
             onPress={() => {
               try {
@@ -389,8 +389,8 @@ const Hub = ({ navigation }) => {
         )}
 
         {/* Navigation Bar */}
-        <View style={styles.navbar}> 
-          <TouchableOpacity 
+        <View style={styles.navbar}>
+          <TouchableOpacity
             style={styles.navButton}
             onPress={() => {
               try {
@@ -403,7 +403,7 @@ const Hub = ({ navigation }) => {
             <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Product.png')} />
             <Text style={styles.navButtonText}>Produit</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.navButton}
             onPress={() => {
               try {
@@ -416,7 +416,7 @@ const Hub = ({ navigation }) => {
             <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-House.png')} />
             <Text style={styles.navButtonText}>Accueil</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.navButton, styles.activeButton]}
             onPress={() => {
               try {
@@ -429,7 +429,7 @@ const Hub = ({ navigation }) => {
             <Image style={[styles.logoNavBar, styles.activeIcon]} source={require('../assets/Icons/Dark-Hub.png')} />
             <Text style={[styles.navButtonText, styles.activeText]}>Hub</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.navButton}
             onPress={() => {
               try {

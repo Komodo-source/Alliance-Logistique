@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList, 
+import { View, Text, StyleSheet, TouchableOpacity, Button, Image, FlatList,
   Dimensions, ScrollView, StatusBar, RefreshControl, useWindowDimensions } from 'react-native';
 import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
 //import * as FileSystem from 'expo-file-system';
@@ -33,7 +33,7 @@ const Accueil = ({ navigation }) => {
     try {
       // Fetch commandes
       await fetch_commande();
-      
+
       // Update current time
       setCurrentTime(new Date());
 
@@ -51,7 +51,7 @@ const Accueil = ({ navigation }) => {
       // Créer les dates en ignorant l'heure pour une comparaison juste des jours
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
+
       // Parser la date de livraison
       let targetDate;
       if (dateString.includes('T')) {
@@ -60,15 +60,15 @@ const Accueil = ({ navigation }) => {
         // Si la date est au format "YYYY-MM-DD HH:MM:SS"
         targetDate = new Date(dateString.replace(' ', 'T'));
       }
-      
+
       const target = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
-      
+
       // Calculer la différence en millisecondes
       const diffTime = target.getTime() - today.getTime();
-      
+
       // Convertir en jours (division par millisecondes dans une journée)
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      
+
       return diffDays;
     } catch (error) {
       console.error('Erreur dans getDaysDifference:', error, 'dateString:', dateString);
@@ -87,9 +87,9 @@ const Accueil = ({ navigation }) => {
   const formatDeliveryDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', { 
-        day: 'numeric', 
-        month: 'short' 
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'short'
       });
     } catch (error) {
       console.error('Erreur formatage date:', error, 'dateString:', dateString);
@@ -106,7 +106,7 @@ const Accueil = ({ navigation }) => {
       if(commande[i].id_status == 1 || commande[i].id_status == 2){
         val++;
       }
-    } 
+    }
     setNbCommandeLivraison(val);
   };
 
@@ -126,25 +126,25 @@ const getFileCommand = async () => {
   console.log("Sponsored Products:", sponsoredProducts);
   console.log("Best Products:", bestProducts);
 };
-    
+
 
   const fetch_commande = async () => {
     try {
       const data = await FileManager.read_file("auto.json");
-      
+
       console.log("User data from auto.json:", data);
-      
-      if (!data || !data.id) {
+
+      if (!data) {
         console.error("No user data or user ID found in auto.json");
         setCommande([]);
         return;
       }
-      
+
       setIsClient(data.type === "client");
       setUserData(data);
       const session_id = data.session_id;
       console.log("session_id : ", session_id);
-      
+
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php', {
         method: 'POST',
         headers: {
@@ -152,14 +152,14 @@ const getFileCommand = async () => {
         },
         body: JSON.stringify({session_id})
       });
-      
+
       if (!response.ok) {
         throw new Error(`Erreur réseau: ${response.status}`);
       }
-      
+
       const responseText = await response.text();
       console.log('Server response:', responseText);
-      
+
       let parsedData;
       try {
         parsedData = JSON.parse(responseText);
@@ -168,21 +168,21 @@ const getFileCommand = async () => {
         console.error('Response was:', responseText);
         throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
       }
-      
+
       console.log("Parsed data:", parsedData);
-      
+
       if (!parsedData || !Array.isArray(parsedData)) {
         console.log("Invalid data format received");
         setCommande([]);
         return;
       }
-      
+
       // Limiter à 3 commandes pour l'affichage
       const limitedData = parsedData.slice(0, 3);
       console.log("Limited data for display:", limitedData);
-      
+
       setCommande(limitedData);
-      
+
     } catch (error) {
       console.error("Error in fetch_commande:", error);
       setCommande([]);
@@ -199,7 +199,7 @@ const getFileCommand = async () => {
       gradient: ['#667eea', '#764ba2'],
       action: () => navigation.navigate('Formulaire')
     }] : []),
-  
+
     {
       id: 2,
       title: "Mes Commandes",
@@ -276,9 +276,9 @@ const categorie_produit = [
     icon: 'food-drumstick'
   },
 ];
-  
+
 const renderCategorieChoice = ({item, index}) => (
-  <TouchableOpacity 
+  <TouchableOpacity
     style={styles.categoryCard}
     activeOpacity={0.8}
     onPress={item.action}
@@ -292,12 +292,12 @@ const renderCategorieChoice = ({item, index}) => (
           color="#2773F5"
         />
       </View>
-      
+
       {/* Title */}
       <Text style={styles.categoryTitle} numberOfLines={2}>
         {item.title}
       </Text>
-      
+
       {/* Optional badge for popular categories */}
       {item.isPopular && (
         <View style={styles.popularBadge}>
@@ -305,17 +305,17 @@ const renderCategorieChoice = ({item, index}) => (
         </View>
       )}
     </View>
-    
+
     {/* Subtle shadow overlay */}
     <View style={styles.shadowOverlay} />
   </TouchableOpacity>
 );
 
   const renderQuickAction = ({ item, index }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={[
         styles.quickActionCard,
-        { 
+        {
           backgroundColor: item.gradient[0],
           transform: [{ scale: 1 }],
           marginLeft: index === 0 ? 20 : 8,
@@ -351,7 +351,7 @@ const renderCategorieChoice = ({item, index}) => (
       <TouchableOpacity
         style={[
           styles.commandeCard,
-          { 
+          {
             marginLeft: index === 0 ? 20 : 8,
             marginRight: index === commande.length - 1 ? 20 : 8,
           }
@@ -364,14 +364,14 @@ const renderCategorieChoice = ({item, index}) => (
             <Text style={styles.commandeName} numberOfLines={1}>{item.nom_dmd}</Text>
             <Text style={styles.commandeNumber}>#{item.id_public_cmd}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}> 
+          <View style={[styles.statusBadge, { backgroundColor: dic_status_color[item.id_status] }]}>
             <View style={styles.statusDot} />
-            <Text style={styles.statusText}>{item.id_status == 1 ? "En préparation" : 
-              item.id_status == 1 ? "En cours de livraison": 
+            <Text style={styles.statusText}>{item.id_status == 1 ? "En préparation" :
+              item.id_status == 1 ? "En cours de livraison":
               "Livré"}</Text>
           </View>
         </View>
-        
+
         <View style={styles.commandeDetails}>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>📅 Livraison prévue</Text>
@@ -402,7 +402,7 @@ const renderCategorieChoice = ({item, index}) => (
 
   const BestProductsCard = ({ item }) => {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.sponsoredCard}
         //onPress={() => navigation.navigate('ProductDetails', { product: item })}
       >
@@ -424,7 +424,7 @@ const renderCategorieChoice = ({item, index}) => (
 
     const SponsoredProductCard = ({ item }) => {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.sponsoredCard}
         //onPress={() => navigation.navigate('ProductDetails', { product: item })}
       >
@@ -448,7 +448,7 @@ const renderCategorieChoice = ({item, index}) => (
     try {
       const sponsoredData = await FileManager.read_file("sponsorisedCommand.json");
       const bestProductsData = await FileManager.read_file("mostCommandedProduct.json");
-      
+
       if (sponsoredData) {
         setSponsoredProducts(sponsoredData);
       }
@@ -467,7 +467,7 @@ const renderCategorieChoice = ({item, index}) => (
       setCurrentTime(new Date());
     }, 60000);
     return () => clearInterval(timer);
-    
+
   }, []);
 
   // Mettre à jour le nombre de commandes en livraison quand les commandes changent
@@ -493,9 +493,9 @@ const renderCategorieChoice = ({item, index}) => (
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      
-      <ScrollView 
-        style={styles.scrollView} 
+
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -509,7 +509,7 @@ const renderCategorieChoice = ({item, index}) => (
           />
         }
       >
-        
+
         {/* Enhanced Header Section */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
@@ -518,10 +518,10 @@ const renderCategorieChoice = ({item, index}) => (
               {userData?.nom || 'Votre Hub Professionnel'}
             </Text>
             <Text style={styles.dateText}>
-              {currentTime.toLocaleDateString('fr-FR', { 
-                weekday: 'long', 
-                day: 'numeric', 
-                month: 'long' 
+              {currentTime.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
               })}
             </Text>
           </View>
@@ -591,7 +591,7 @@ const renderCategorieChoice = ({item, index}) => (
         {commande.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🚚 Prochaine Livraison</Text>
-            <View style={[styles.nextDeliveryCard, {marginTop: 20}]}> 
+            <View style={[styles.nextDeliveryCard, {marginTop: 20}]}>
               <View style={styles.deliveryHeader}>
                 <View style={styles.deliveryInfo}>
                   <Text style={styles.deliveryTitle}>{commande[0].nom_dmd}</Text>
@@ -603,18 +603,18 @@ const renderCategorieChoice = ({item, index}) => (
                     })}
                   </Text>
                 </View>
-                <View style={[styles.deliveryStatus, {backgroundColor: jours_restants === 0 ? "#fedec3" : 
+                <View style={[styles.deliveryStatus, {backgroundColor: jours_restants === 0 ? "#fedec3" :
                  jours_restants > 0 ? "#d1fae5" : "#fecece"}]}>
-                  <Text style={[styles.deliveryStatusText, {color: jours_restants === 0 ? "#835407" : 
+                  <Text style={[styles.deliveryStatusText, {color: jours_restants === 0 ? "#835407" :
                  jours_restants > 0 ? "#065f46" : "#6f0606"}]}>
                     {jours_restants > 0
                 ? `${jours_restants} jour${jours_restants > 1 ? 's' : ''}`
-                : jours_restants === 0 ? "Livraison aujourd'hui" : 
+                : jours_restants === 0 ? "Livraison aujourd'hui" :
                  "Livraison dépassée"}
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.trackButton}
                 onPress={() => navigation.navigate('detail_Commande', {item: commande[0]})}
               >
@@ -650,7 +650,7 @@ const renderCategorieChoice = ({item, index}) => (
               <Text style={styles.emptyStateDescription}>
                 Commencez par créer votre première commande
               </Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.primaryButton}
                 onPress={() => navigation.navigate('Formulaire')}
               >
@@ -717,7 +717,7 @@ const renderCategorieChoice = ({item, index}) => (
             <Text style={styles.promoText}>
               Programmez vos commandes récurrentes et bénéficiez de tarifs préférentiels automatiquement.
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.promoButton}
               onPress={() => navigation.navigate('commande_reccurente')}
             >
@@ -733,8 +733,8 @@ const renderCategorieChoice = ({item, index}) => (
       </ScrollView>
 
       {/* Enhanced Bottom Navigation */}
-      <View style={styles.navbar}> 
-        <TouchableOpacity 
+      <View style={styles.navbar}>
+        <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('Produit')}
         >
@@ -747,7 +747,7 @@ const renderCategorieChoice = ({item, index}) => (
           <Text style={styles.navButtonText}>Produit</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.navButton, styles.activeButton]}
           onPress={() => navigation.navigate('Accueil')}
         >
@@ -759,8 +759,8 @@ const renderCategorieChoice = ({item, index}) => (
           </View>
           <Text style={[styles.navButtonText, styles.activeText]}>Accueil</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('Hub')}
         >
@@ -773,7 +773,7 @@ const renderCategorieChoice = ({item, index}) => (
           <Text style={styles.navButtonText}>Hub</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('Profil')}
         >
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 120,
   },
-  
+
   // Enhanced Header Styles
   header: {
     flexDirection: 'row',
@@ -1346,7 +1346,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minHeight: 60,
   },
-  
+
   activeButton: {
     backgroundColor: '#3B82F6',
     shadowColor: '#3B82F6',
@@ -1358,24 +1358,24 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  
+
   iconContainer: {
     marginBottom: 4,
     padding: 2,
   },
-  
+
   logoNavBar: {
     width: 24,
     height: 24,
     tintColor: '#666666',
   },
-  
+
   activeIcon: {
     tintColor: '#FFFFFF',
     width: 26,
     height: 26,
   },
-  
+
   navButtonText: {
     fontSize: 12,
     fontWeight: '500',

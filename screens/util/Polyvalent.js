@@ -27,18 +27,19 @@ export const openNavigationWithChoice = async (latitude, longitude, label = 'Des
   }
 
   if (availableApps.length === 0) {
-    Alert.alert('Error', 'No navigation apps available');
+    Alert.alert('Erreur', 'Pas d\'application de navigation disponible');
     return;
   }
 
   // Show action sheet with available apps
   Alert.alert(
-    'Choose Navigation App',
-    'Select which app to use for navigation:',
+    'Choisir une app de navigation',
+    'Sélectionner votre app de navigation:',
     availableApps.map((app, index) => ({
-      text: app.name.replace(/([A-Z])/g, ' $1').trim(), // Convert camelCase to readable
+      text: app.name.replace(/([A-Z])/g, ' $1').trim(),
       onPress: () => Linking.openURL(app.url),
       style: index === 0 ? 'default' : 'default'
-    }))
+    })),
+
   );
 };

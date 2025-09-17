@@ -21,7 +21,7 @@ const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 const HomePage = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState(null);
-  
+
   // Remplace les IDs par les tiens depuis la console Google Cloud
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: '670788533243-fshmj1g5nd7v43o3b0idptpq05lb7ri1.apps.googleusercontent.com',
@@ -75,7 +75,7 @@ const HomePage = ({ navigation }) => {
         </View>
 
         <View style={styles.TitleContainer}>
-          <Text style={styles.titre}>Révolutionnez maintenant la façon de vous faire livrer</Text>
+          <Text style={styles.titre}>Révolutionnez maintenant votre façon de vous faire livrer</Text>
           <Text style={styles.titre}>Optez pour l'innovation logistique</Text>
         </View>
 

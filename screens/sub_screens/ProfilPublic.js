@@ -251,12 +251,7 @@ const ProfilPublic = ({ route }) => {
                 <Text style={styles.secondaryButtonText}>Store Info</Text>
               </TouchableOpacity>
             </>
-          ) : (
-            <TouchableOpacity style={styles.primaryButton}>
-              <Ionicons name="chatbubble-outline" size={20} color="white" />
-              <Text style={styles.primaryButtonText}>Contact</Text>
-            </TouchableOpacity>
-          )}
+          ) : null}
         </View>
 
         {/* Products Section */}

@@ -8,7 +8,7 @@ Alliance logistique
 	x	Placeholder phone +22976…
 	◦	Ajout sponsorisé page accueil
 	x	Produit les plus commandés
-	◦	Reinclure coursier
+	x	Reinclure coursier
 	◦	Système notification
 	x	Bool si fournir discount
         - affiche des produits randoms discount
@@ -20,7 +20,7 @@ Alliance logistique
 	◦ modifier le profil
 	x Update l'Accueil
 	◦ optimiser le loading, utilisé une fonction à la place de plusieurs
-	◦ checker pour remove id in auto.json
+	x checker pour remove id in auto.json
 	◦ hasher les code
-	◦ ouvrir les loc dans une app (maps ...)
+	X ouvrir les loc dans une app (maps ...)
 

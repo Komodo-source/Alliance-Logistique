@@ -11,6 +11,8 @@ import LeafletMap from '../../components/LeafletMap';
 import * as fileManager from '../util/file-manager.js';
 import { debbug_log } from '../util/debbug.js';
 import { getAlertRef } from '../util/AlertService';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { openNavigationWithChoice  }  from "../util/Polyvalent.js";
 
 var headers = {
   'Accept': 'application/json',
@@ -744,6 +746,28 @@ const DetailCommande = ({ route, navigation }) => {
               <Text style={styles.infoText}>Code de commande: <Text style={styles.infoValue}>{(typeUser === "client" ?  item.code_echange : item.code_echange_fourni) || 'Code Introuvable'}</Text></Text>
             </View>
           </View>
+          
+        {!isAdresse && typeUser === "coursier"  ? (
+          <View style={styles.navButton}>
+              <TouchableOpacity
+                style={{    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',}}
+                onPress={() => openNavigationWithChoice(item.localisation_dmd.split(";")[0], item.localisation_dmd.split(";")[1])}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons
+                  name="navigation"
+                  size={28}
+                  color="#111"
+                  style={styles.icon}
+                />
+                <Text style={styles.buttonText}>
+                  Naviguer vers la livraison
+                </Text>
+
+              </TouchableOpacity>
+          </View>) : null}
 
 
 
@@ -1015,7 +1039,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 15,
-    marginBottom: 20,
+    marginBottom: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -1298,6 +1322,31 @@ activeNavText: {
   },
   courierButton: {
     backgroundColor: '#000000', // Uber black
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 8,
+    marginBottom: 55,
+    borderColor: "#111",
+    borderWidth: 2
+  },
+  buttonText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "500",
+    marginRight: 8,
   },
 });
 

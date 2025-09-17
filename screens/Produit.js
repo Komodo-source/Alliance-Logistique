@@ -15,7 +15,7 @@ export const loadImages = (id_produit) => {
       case "3":
           return 'https://arena.ct.ws/product/3.jpg';
       case "4":
-          return 'https://arena.ct.ws/product/4.jpg';        
+          return 'https://arena.ct.ws/product/4.jpg';
       case "8":
           return 'https://arena.ct.ws/product/8.jpg';
       case "10":
@@ -31,10 +31,10 @@ export const loadImages = (id_produit) => {
 
 const Produit = ({ navigation, route}) => {
   const [produits, setProduits] = useState([]);
-  const [allProduits, setAllProduits] = useState([]); 
+  const [allProduits, setAllProduits] = useState([]);
   const [commandeName, setCommandeName] = useState('');
   const fileUri = FileSystem.documentDirectory + 'product.json';
-  
+
 
 
 /*
@@ -42,15 +42,15 @@ const Produit = ({ navigation, route}) => {
     //Obsolète
     try {
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
-  
+
       if (!fileInfo.exists) {
         console.log('File does not exist.');
         return true;
       }
-  
+
       const content = await FileSystem.readAsStringAsync(fileUri);
       const isEmpty = content.trim().length === 0;
-      
+
       console.log('Is file empty?', isEmpty);
       return isEmpty;
     } catch (error) {
@@ -63,19 +63,19 @@ const Produit = ({ navigation, route}) => {
   const readProductFile = async () => {
       try {
         console.log('lecture du fichier:', fileUri);
-    
+
         const fileInfo = await FileSystem.getInfoAsync(fileUri);
         if (!fileInfo.exists) {
           console.warn('Fichier inexistant:', fileUri);
           return null;
         }
-    
+
         const fileContents = await FileSystem.readAsStringAsync(fileUri);
         console.log('Contenu du fichier:', fileContents);
-    
+
         const parsedData = JSON.parse(fileContents);
         console.log('Parse du json:', parsedData);
-        
+
         return parsedData;
       } catch (error) {
         console.error('Error reading product.json:', error);
@@ -84,7 +84,7 @@ const Produit = ({ navigation, route}) => {
         } else if (error.code === 'ENOENT') {
           console.error('File not found - path may be incorrect');
         }
-        
+
         return null;
       }
     };
@@ -127,13 +127,13 @@ const Produit = ({ navigation, route}) => {
     }
   }, [allProduits, route.params]);
 
-    
+
   const researchProduct = (text) => {
     setCommandeName(text);
     if (text.trim() === "") {
       setProduits(allProduits);
     } else {
-      const filtered = allProduits.filter(item => 
+      const filtered = allProduits.filter(item =>
         item.nom_produit.toLowerCase().includes(text.toLowerCase()) ||
         item.nom_categorie.toLowerCase().includes(text.toLowerCase())
       );
@@ -144,11 +144,11 @@ const Produit = ({ navigation, route}) => {
   const renderProduct = ({ item }) => (
     <TouchableOpacity style={styles.productCard}
     onPress={() => navigation.navigate('DetailProduit', {item})}>
-      
-      <Image 
+
+      <Image
         source={{uri: loadImages(item.id_produit)}}
         style={styles.productImage}
-      />          
+      />
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.nom_produit}</Text>
         <Text style={styles.productPrice}>{item.prix_produit} FCFA</Text>
@@ -167,12 +167,12 @@ const Produit = ({ navigation, route}) => {
         placeholderTextColor="#000000ff"
         value={commandeName}
         onChangeText={researchProduct}
-      />      
-      <Image 
+      />
+      <Image
           source = {require('../assets/Icons/Dark-Search.png')}
           style={styles.imageSearch}
-        /> 
-       
+        />
+
     </View>
     <Text style={styles.IndicationProduit}>* Les prix peuvent changer par fournisseurs </Text>
 
@@ -184,8 +184,8 @@ const Produit = ({ navigation, route}) => {
         contentContainerStyle={styles.productGrid}
       />
 
-    <View style={styles.navbar}> 
-      <TouchableOpacity 
+    <View style={styles.navbar}>
+      <TouchableOpacity
         style={[styles.navButton, styles.activeButton]}
         onPress={() => navigation.navigate('Produit')}
       >
@@ -198,7 +198,7 @@ const Produit = ({ navigation, route}) => {
         <Text style={[styles.navButtonText, styles.activeText]}>Produit</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.navButton}
         onPress={() => navigation.navigate('Accueil')}
       >
@@ -210,8 +210,8 @@ const Produit = ({ navigation, route}) => {
         </View>
         <Text style={styles.navButtonText}>Accueil</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={styles.navButton}
         onPress={() => navigation.navigate('Hub')}
       >
@@ -224,7 +224,7 @@ const Produit = ({ navigation, route}) => {
         <Text style={styles.navButtonText}>Hub</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.navButton}
         onPress={() => navigation.navigate('Profil')}
       >
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 10,
   },
-  
+
   navButton: {
     flex: 1,
     alignItems: 'center',
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minHeight: 60,
   },
-  
+
   activeButton: {
     backgroundColor: '#3B82F6',
     shadowColor: '#3B82F6',
@@ -344,31 +344,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  
+
   iconContainer: {
     marginBottom: 4,
     padding: 2,
   },
-  
+
   logoNavBar: {
     width: 24,
     height: 24,
     tintColor: '#666666',
   },
-  
+
   activeIcon: {
     tintColor: '#FFFFFF',
     width: 26,
     height: 26,
   },
-  
+
   navButtonText: {
     fontSize: 12,
     fontWeight: '500',
     color: '#666666',
     textAlign: 'center',
   },
-  
+
   activeText: {
     color: '#FFFFFF',
     fontWeight: '600',
@@ -385,8 +385,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 45,
     alignSelf: 'center',
-    backgroundColor: '#c5c5c5ff',
-    borderColor: "#c5c5c5ff"
+    backgroundColor: '#727272ff',
+    borderColor: "#727272ff",
+    color: "#fff"
   },
   imageSearch: {
     width: 30,
@@ -398,7 +399,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    
+
     justifyContent: 'space-around',
   },
 });
