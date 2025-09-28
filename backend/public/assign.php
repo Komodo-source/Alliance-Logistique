@@ -141,7 +141,7 @@ try {
             $public_id = uniqid("CMD_");
             $exchange_code = rand(0, 99999);
             $exchange_code_fourni = rand(0, 99999);
-            $status_default = 1;
+            $status_default = 3;
             $insert_sql = "
                 INSERT INTO COMMANDE(id_cmd, id_public_cmd, id_fournisseur, id_client, id_dmd, id_coursier, code_echange, id_status, code_echange_fourni)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";

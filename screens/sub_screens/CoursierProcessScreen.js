@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileManager from '../util/file-manager';
+import { debbug_log } from '../util/debbug';
 
 const { width } = Dimensions.get('window');
 
@@ -116,6 +117,27 @@ const CoursierProcessScreen = ({ navigation, route }) => {
     }
   };
 
+  const changeStatusCommand = async(nv_status) => {
+    try{
+    const response = await("https://backend-logistique-api-latest.onrender.com/change_status.php",{
+      method: "POST",
+      headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({id_cmd: item.id_cmd, status: nv_status}),
+          })
+
+      const result = await response.json();
+      debbug_log("== Response API, change status == ", 'cyan');
+      debbug_log(result, 'cyan');
+
+    }catch(error){
+      debbug_log("An error occured", "red");
+    }
+
+  }
+
   const handleFournisseurCodeSubmit = () => {
     if (!commandData) return;
 
@@ -130,6 +152,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
       };
       setCommandData(updatedData);
       setCurrentStep(2);
+      changeStatusCommand(1);
       Alert.alert('Succès', 'Code validé! Produits récupérés. Vous pouvez maintenant vous diriger vers le client.');
     } else {
       Alert.alert('Erreur', 'Code incorrect. Veuillez réessayer.');
@@ -139,7 +162,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
   const handleClientCodeSubmit = () => {
   if (!commandData) return;
 
-  if (clientCode === commandData.client.code_echange) {  
+  if (clientCode === commandData.client.code_echange) {
     const updatedData = {
       ...commandData,
       produits: commandData.produits.map(produit => ({
@@ -149,6 +172,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
     };
     setCommandData(updatedData);
     setCurrentStep(3);
+    changeStatusCommand(2);
     Alert.alert('Succès', 'Commande terminée! Livraison validée.');
   } else {
     Alert.alert('Erreur', 'Code incorrect. Veuillez réessayer.');

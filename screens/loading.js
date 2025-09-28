@@ -360,7 +360,7 @@ import React, { useEffect, useState} from 'react';
           <Text style={styles.maj}>L'application fait une mise à jour. Merci de Patientez</Text>
           :
           <View></View>}
-        <Text style={styles.versionText}>Admin Beta 1.2.1</Text>
+        <Text style={styles.versionText}>Admin Beta 1.2.3</Text>
       </View>
     );
   };

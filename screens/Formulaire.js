@@ -1,34 +1,48 @@
-import React, {useState, useEffect} from 'react';
-import {Keyboard, StyleSheet, Text, TextInput, TouchableWithoutFeedback, Modal, FlatList, View, Button, TouchableOpacity, ScrollView, Image, Alert, PermissionsAndroid, ActivityIndicator} from 'react-native';
-import * as FileSystem from 'expo-file-system';
-import TomateImage from '../assets/Icons/Dark-tomato.png';
-import SaladeImage from '../assets/Icons/Dark-Salad.png';
-import CarotteImage from '../assets/Icons/Dark-Carrot.png';
-import ChickenImage from '../assets/Icons/Dark-Chicken.png';
-import LapinImage from '../assets/Icons/Rabbit.png';
-import OeufImage from '../assets/Icons/Dark-oeuf.png';
-import BoeufImage from '../assets/Icons/Dark-beef.png';
+import React, { useState, useEffect } from "react";
+import {
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableWithoutFeedback,
+  Modal,
+  FlatList,
+  View,
+  Button,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Alert,
+  PermissionsAndroid,
+  ActivityIndicator,
+} from "react-native";
+import * as FileSystem from "expo-file-system";
+import TomateImage from "../assets/Icons/Dark-tomato.png";
+import SaladeImage from "../assets/Icons/Dark-Salad.png";
+import CarotteImage from "../assets/Icons/Dark-Carrot.png";
+import ChickenImage from "../assets/Icons/Dark-Chicken.png";
+import LapinImage from "../assets/Icons/Rabbit.png";
+import OeufImage from "../assets/Icons/Dark-oeuf.png";
+import BoeufImage from "../assets/Icons/Dark-beef.png";
 
-import LeafletMap from '../components/LeafletMap';
-import { getAlertRef } from './util/AlertService';
-import Snackbar from './util/SnackBar.js';
-import { useRef } from 'react';
+import LeafletMap from "../components/LeafletMap";
+import { getAlertRef } from "./util/AlertService";
+import Snackbar from "./util/SnackBar.js";
+import { useRef } from "react";
 
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import * as Location from 'expo-location';
-import dayjs from 'dayjs';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import * as debbug_lib from './util/debbug.js';
-import * as fileManager from './util/file-manager.js';
-import axios from 'axios';
-import { SafeAreaView } from 'react-native';
+import * as Location from "expo-location";
+import dayjs from "dayjs";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as debbug_lib from "./util/debbug.js";
+import * as fileManager from "./util/file-manager.js";
+import axios from "axios";
+import { SafeAreaView } from "react-native";
 
-
-const Formulaire = ({ navigation, route}) => {
-
+const Formulaire = ({ navigation, route }) => {
   let pre_selected_item = null;
-  console.log("route"+  route);
+  console.log("route" + route);
   if (route && route.params && route.params.produits) {
     pre_selected_item = route.params.produits;
     console.log("produit deja selec à partir d'un panier");
@@ -37,7 +51,7 @@ const Formulaire = ({ navigation, route}) => {
 
   // Fixed date state management
   const [showPicker, setShowPicker] = useState(false);
-  const [pickerMode, setPickerMode] = useState('date');
+  const [pickerMode, setPickerMode] = useState("date");
   const [date, setDate] = useState(new Date());
   //const [tempDate, setTempDate] = useState(dayjs()); // Temporary date for modal
   //const [showDatePicker, setShowDatePicker] = useState(false);
@@ -45,9 +59,9 @@ const Formulaire = ({ navigation, route}) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   //const [open, setOpen] = useState(false);
   //const [poids, setPoids] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [commandeName, setCommandeName] = useState('');
-  const [description, setDescription] = useState('');
+  const [nombre, setNombre] = useState("");
+  const [commandeName, setCommandeName] = useState("");
+  const [description, setDescription] = useState("");
   //const [childViews, setChildViews] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -59,14 +73,14 @@ const Formulaire = ({ navigation, route}) => {
   //const [isNombreFocused, setIsNombreFocused] = useState(false);
   //const [isPoidsFocused, setIsPoidsFocused] = useState(false);
   const [produits, setProduits] = useState([]);
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [region, setRegion] = useState({
     latitude: 9.3077,
     longitude: 2.3158,
     latitudeDelta: 0.0421,
     longitudeDelta: 0.822,
   });
-  const [addresse, setAddresse] = useState('');
+  const [addresse, setAddresse] = useState("");
 
   const [modalFourniVisible, setModalFourniVisible] = useState(false);
   const [fourni, setFourni] = useState(null);
@@ -79,7 +93,7 @@ const Formulaire = ({ navigation, route}) => {
     longitudeDelta: region.longitudeDelta || 0.822,
   };
   const [produit, setProduit] = useState([]);
-  const fileUri = FileSystem.documentDirectory + 'product.json';
+  const fileUri = FileSystem.documentDirectory + "product.json";
   //const [selectedTime, setSelectedTime] = useState(new Date());
   //const [showTimePicker, setShowTimePicker] = useState(false);
   const [dataUser, setDataUser] = useState(null);
@@ -90,131 +104,130 @@ const Formulaire = ({ navigation, route}) => {
   //debbug_lib.debbug_log("dataUser"+ dataUser, "magenta");
 
   const dic_image_name = {
-    "tomate": TomateImage,
-    "salade": SaladeImage,
-    "carotte": CarotteImage,
+    tomate: TomateImage,
+    salade: SaladeImage,
+    carotte: CarotteImage,
     "poulet léger": ChickenImage,
     "poulet lourd": ChickenImage,
-    "pintade": ChickenImage,
-    "lapin": LapinImage,
+    pintade: ChickenImage,
+    lapin: LapinImage,
     "oeuf palette(20)": OeufImage,
-    "caille": ChickenImage,
+    caille: ChickenImage,
     "gigot agneau": BoeufImage,
     "cote de porc": BoeufImage,
     "boeuf morceau": BoeufImage,
-    "default": TomateImage,
+    default: TomateImage,
   };
 
   const iconMapping = {
-  // --- Poissons & Fruits de mer ---
-  "mérou": "fish",
-  "bar": "fish",
-  "carpe grise": "fish",
-  "carpe rouge": "fish",
-  "sol fibo": "fish",
-  "brochet": "fish",
-  "crabe de mer": "crab",
-  "crabe de rivière": "crab",
-  "carpe": "fish",
-  "dorade": "fish",
-  "silivie": "fish",
-  "cilure blanc": "fish",
-  "cilure noir": "fish",
-  "capitaine": "fish",
-  "crevette": "fish",
-  "gambas": "fish",
-  "langouste": "fish",
-  "langoustine": "fish",
-  "petite crevette": "fish",
-  "calamar": "fish",
+    // --- Poissons & Fruits de mer ---
+    mérou: "fish",
+    bar: "fish",
+    "carpe grise": "fish",
+    "carpe rouge": "fish",
+    "sol fibo": "fish",
+    brochet: "fish",
+    "crabe de mer": "crab",
+    "crabe de rivière": "crab",
+    carpe: "fish",
+    dorade: "fish",
+    silivie: "fish",
+    "cilure blanc": "fish",
+    "cilure noir": "fish",
+    capitaine: "fish",
+    crevette: "fish",
+    gambas: "fish",
+    langouste: "fish",
+    langoustine: "fish",
+    "petite crevette": "fish",
+    calamar: "fish",
 
-  // --- Fruits ---
-  "orange": "fruit-citrus",
-  "citron": "fruit-citrus",
-  "avocat": "fruit-avocado",
-  "banane": "fruit-banana",
-  "pomme": "food-apple",
-  "capoti": "fruit-pineapple", // approximation
-  "corossol": "fruit-pineapple", // approximation
-  "mangue": "fruit-mango",
-  "papaye": "fruit-pineapple", // approximation
-  "goyave": "fruit-pineapple", // approximation
-  "ananas": "fruit-pineapple",
-  "banane plantin": "fruit-banana",
-  "banane sucrée": "fruit-banana",
-  "litchi": "fruit-grapes", // approximation
-  "carambole": "fruit-pineapple", // approximation
-  "grenade": "fruit-citrus",
+    // --- Fruits ---
+    orange: "fruit-citrus",
+    citron: "fruit-citrus",
+    avocat: "fruit-avocado",
+    banane: "fruit-banana",
+    pomme: "food-apple",
+    capoti: "fruit-pineapple", // approximation
+    corossol: "fruit-pineapple", // approximation
+    mangue: "fruit-mango",
+    papaye: "fruit-pineapple", // approximation
+    goyave: "fruit-pineapple", // approximation
+    ananas: "fruit-pineapple",
+    "banane plantin": "fruit-banana",
+    "banane sucrée": "fruit-banana",
+    litchi: "fruit-grapes", // approximation
+    carambole: "fruit-pineapple", // approximation
+    grenade: "fruit-citrus",
 
-  // --- Légumes & Tubercules ---
-  "épinard (gboman)": "leaf",
-  "basilic africain (ch io)": "leaf",
-  "pomme de terre": "potato",
-  "manioc": "cassava", // approximation avec "leaf"
-  "ignam": "potato", // approximation
-  "riz": "rice",
-  "attiéke": "rice",
-  "oignon blanc": "onion",
-  "tapioka": "rice",
-  "oignon rouge": "onion",
-  "ail": "garlic",
-  "gingembre": "ginger-root",
-  "poivre": "pepper-hot",
-  "fotete": "leaf",
-  "curcuma": "ginger-root",
-  "gros piment vert frais": "chili-mild",
-  "clou de girofle": "flower",
-  "anis étoilé": "flower",
-  "gombo": "food-apple-outline", // approximation
-  "crincrin": "leaf",
-  "telibo (farine)": "sack",
-  "farine gari": "sack",
-  "riz glacé": "rice",
-  "riz parfumé": "rice",
-  "riz long": "rice",
-  "poivron": "chili-hot",
-  "aubergine": "food-apple-outline", // approximation
-  "betterave": "beet",
-  "navet": "food-apple-outline", // approximation
-  "maïs frais": "corn",
-  "salade": "leaf",
-  "carotte": "carrot",
-  "tomate": "food-apple-outline", // approximation
+    // --- Légumes & Tubercules ---
+    "épinard (gboman)": "leaf",
+    "basilic africain (ch io)": "leaf",
+    "pomme de terre": "potato",
+    manioc: "cassava", // approximation avec "leaf"
+    ignam: "potato", // approximation
+    riz: "rice",
+    attiéke: "rice",
+    "oignon blanc": "onion",
+    tapioka: "rice",
+    "oignon rouge": "onion",
+    ail: "garlic",
+    gingembre: "ginger-root",
+    poivre: "pepper-hot",
+    fotete: "leaf",
+    curcuma: "ginger-root",
+    "gros piment vert frais": "chili-mild",
+    "clou de girofle": "flower",
+    "anis étoilé": "flower",
+    gombo: "food-apple-outline", // approximation
+    crincrin: "leaf",
+    "telibo (farine)": "sack",
+    "farine gari": "sack",
+    "riz glacé": "rice",
+    "riz parfumé": "rice",
+    "riz long": "rice",
+    poivron: "chili-hot",
+    aubergine: "food-apple-outline", // approximation
+    betterave: "beet",
+    navet: "food-apple-outline", // approximation
+    "maïs frais": "corn",
+    salade: "leaf",
+    carotte: "carrot",
+    tomate: "food-apple-outline", // approximation
 
-  // --- Volailles & Viandes ---
-  "poulet local (bicyclette)": "food-drumstick",
-  "canard": "duck",
-  "pigeon": "bird",
-  "oeuf de caille": "egg",
-  "gésier": "food-drumstick",
-  "entrecôte": "cow",
-  "bavette aloyau": "cow",
-  "coeur de boeuf": "cow",
-  "viande porc générique": "pig",
-  "côte porc première": "pig",
-  "côte porc échine": "pig",
-  "pied boeuf": "cow",
-  "pied porc": "pig",
-  "tête boeuf": "cow",
-  "tête porc": "pig",
-  "langue boeuf": "cow",
-  "langue porc": "pig",
-  "agouti": "rodent", // approximation
-  "poulet cher": "food-drumstick",
-  "poulet léger": "food-drumstick",
-  "poulet lourd": "food-drumstick",
-  "pintade": "bird",
-  "lapin": "rabbit",
-  "oeuf palette(30)": "egg",
-  "caille": "bird",
-  "gigot agneau": "sheep",
-  "boeuf morceau": "cow",
-  "côte de porc": "pig",
+    // --- Volailles & Viandes ---
+    "poulet local (bicyclette)": "food-drumstick",
+    canard: "duck",
+    pigeon: "bird",
+    "oeuf de caille": "egg",
+    gésier: "food-drumstick",
+    entrecôte: "cow",
+    "bavette aloyau": "cow",
+    "coeur de boeuf": "cow",
+    "viande porc générique": "pig",
+    "côte porc première": "pig",
+    "côte porc échine": "pig",
+    "pied boeuf": "cow",
+    "pied porc": "pig",
+    "tête boeuf": "cow",
+    "tête porc": "pig",
+    "langue boeuf": "cow",
+    "langue porc": "pig",
+    agouti: "rodent", // approximation
+    "poulet cher": "food-drumstick",
+    "poulet léger": "food-drumstick",
+    "poulet lourd": "food-drumstick",
+    pintade: "bird",
+    lapin: "rabbit",
+    "oeuf palette(30)": "egg",
+    caille: "bird",
+    "gigot agneau": "sheep",
+    "boeuf morceau": "cow",
+    "côte de porc": "pig",
 
-  // --- Défaut ---
-  "default": "basket"
-};
-
+    // --- Défaut ---
+    default: "basket",
+  };
 
   const [mapInteracting, setMapInteracting] = useState(false);
   const snackBarRef = useRef();
@@ -224,12 +237,11 @@ const Formulaire = ({ navigation, route}) => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status === 'granted') {
+      if (status === "granted") {
         setHasLocationPermission(true);
         getCurrentLocation();
         return true;
       } else {
-
         setHasLocationPermission(false);
         //Alert.alert('Permission refusée', 'Vous devez autoriser la localisation');
         getAlertRef().current?.showAlert(
@@ -237,8 +249,7 @@ const Formulaire = ({ navigation, route}) => {
           "Vous devez autoriser la localisation",
           true,
           "Autoriser",
-          null,
-
+          null
         );
         return false;
       }
@@ -248,25 +259,26 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
-
   const getFourni = async (id_prod) => {
     let data = {};
     try {
-
       // va chercher la liste des fournisseurs produisant le même
       // produit afin de les comparer
 
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_fournisseur_produit.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({id_produit: id_prod})
-      });
+      const response = await fetch(
+        "https://backend-logistique-api-latest.onrender.com/get_fournisseur_produit.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_produit: id_prod }),
+        }
+      );
       data = await response.json();
       setFourni(data);
       console.log("Fourni fetched:", data);
-      if (data.length === 0 ) {
-        return 1;}
-
+      if (data.length === 0) {
+        return 1;
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des produits:", error);
     }
@@ -280,8 +292,12 @@ const Formulaire = ({ navigation, route}) => {
         console.log("Lecture depuis le fichier local");
         data = fileData;
       } else {
-        console.log("Fichier vide ou inexistant, récupération depuis le serveur");
-        const response = await fetch('https://backend-logistique-api-latest.onrender.com/product.php');
+        console.log(
+          "Fichier vide ou inexistant, récupération depuis le serveur"
+        );
+        const response = await fetch(
+          "https://backend-logistique-api-latest.onrender.com/product.php"
+        );
         data = await response.json();
         console.log("Produits reçus du serveur:", data);
       }
@@ -292,34 +308,29 @@ const Formulaire = ({ navigation, route}) => {
     }
   };
 
+  const renderFourniChoix = ({ item: fourni, index }) => {
+    const isFirstSupplier = index === 0;
+    const distance = fourni.localisation_orga !== null ? 1 : null;
 
-    const renderFourniChoix = ({ item: fourni, index }) => {
-      const isFirstSupplier = index === 0;
-      const distance = fourni.localisation_orga !== null ? 1 : null;
+    return (
+      <TouchableOpacity
+        style={[styles.productCard, isFirstSupplier && styles.cheapestCard]}
+        onPress={() => {
+          fournisseur_liste.push(fourni.id_fournisseur);
+          setModalFourniVisible(false);
 
-      return (
-        <TouchableOpacity
-          style={[
-            styles.productCard,
-            isFirstSupplier && styles.cheapestCard
-          ]}
-          onPress={() => {
-            fournisseur_liste.push(fourni.id_fournisseur);
-            setModalFourniVisible(false);
-
-            // Add product with selected supplier's price
-            if (selectedProduct) {
-              add_product(
-                selectedProduct.key,
-                nombre,
-                selectedProduct.id,
-                selectedProduct.originalItem,
-                fourni.prix_produit // Pass the price
-              );
-            }
-          }}
-        >
-
+          // Add product with selected supplier's price
+          if (selectedProduct) {
+            add_product(
+              selectedProduct.key,
+              nombre,
+              selectedProduct.id,
+              selectedProduct.originalItem,
+              fourni.prix_produit // Pass the price
+            );
+          }
+        }}
+      >
         {/* Best Price Badge for first supplier */}
         {isFirstSupplier && (
           <View style={styles.bestPriceBadge}>
@@ -332,34 +343,29 @@ const Formulaire = ({ navigation, route}) => {
             <Text style={styles.supplierName}>{fourni.nom_orga}</Text>
             <Text style={styles.productPrice}>{fourni.prix_produit} FCFA</Text>
           </View>
-
-
         </View>
 
         <View style={styles.supplierDetails}>
           <View style={styles.detailRow}>
-
-              <MaterialCommunityIcons
-                name="map-marker"
-                size={16}
-                color="#64748B"
-              />
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={16}
+              color="#64748B"
+            />
 
             <Text style={styles.detailText}>
               {distance !== null
                 ? `${distance.toFixed(1)} km`
-                : fourni.ville_organisation || 'Adresse non renseignée'
-              }
+                : fourni.ville_organisation || "Adresse non renseignée"}
             </Text>
           </View>
 
           <View style={styles.detailRow}>
-
             <MaterialCommunityIcons
-                name="cube-outline"
-                size={16}
-                color="#64748B"
-              />
+              name="cube-outline"
+              size={16}
+              color="#64748B"
+            />
             <Text style={styles.detailText}>
               Stock: {fourni.nb_produit_fourni} unités
             </Text>
@@ -369,35 +375,34 @@ const Formulaire = ({ navigation, route}) => {
     );
   };
 
-
   const readProductFile = async () => {
     try {
-      console.log('lecture du fichier:', fileUri);
+      console.log("lecture du fichier:", fileUri);
 
       const fileInfo = await FileSystem.getInfoAsync(fileUri);
       if (!fileInfo.exists) {
-        console.warn('Fichier inexistant:', fileUri);
+        console.warn("Fichier inexistant:", fileUri);
         return null;
       }
 
       const fileContents = await FileSystem.readAsStringAsync(fileUri);
-      console.log('Contenu du fichier:', fileContents);
+      console.log("Contenu du fichier:", fileContents);
 
       const parsedData = JSON.parse(fileContents);
-      console.log('Parse du json:', parsedData);
+      console.log("Parse du json:", parsedData);
 
       return parsedData;
     } catch (error) {
-      console.error('Error reading product.json:', error);
+      console.error("Error reading product.json:", error);
       if (error instanceof SyntaxError) {
-        console.error('Failed to parse JSON - file may be corrupted');
-      } else if (error.code === 'ENOENT') {
-        console.error('File not found - path may be incorrect');
+        console.error("Failed to parse JSON - file may be corrupted");
+      } else if (error.code === "ENOENT") {
+        console.error("File not found - path may be incorrect");
       }
 
       return null;
     }
-  }
+  };
 
   // Fixed search function
   const handleSearchTextChange = (text) => {
@@ -405,11 +410,12 @@ const Formulaire = ({ navigation, route}) => {
     if (text.trim() === "") {
       setProduits(produit);
     } else {
-      const filtered = produit.filter(item =>
-        item.nom_produit &&
-        typeof item.nom_produit === 'string' &&
-        item.nom_produit.toLowerCase().includes(text.toLowerCase()) ||
-        item.nom_categorie.toLowerCase().includes(text.toLowerCase())
+      const filtered = produit.filter(
+        (item) =>
+          (item.nom_produit &&
+            typeof item.nom_produit === "string" &&
+            item.nom_produit.toLowerCase().includes(text.toLowerCase())) ||
+          item.nom_categorie.toLowerCase().includes(text.toLowerCase())
       );
       setProduits(filtered);
     }
@@ -418,37 +424,37 @@ const Formulaire = ({ navigation, route}) => {
   // Get unit label based on type_vendu
   const getUnitLabel = (product) => {
     if (product && product.type_vendu) {
-      if (product.type_vendu === 'poids') {
-        return 'kg';
-      } else if (product.type_vendu === 'pièce') {
-        return 'unité(s)';
+      if (product.type_vendu === "poids") {
+        return "kg";
+      } else if (product.type_vendu === "pièce") {
+        return "unité(s)";
       }
     }
-    return 'unité(s)'; // default
+    return "unité(s)"; // default
   };
 
   // Get quantity label for modal
   const getQuantityLabel = (product) => {
     if (product && product.type_vendu) {
-      if (product.type_vendu === 'poids') {
-        return 'Quantité (en kg):';
-      } else if (product.type_vendu === 'pièce') {
-        return 'Quantité (nombre de pièces):';
+      if (product.type_vendu === "poids") {
+        return "Quantité (en kg):";
+      } else if (product.type_vendu === "pièce") {
+        return "Quantité (nombre de pièces):";
       }
     }
-    return 'Quantité (nombre de pièces):'; // default
+    return "Quantité (nombre de pièces):"; // default
   };
 
   // Fixed date formatting function
   const formatDate = (dateValue) => {
     const date = dayjs(dateValue);
-    return date.format('YYYY-MM-DD HH:mm:ss');
+    return date.format("YYYY-MM-DD HH:mm:ss");
   };
 
   // Fixed date normalization function
   const normaliseDate = (dateValue) => {
     const date = dayjs(dateValue);
-    return date.format('DD/MM/YYYY HH:mm');
+    return date.format("DD/MM/YYYY HH:mm");
   };
 
   const getCurrentLocation = async () => {
@@ -482,7 +488,7 @@ const Formulaire = ({ navigation, route}) => {
       });
     } catch (error) {
       console.log(error);
-      Alert.alert('Error', 'Could not get your current location');
+      Alert.alert("Error", "Could not get your current location");
     }
   };
 
@@ -494,7 +500,10 @@ const Formulaire = ({ navigation, route}) => {
         // Read user data asynchronously
         const userData = await fileManager.read_file("auto.json");
         setDataUser(userData);
-        debbug_lib.debbug_log("User data loaded: " + JSON.stringify(userData), "green");
+        debbug_lib.debbug_log(
+          "User data loaded: " + JSON.stringify(userData),
+          "green"
+        );
       } catch (error) {
         console.error("Error loading user data:", error);
         setDataUser(null);
@@ -509,7 +518,10 @@ const Formulaire = ({ navigation, route}) => {
         await requestLocationPermission();
         await getProduct();
 
-        debbug_lib.debbug_log("pre_selected_item: " + pre_selected_item, "yellow");
+        debbug_lib.debbug_log(
+          "pre_selected_item: " + pre_selected_item,
+          "yellow"
+        );
         if (pre_selected_item != null && pre_selected_item !== undefined) {
           set_product_rec();
         }
@@ -519,7 +531,6 @@ const Formulaire = ({ navigation, route}) => {
     };
 
     initializeApp();
-
   }, []);
 
   const handleMapPress = (e) => {
@@ -529,60 +540,57 @@ const Formulaire = ({ navigation, route}) => {
         setSelectedLocation(coordinate);
       }
     } catch (error) {
-      console.error('Error handling map press:', error);
+      console.error("Error handling map press:", error);
     }
   };
 
-
   const getIconName = (productName) => {
-  if (!productName) return iconMapping.default;
-  const name = productName.toLowerCase();
+    if (!productName) return iconMapping.default;
+    const name = productName.toLowerCase();
 
-  // Cherche correspondance exacte ou partielle
-  for (let key in iconMapping) {
-    if (name.includes(key)) {
-      return iconMapping[key];
+    // Cherche correspondance exacte ou partielle
+    for (let key in iconMapping) {
+      if (name.includes(key)) {
+        return iconMapping[key];
+      }
     }
-  }
 
-  return iconMapping.default;
-};
-
-
+    return iconMapping.default;
+  };
 
   // Modified product list rendering to limit to 10 items and show unit
-const renderProductItem = ({ item }) => {
-  const productName = item.nom_produit || 'Produit sans nom';
-  const unitLabel = getUnitLabel(item);
-  const iconName = getIconName(productName);
+  const renderProductItem = ({ item }) => {
+    const productName = item.nom_produit || "Produit sans nom";
+    const unitLabel = getUnitLabel(item);
+    const iconName = getIconName(productName);
 
-  return (
-    <TouchableOpacity
-      style={styles.productItem}
-      onPress={() => {
-        setSelectedProduct({
-          id: item.id_produit,
-          key: productName,
-          originalItem: item
-        });
-        setModalVisible(true);
-      }}
-    >
-      <View style={styles.productItemContent}>
-        <MaterialCommunityIcons
-          name={iconName}
-          size={28}
-          color="#4CAF50"
-          style={{ marginRight: 8 }}
-        />
-        <View style={styles.productTextContainer}>
-          <Text style={styles.productName}>{productName}</Text>
-          <Text style={styles.productUnit}>Vendu par {unitLabel}</Text>
+    return (
+      <TouchableOpacity
+        style={styles.productItem}
+        onPress={() => {
+          setSelectedProduct({
+            id: item.id_produit,
+            key: productName,
+            originalItem: item,
+          });
+          setModalVisible(true);
+        }}
+      >
+        <View style={styles.productItemContent}>
+          <MaterialCommunityIcons
+            name={iconName}
+            size={28}
+            color="#4CAF50"
+            style={{ marginRight: 8 }}
+          />
+          <View style={styles.productTextContainer}>
+            <Text style={styles.productName}>{productName}</Text>
+            <Text style={styles.productUnit}>Vendu par {unitLabel}</Text>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-};
+      </TouchableOpacity>
+    );
+  };
 
   const set_product_rec = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
@@ -592,7 +600,7 @@ const renderProductItem = ({ item }) => {
       // Collect all new products first
       const newProducts = [];
 
-      for(let i = 0; i < pre_selected_item.length; i++){
+      for (let i = 0; i < pre_selected_item.length; i++) {
         const item = pre_selected_item[i];
         if (!item) continue; // Skip if item is null/undefined
 
@@ -600,49 +608,56 @@ const renderProductItem = ({ item }) => {
 
         const newProduct = {
           id: item.id || item.id_produit || Math.random().toString(),
-          name: item.nom || item.nom_produit || 'Produit',
+          name: item.nom || item.nom_produit || "Produit",
           productDetails: {
             ...item,
             nombre: item.quantite || item.nombre || 1,
-            poids: item.quantite || item.poids || 1
-          }
+            poids: item.quantite || item.poids || 1,
+          },
         };
 
         newProducts.push(newProduct);
       }
 
       // Set all products at once
-      setProducts(prevProducts => [...prevProducts, ...newProducts]);
-    }
-  }
-
-  const add_product = (name, quantite, id, originalItem = null, price = null, shouldBatch = false) => {
-  if (!shouldBatch) {
-    setModalVisible(false);
-  }
-
-  // Use the provided price or fall back to the product's default price
-  const productPrice = price || originalItem?.prix_produit || 0;
-
-  const newProduct = {
-    id,
-    name,
-    productDetails: {
-      ...(originalItem || {}),
-      quantite: parseFloat(quantite) || 1,
-      prix: productPrice, // Add price to product details
-      type_vendu: originalItem?.type_vendu || 'pièce'
+      setProducts((prevProducts) => [...prevProducts, ...newProducts]);
     }
   };
 
-  if (shouldBatch) {
-    return newProduct;
-  } else {
-    setProducts(prevProducts => [...prevProducts, newProduct]);
-    setNombre('');
-    snackBarRef.current?.show('Produit ajouté à la commande', 'info');
-  }
-};
+  const add_product = (
+    name,
+    quantite,
+    id,
+    originalItem = null,
+    price = null,
+    shouldBatch = false
+  ) => {
+    if (!shouldBatch) {
+      setModalVisible(false);
+    }
+
+    // Use the provided price or fall back to the product's default price
+    const productPrice = price || originalItem?.prix_produit || 0;
+
+    const newProduct = {
+      id,
+      name,
+      productDetails: {
+        ...(originalItem || {}),
+        quantite: parseFloat(quantite) || 1,
+        prix: productPrice, // Add price to product details
+        type_vendu: originalItem?.type_vendu || "pièce",
+      },
+    };
+
+    if (shouldBatch) {
+      return newProduct;
+    } else {
+      setProducts((prevProducts) => [...prevProducts, newProduct]);
+      setNombre("");
+      snackBarRef.current?.show("Produit ajouté à la commande", "info");
+    }
+  };
 
   const set_product_rec_alternative = () => {
     debbug_lib.debbug_log("produit deja selec à partir d'un panier", "yellow");
@@ -650,14 +665,14 @@ const renderProductItem = ({ item }) => {
     if (pre_selected_item && Array.isArray(pre_selected_item)) {
       const newProducts = [];
 
-      for(let i = 0; i < pre_selected_item.length; i++){
+      for (let i = 0; i < pre_selected_item.length; i++) {
         const item = pre_selected_item[i];
         if (!item) continue; // Skip if item is null/undefined
 
         debbug_lib.debbug_log(item, "blue");
 
         const product = add_product(
-          item.nom || item.nom_produit || 'Produit',
+          item.nom || item.nom_produit || "Produit",
           item.quantite || 1,
           item.id || item.id_produit || Math.random().toString(),
           item,
@@ -668,14 +683,12 @@ const renderProductItem = ({ item }) => {
       }
 
       // Set all products at once
-      setProducts(prevProducts => [...prevProducts, ...newProducts]);
+      setProducts((prevProducts) => [...prevProducts, ...newProducts]);
     }
-  }
+  };
 
   // New function to remove product
   const removeProduct = (productId) => {
-
-
     getAlertRef().current?.showAlert(
       "Supprimer le produit",
       "Voulez-vous vraiment supprimer ce produit de votre commande?",
@@ -685,42 +698,39 @@ const renderProductItem = ({ item }) => {
       true,
       "Supprimer",
       () => {
-        setProducts(products.filter(product => product.id !== productId));
+        setProducts(products.filter((product) => product.id !== productId));
         // Show snackbar
-        snackBarRef.current?.show('Produit supprimé de la commande', 'info');
-      },
+        snackBarRef.current?.show("Produit supprimé de la commande", "info");
+      }
     );
-
-
   };
-
 
   // Fixed date picker handlers
   const openDatePicker = () => {
-    setPickerMode('date');
+    setPickerMode("date");
     setShowPicker(true);
   };
 
   const onPickerChange = (event, selectedValue) => {
-    if (pickerMode === 'date') {
+    if (pickerMode === "date") {
       setShowPicker(false);
       if (selectedValue) {
         // Set date, then open time picker
         const newDate = new Date(selectedValue);
-        setDate(prev => {
+        setDate((prev) => {
           // Keep previous time if any
           const prevDate = prev || new Date();
           newDate.setHours(prevDate.getHours());
           newDate.setMinutes(prevDate.getMinutes());
           return newDate;
         });
-        setPickerMode('time');
+        setPickerMode("time");
         setTimeout(() => setShowPicker(true), 300); // Open time picker after a short delay
       }
-    } else if (pickerMode === 'time') {
+    } else if (pickerMode === "time") {
       setShowPicker(false);
       if (selectedValue) {
-        setDate(prev => {
+        setDate((prev) => {
           const newDate = new Date(prev);
           newDate.setHours(selectedValue.getHours());
           newDate.setMinutes(selectedValue.getMinutes());
@@ -736,18 +746,18 @@ const renderProductItem = ({ item }) => {
   };
 
   const zoomOut = () => {
-    setRegion(prev => ({
+    setRegion((prev) => ({
       ...prev,
       latitudeDelta: prev.latitudeDelta * 1.2,
-      longitudeDelta: prev.longitudeDelta * 1.2
+      longitudeDelta: prev.longitudeDelta * 1.2,
     }));
   };
 
   const zoomIn = () => {
-    setRegion(prev => ({
+    setRegion((prev) => ({
       ...prev,
       latitudeDelta: Math.max(prev.latitudeDelta * 0.8, 0.0001),
-      longitudeDelta: Math.max(prev.longitudeDelta * 0.8, 0.0001)
+      longitudeDelta: Math.max(prev.longitudeDelta * 0.8, 0.0001),
     }));
   };
 
@@ -760,37 +770,38 @@ const renderProductItem = ({ item }) => {
       () => handleSubmit(),
       true,
       "Annuler",
-      () => console.log('Annulation'),
-
+      () => console.log("Annulation")
     );
-  }
+  };
 
   const testServerConnection = async () => {
     try {
       // Create a timeout promise for the connection test
       const testTimeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Connection test timeout')), 10000); // 10 second timeout
+        setTimeout(() => reject(new Error("Connection test timeout")), 10000); // 10 second timeout
       });
 
       const response = await Promise.race([
-        fetch('https://backend-logistique-api-latest.onrender.com/check_conn.php'),
-        testTimeoutPromise
+        fetch(
+          "https://backend-logistique-api-latest.onrender.com/check_conn.php"
+        ),
+        testTimeoutPromise,
       ]);
 
       const responseText = await response.text();
-      console.log('Test server response:', responseText);
+      console.log("Test server response:", responseText);
 
       try {
         const data = JSON.parse(responseText);
-        console.log('Server test successful:', data);
+        console.log("Server test successful:", data);
         return data.success ? true : false;
       } catch (parseError) {
-        console.error('Server test JSON parse error:', parseError);
-        console.error('Server test response was:', responseText);
+        console.error("Server test JSON parse error:", parseError);
+        console.error("Server test response was:", responseText);
         return false;
       }
     } catch (error) {
-      console.error('Server test failed:', error);
+      console.error("Server test failed:", error);
       return false;
     }
   };
@@ -800,57 +811,73 @@ const renderProductItem = ({ item }) => {
     setChargement(true);
 
     // Test server connection first, but don't block if it fails
-    testServerConnection().then(isConnected => {
-      if (!isConnected) {
-        console.warn('Server connection test failed, but continuing with form submission...');
-        // Don't block the form submission, just log the warning
-      }
+    testServerConnection()
+      .then((isConnected) => {
+        if (!isConnected) {
+          console.warn(
+            "Server connection test failed, but continuing with form submission..."
+          );
+          // Don't block the form submission, just log the warning
+        }
 
-      // Continue with form submission regardless
-      submitForm();
-    }).catch(error => {
-      console.warn('Server connection test error:', error);
-      // Continue with form submission even if test fails
-      submitForm();
-    });
+        // Continue with form submission regardless
+        submitForm();
+      })
+      .catch((error) => {
+        console.warn("Server connection test error:", error);
+        // Continue with form submission even if test fails
+        submitForm();
+      });
   };
 
   const submitForm = () => {
     // Validation checks
     if (userDataLoading) {
-      Alert.alert('Erreur', 'Veuillez attendre le chargement des données utilisateur');
+      Alert.alert(
+        "Erreur",
+        "Veuillez attendre le chargement des données utilisateur"
+      );
       setChargement(false);
       return;
     }
 
     if (!selectedLocation) {
-      Alert.alert('Erreur', 'Veuillez sélectionner un lieu de livraison sur la carte');
+      Alert.alert(
+        "Erreur",
+        "Veuillez sélectionner un lieu de livraison sur la carte"
+      );
       setChargement(false);
       return;
     }
 
     if (!commandeName.trim()) {
-      Alert.alert('Erreur', 'Veuillez saisir un nom pour la commande');
+      Alert.alert("Erreur", "Veuillez saisir un nom pour la commande");
       setChargement(false);
       return;
     }
 
     if (products.length === 0) {
-      Alert.alert('Erreur', 'Veuillez ajouter au moins un produit à votre commande');
+      Alert.alert(
+        "Erreur",
+        "Veuillez ajouter au moins un produit à votre commande"
+      );
       setChargement(false);
       return;
     }
 
     // Check if dataUser exists and has an id
     if (!dataUser || !dataUser.id) {
-      Alert.alert('Erreur', 'Erreur de connexion utilisateur. Veuillez vous reconnecter.');
+      Alert.alert(
+        "Erreur",
+        "Erreur de connexion utilisateur. Veuillez vous reconnecter."
+      );
       setChargement(false);
       try {
         if (navigation && navigation.navigate) {
-          navigation.navigate('HomePage');
+          navigation.navigate("HomePage");
         }
       } catch (error) {
-        console.error('Navigation error:', error);
+        console.error("Navigation error:", error);
       }
       return;
     }
@@ -861,166 +888,197 @@ const renderProductItem = ({ item }) => {
       desc_dmd: description.trim(),
       date_fin: formatDate(date), // Using the fixed formatDate function
       id_client: parseInt(dataUser.id) || 1, // Ensure it's an integer
-      localisation_dmd: addresse !== '' ? addresse : `${selectedLocation.latitude};${selectedLocation.longitude}`,
-      produit_contenu: products.map(product => ({
+      localisation_dmd:
+        addresse !== ""
+          ? addresse
+          : `${selectedLocation.latitude};${selectedLocation.longitude}`,
+      produit_contenu: products.map((product) => ({
         id_produit: parseInt(product.id) || 1, // Ensure it's an integer
         nb_produit: parseFloat(product.productDetails.quantite) || 1,
         //ids_piece_produit: parseFloat(product.productDetails.poids) || 0
       })),
-      lliste_fourni: fournisseur_liste
+      lliste_fourni: fournisseur_liste,
     };
 
     let cate = [];
     //nous permet de check si l'utlisateur
     //souhaite réellement des commandes de différentes catégories
-    for(let i=0; i<products.length();i++){
-      if(!cate.includes(products[i])){
-        if(cate.length() > 1){
-            let a_quitter = false;
-            getAlertRef().current?.showAlert(
-                "Attention",
-                "Vous avez décidez de choisir des produits de catégories différents, les livraisons peuvent être à date différentes.",
-                true,
-                "Continuer",
-                null,
-                true,
-                "Annuler",
-                a_quitter = true
-                ,
-              );
-            if( a_quitter){return;}else{break;}
-        }else{cate.push(products[i]);}
+    for (let i = 0; i < products.length(); i++) {
+      if (!cate.includes(products[i])) {
+        if (cate.length() > 1) {
+          let a_quitter = false;
+          getAlertRef().current?.showAlert(
+            "Attention",
+            "Vous avez décidez de choisir des produits de catégories différents, les livraisons peuvent être à date différentes.",
+            true,
+            "Continuer",
+            null,
+            true,
+            "Annuler",
+            (a_quitter = true)
+          );
+          if (a_quitter) {
+            return;
+          } else {
+            break;
+          }
+        } else {
+          cate.push(products[i]);
+        }
       }
     }
 
     // Additional validation
     if (!formData.nom_dmd) {
-      Alert.alert('Erreur', 'Le nom de la commande ne peut pas être vide');
+      Alert.alert("Erreur", "Le nom de la commande ne peut pas être vide");
       setChargement(false);
       return;
     }
 
     if (formData.produit_contenu.length === 0) {
-      Alert.alert('Erreur', 'Aucun produit sélectionné');
+      Alert.alert("Erreur", "Aucun produit sélectionné");
       setChargement(false);
       return;
     }
 
-    console.log('Form data to send:', JSON.stringify(formData, null, 2));
-    console.log('Sending request to:', 'https://backend-logistique-api-latest.onrender.com/create_command.php');
+    console.log("Form data to send:", JSON.stringify(formData, null, 2));
+    console.log(
+      "Sending request to:",
+      "https://backend-logistique-api-latest.onrender.com/create_command.php"
+    );
 
     // Create a timeout promise
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
+      setTimeout(() => reject(new Error("Request timeout")), 30000); // 30 second timeout
     });
 
     // Race between the fetch and timeout
     // Race between the fetch and timeout
     Promise.race([
-      fetch('https://backend-logistique-api-latest.onrender.com/create_command.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      }),
-      timeoutPromise
-    ])
-    .then(async response => {
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('HTTP Error Response:', errorText);
-        throw new Error(`Erreur réseau: ${response.status} - ${errorText.substring(0, 200)}`);
-      }
-
-      // Get the response text first to debug
-      const responseText = await response.text();
-      console.log('Server response:', responseText);
-
-      // Try to parse as JSON
-      try {
-        return JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('JSON Parse Error:', parseError);
-        console.error('Response was:', responseText);
-        throw new Error(`Erreur de réponse serveur: ${responseText.substring(0, 100)}...`);
-      }
-    })
-    .then(data => {
-      console.log('Succès commande:', data);
-
-      // Call assign.php and wait for it to complete
-      console.log('Calling assign.php...');
-
-      // Create a timeout promise for assign.php
-      const assignTimeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Assign request timeout')), 15000); // 15 second timeout
-      });
-
-      return Promise.race([
-        fetch('https://backend-logistique-api-latest.onrender.com/assign.php', {
-          method: 'POST',
+      fetch(
+        "https://backend-logistique-api-latest.onrender.com/create_command.php",
+        {
+          method: "POST",
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
+            Accept: "application/json",
           },
-          body: JSON.stringify(formData)
-        }),
-        assignTimeoutPromise
-      ]);
-    })
-    .then(async response => {
-      console.log('Assign response status:', response.status);
+          body: JSON.stringify(formData),
+        }
+      ),
+      timeoutPromise,
+    ])
+      .then(async (response) => {
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn('Erreur lors de l\'assignation des commandes:', response.status, errorText);
-        return null;
-      } else {
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("HTTP Error Response:", errorText);
+          throw new Error(
+            `Erreur réseau: ${response.status} - ${errorText.substring(0, 200)}`
+          );
+        }
+
+        // Get the response text first to debug
         const responseText = await response.text();
-        console.log('Split assign response:', responseText);
+        console.log("Server response:", responseText);
+
+        // Try to parse as JSON
         try {
           return JSON.parse(responseText);
         } catch (parseError) {
-          console.error('Split assign JSON Parse Error:', parseError);
-          console.error('Split assign response was:', responseText);
-          return null;
+          console.error("JSON Parse Error:", parseError);
+          console.error("Response was:", responseText);
+          throw new Error(
+            `Erreur de réponse serveur: ${responseText.substring(0, 100)}...`
+          );
         }
-      }
-    })
-    .then(splitData => {
-      console.log('Split assign result:', splitData);
-      getAlertRef().current?.showAlert(
-        "Succès",
-        "Commande créée avec succès! La Préparation est en cours.",
-      );
+      })
+      .then((data) => {
+        console.log("Succès commande:", data);
 
-      // Reset form
-      setCommandeName('');
-      setDescription('');
-      setDate(dayjs());
-      setProducts([]);
-      setChildViews([]);
-      setSelectedLocation(null);
-      setChargement(false);
-      navigation.navigate('Accueil');
-    })
-    .catch(error => {
-      console.error('Erreur:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue lors de la création de la commande: ' + error.message);
-      setChargement(false);
-    });
-  }
+        // Call assign.php and wait for it to complete
+        console.log("Calling assign.php...");
 
+        // Create a timeout promise for assign.php
+        const assignTimeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Assign request timeout")), 15000); // 15 second timeout
+        });
 
-  return(
+        return Promise.race([
+          fetch(
+            "https://backend-logistique-api-latest.onrender.com/assign.php",
+            {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(formData),
+            }
+          ),
+          assignTimeoutPromise,
+        ]);
+      })
+      .then(async (response) => {
+        console.log("Assign response status:", response.status);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(
+            "Erreur lors de l'assignation des commandes:",
+            response.status,
+            errorText
+          );
+          return null;
+        } else {
+          const responseText = await response.text();
+          console.log("Split assign response:", responseText);
+          try {
+            return JSON.parse(responseText);
+          } catch (parseError) {
+            console.error("Split assign JSON Parse Error:", parseError);
+            console.error("Split assign response was:", responseText);
+            return null;
+          }
+        }
+      })
+      .then((splitData) => {
+        console.log("Split assign result:", splitData);
+        getAlertRef().current?.showAlert(
+          "Succès",
+          "Commande créée avec succès! La Préparation est en cours."
+        );
+
+        // Reset form
+        setCommandeName("");
+        setDescription("");
+        setDate(dayjs());
+        setProducts([]);
+        setChildViews([]);
+        setSelectedLocation(null);
+        setChargement(false);
+        navigation.navigate("Accueil");
+      })
+      .catch((error) => {
+        console.error("Erreur:", error);
+        Alert.alert(
+          "Erreur",
+          "Une erreur est survenue lors de la création de la commande: " +
+            error.message
+        );
+        setChargement(false);
+      });
+  };
+
+  return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={{flex: 1, position: 'relative'}}>
-        <ScrollView contentContainerStyle={styles.scrollContainer} scrollEnabled={!mapInteracting}>
+      <View style={{ flex: 1, position: "relative" }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          scrollEnabled={!mapInteracting}
+        >
           <View style={styles.container}>
             <Text style={styles.textH1}>Nouvelle Commande</Text>
 
@@ -1043,7 +1101,10 @@ const renderProductItem = ({ item }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Description (Optionnel)</Text>
                 <TextInput
-                  style={[styles.inputDesc, isDescFocused && styles.inputFocused]}
+                  style={[
+                    styles.inputDesc,
+                    isDescFocused && styles.inputFocused,
+                  ]}
                   placeholder="Ex: Viande et poisson pour l'Hotel n°..."
                   placeholderTextColor="#a2a2a9"
                   multiline
@@ -1064,10 +1125,10 @@ const renderProductItem = ({ item }) => {
                   onPress={openDatePicker}
                 >
                   <Text style={styles.datePickerButtonText}>
-                    {dayjs(date).format('DD/MM/YYYY HH:mm')}
+                    {dayjs(date).format("DD/MM/YYYY HH:mm")}
                   </Text>
                   <Image
-                    source={require('../assets/Icons/calendar-icon.png')}
+                    source={require("../assets/Icons/calendar-icon.png")}
                     style={styles.calendarIcon}
                   />
                 </TouchableOpacity>
@@ -1085,17 +1146,17 @@ const renderProductItem = ({ item }) => {
 
               {/* Fournisseur Modal */}
 
-                <Modal
-                  animationType='fade'
-                  transparent={true}
-                  visible={modalFourniVisible}
-                  onRequestClose={() => setModalFourniVisible(false)}
-                >
+              <Modal
+                animationType="fade"
+                transparent={true}
+                visible={modalFourniVisible}
+                onRequestClose={() => setModalFourniVisible(false)}
+              >
                 <View style={styles.modalOverlay}>
-                  <View style={[styles.modalContent, {alignItems: ''}]}>
+                  <View style={[styles.modalContent, { alignItems: "" }]}>
                     <TouchableOpacity
-                    onPress={() => setModalFourniVisible(false)}
-                    style={{marginLeft: 15}}
+                      onPress={() => setModalFourniVisible(false)}
+                      style={{ marginLeft: 15 }}
                     >
                       <MaterialCommunityIcons
                         name="close"
@@ -1110,7 +1171,7 @@ const renderProductItem = ({ item }) => {
                         fontWeight: "600",
                         marginTop: 15,
                         marginBottom: 15,
-                        textAlign: "center"
+                        textAlign: "center",
                       }}
                     >
                       Choisissez le livreur le plus proche
@@ -1118,81 +1179,87 @@ const renderProductItem = ({ item }) => {
 
                     <TouchableOpacity
                       onPress={() => {
-                          setModalFourniVisible(false);
-                          if (selectedProduct) {
-                              add_product(
-                                  selectedProduct.key,
-                                  nombre,
-                                  selectedProduct.id,
-                                  selectedProduct.originalItem,
-                                  fourni[0]?.prix_produit || 0 // Use the first supplier's price or default to 0
-                              );
-                          }
+                        setModalFourniVisible(false);
+                        if (selectedProduct) {
+                          add_product(
+                            selectedProduct.key,
+                            nombre,
+                            selectedProduct.id,
+                            selectedProduct.originalItem,
+                            fourni[0]?.prix_produit || 0 // Use the first supplier's price or default to 0
+                          );
+                        }
                       }}
                       activeOpacity={0.8}
                       style={{ marginTop: 15, marginBottom: 15 }}
-                  >
+                    >
                       <View
-                          style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "#4CAF50",
-                              paddingVertical: 15,
-                              paddingHorizontal: 20,
-                              borderRadius: 15,
-                              shadowColor: "#000",
-                              shadowOffset: { width: 0, height: 3 },
-                              shadowOpacity: 0.3,
-                              shadowRadius: 4,
-                              elevation: 5,
-                          }}
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: "#4CAF50",
+                          paddingVertical: 15,
+                          paddingHorizontal: 20,
+                          borderRadius: 15,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 3 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 4,
+                          elevation: 5,
+                        }}
                       >
-                          <MaterialCommunityIcons
-                              name="truck-fast-outline"
-                              size={28}
-                              color="#fff"
-                              style={{ marginRight: 10 }}
-                          />
-                          <Text
-                              style={{
-                                  fontSize: 16,
-                                  fontWeight: "600",
-                                  color: "#fff",
-                                  textTransform: "uppercase",
-                                  letterSpacing: 1,
-                              }}
-                          >
-                              Livraison Éclair
-                          </Text>
+                        <MaterialCommunityIcons
+                          name="truck-fast-outline"
+                          size={28}
+                          color="#fff"
+                          style={{ marginRight: 10 }}
+                        />
+                        <Text
+                          style={{
+                            fontSize: 16,
+                            fontWeight: "600",
+                            color: "#fff",
+                            textTransform: "uppercase",
+                            letterSpacing: 1,
+                          }}
+                        >
+                          Livraison Éclair
+                        </Text>
                       </View>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
 
                     <View style={styles.orDivider}>
-                    <View style={styles.dividerLine}></View>
-                    <Text style={styles.orText}>OU</Text>
-                    <View style={styles.dividerLine}></View>
-                  </View>
-
+                      <View style={styles.dividerLine}></View>
+                      <Text style={styles.orText}>OU</Text>
+                      <View style={styles.dividerLine}></View>
+                    </View>
 
                     <Text
-                    style={{fontSize: 18, fontWeight: "500", marginTop: 15, marginBottom: 15, textAlign: "center"}}
-                    >Choisissez parmi la liste des fournisseurs</Text>
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "500",
+                        marginTop: 15,
+                        marginBottom: 15,
+                        textAlign: "center",
+                      }}
+                    >
+                      Choisissez parmi la liste des fournisseurs
+                    </Text>
 
                     <FlatList
                       data={fourni}
                       renderItem={renderFourniChoix}
-                      keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
+                      keyExtractor={(fourni) =>
+                        fourni.id_fournisseur.toString()
+                      }
                       numColumns={1}
                       contentContainerStyle={styles.productGrid}
                       showsVerticalScrollIndicator={false}
                     />
-                    </View>
                   </View>
-                </Modal>
-
-
-
+                </View>
+              </Modal>
 
               {/* Product Modal */}
               <Modal
@@ -1203,9 +1270,7 @@ const renderProductItem = ({ item }) => {
               >
                 <View style={styles.modalOverlay}>
                   <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>
-                      Produit sélectionné:
-                    </Text>
+                    <Text style={styles.modalTitle}>Produit sélectionné:</Text>
                     <Text style={styles.modalTextSelected}>
                       {selectedProduct?.key}
                     </Text>
@@ -1213,8 +1278,11 @@ const renderProductItem = ({ item }) => {
                     {/* Add price display if available */}
                     {selectedProduct?.originalItem?.prix_produit && (
                       <Text style={styles.modalPrice}>
-                        Prix Moyen : ~{selectedProduct.originalItem.prix_produit} FCFA
-                        {selectedProduct.originalItem.type_vendu === 'poids' ? ' / kg' : ' / unité'}
+                        Prix Moyen : ~
+                        {selectedProduct.originalItem.prix_produit} FCFA
+                        {selectedProduct.originalItem.type_vendu === "poids"
+                          ? " / kg"
+                          : " / unité"}
                       </Text>
                     )}
 
@@ -1250,10 +1318,8 @@ const renderProductItem = ({ item }) => {
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.modalButtonOK}
-                        onPress={async() => {
-
-
-                          if (nombre ) {
+                        onPress={async () => {
+                          if (nombre) {
                             //add_product(
                             //  selectedProduct.key,
                             //  //poids,
@@ -1262,24 +1328,24 @@ const renderProductItem = ({ item }) => {
                             //  selectedProduct.id,
                             //  selectedProduct.originalItem
                             //); // CHECKER LE NB DE PARAM
-                            if (await getFourni(selectedProduct.id) === 1){
-                              setModalVisible(false)
+                            if ((await getFourni(selectedProduct.id)) === 1) {
+                              setModalVisible(false);
                               getAlertRef().current?.showAlert(
-                                  'Aïe',
-                                  'Oups! Aucun fournisseur ne peut remplir votre commande. Revenez plus tard',
-                                  true,
-                                  "continuer",
-                                  null
+                                "Aïe",
+                                "Oups! Aucun fournisseur ne peut remplir votre commande. Revenez plus tard",
+                                true,
+                                "continuer",
+                                null
                               );
-                            }else{
-                              setModalVisible(false)
-                              setModalFourniVisible(true)
+                            } else {
+                              setModalVisible(false);
+                              setModalFourniVisible(true);
                             }
-
-
-
                           } else {
-                            Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+                            Alert.alert(
+                              "Erreur",
+                              "Veuillez remplir tous les champs"
+                            );
                           }
                         }}
                       >
@@ -1302,29 +1368,33 @@ const renderProductItem = ({ item }) => {
                   onChangeText={handleSearchTextChange}
                 />
                 <Image
-                  source={require('../assets/Icons/Dark-Search.png')}
+                  source={require("../assets/Icons/Dark-Search.png")}
                   style={styles.imageSearch}
                 />
               </View>
 
               {/* Products List Section */}
-            <SafeAreaView style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Produits commandable</Text>
-              <View style={styles.productListContainer}>
-                <FlatList
-                  data={produits}
-                  keyExtractor={(item, index) => item.id_produit?.toString() || index.toString()}
-                  renderItem={renderProductItem}
-                  ListEmptyComponent={
-                    <Text style={styles.emptyListText}>Aucun produit trouvé</Text>
-                  }
-                  showsVerticalScrollIndicator={true}
-                  scrollEnabled={true}
-                  nestedScrollEnabled={true}
-                  style={styles.productFlatList}
-                />
-              </View>
-            </SafeAreaView>
+              <SafeAreaView style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Produits commandable</Text>
+                <View style={styles.productListContainer}>
+                  <FlatList
+                    data={produits}
+                    keyExtractor={(item, index) =>
+                      item.id_produit?.toString() || index.toString()
+                    }
+                    renderItem={renderProductItem}
+                    ListEmptyComponent={
+                      <Text style={styles.emptyListText}>
+                        Aucun produit trouvé
+                      </Text>
+                    }
+                    showsVerticalScrollIndicator={true}
+                    scrollEnabled={true}
+                    nestedScrollEnabled={true}
+                    style={styles.productFlatList}
+                  />
+                </View>
+              </SafeAreaView>
 
               {/* Selected Products - Enhanced with delete functionality */}
               {products.length > 0 && (
@@ -1332,33 +1402,50 @@ const renderProductItem = ({ item }) => {
                   <Text style={styles.sectionTitle}>Produits Sélectionnés</Text>
                   <View style={styles.selectedProductsContainer}>
                     {products.map((product, index) => {
-                      const quantity = parseFloat(product.productDetails.quantite) || 1;
-                      const price = parseFloat(product.productDetails.prix) || 0;
+                      const quantity =
+                        parseFloat(product.productDetails.quantite) || 1;
+                      const price =
+                        parseFloat(product.productDetails.prix) || 0;
                       const lineTotal = quantity * price;
 
                       return (
-                        <View key={`${product.name}-${index}`} style={styles.containerProduct}>
+                        <View
+                          key={`${product.name}-${index}`}
+                          style={styles.containerProduct}
+                        >
                           <View style={styles.productInfo}>
                             <Text style={styles.productInfoText}>
                               {quantity}x {product.name}
                             </Text>
                             <Text style={styles.productPriceText}>
-                              {price.toLocaleString()} FCFA x {quantity} = {lineTotal.toLocaleString()} FCFA
+                              {price.toLocaleString()} FCFA x {quantity} ={" "}
+                              {lineTotal.toLocaleString()} FCFA
                             </Text>
                             <Text style={styles.categoryText}>
-                              ({product.productDetails.nom_categorie || 'Catégorie non définie'})
+                              (
+                              {product.productDetails.nom_categorie ||
+                                "Catégorie non définie"}
+                              )
                             </Text>
                           </View>
                           <View style={styles.productActions}>
                             <Image
-                              style={{marginRight: 25}}
-                              source={dic_image_name[typeof product.name === 'string' ? product.name.toLowerCase() : 'tomate']}
+                              style={{ marginRight: 25 }}
+                              source={
+                                dic_image_name[
+                                  typeof product.name === "string"
+                                    ? product.name.toLowerCase()
+                                    : "tomate"
+                                ]
+                              }
                             />
                             <TouchableOpacity
                               style={styles.deleteButton}
                               onPress={() => removeProduct(product.id)}
                             >
-                              <Text style={{fontSize: 20, color: '#000'}}>✕</Text>
+                              <Text style={{ fontSize: 20, color: "#000" }}>
+                                ✕
+                              </Text>
                             </TouchableOpacity>
                           </View>
                         </View>
@@ -1369,11 +1456,17 @@ const renderProductItem = ({ item }) => {
                   {/* Add Total Calculation */}
                   <View style={styles.totalContainer}>
                     <Text style={styles.totalText}>
-                      Total: {products.reduce((sum, product) => {
-                        const quantity = parseFloat(product.productDetails.quantite) || 1;
-                        const price = parseFloat(product.productDetails.prix) || 0;
-                        return sum + (quantity * price);
-                      }, 0).toLocaleString()} FCFA
+                      Total:{" "}
+                      {products
+                        .reduce((sum, product) => {
+                          const quantity =
+                            parseFloat(product.productDetails.quantite) || 1;
+                          const price =
+                            parseFloat(product.productDetails.prix) || 0;
+                          return sum + quantity * price;
+                        }, 0)
+                        .toLocaleString()}{" "}
+                      FCFA
                     </Text>
                   </View>
                 </View>
@@ -1425,10 +1518,12 @@ const renderProductItem = ({ item }) => {
                     disabled={!hasLocationPermission}
                   >
                     <Image
-                      source={require('../assets/Icons/location-icon.png')}
+                      source={require("../assets/Icons/location-icon.png")}
                       style={styles.locationIcon}
                     />
-                    <Text style={styles.locationButtonText}>Utiliser ma position</Text>
+                    <Text style={styles.locationButtonText}>
+                      Utiliser ma position
+                    </Text>
                   </TouchableOpacity>
 
                   <View style={styles.orDivider}>
@@ -1452,50 +1547,68 @@ const renderProductItem = ({ item }) => {
                     onMapTouchStart={() => setMapInteracting(true)}
                     onMapTouchEnd={() => setMapInteracting(false)}
                   />
-                  {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
-                    <View style={styles.coordinatesContainer}>
-                      <Image
-                        source={require('../assets/Icons/marker-icon.png')}
-                        style={styles.markerIcon}
-                      />
-                      <Text style={styles.coordinatesText}>
-                        {selectedLocation.latitude.toFixed(6)}, {selectedLocation.longitude.toFixed(6)}
-                      </Text>
-                    </View>
-                  )}
+                  {selectedLocation &&
+                    selectedLocation.latitude &&
+                    selectedLocation.longitude && (
+                      <View style={styles.coordinatesContainer}>
+                        <Image
+                          source={require("../assets/Icons/marker-icon.png")}
+                          style={styles.markerIcon}
+                        />
+                        <Text style={styles.coordinatesText}>
+                          {selectedLocation.latitude.toFixed(6)},{" "}
+                          {selectedLocation.longitude.toFixed(6)}
+                        </Text>
+                      </View>
+                    )}
                 </View>
                 <View style={styles.orDivider}>
-                    <View style={styles.dividerLine}></View>
-                    <Text style={styles.orText}>OU</Text>
-                    <View style={styles.dividerLine}></View>
-                  </View>
-                  <Text style={[styles.tapInstruction, {marginBottom: 10}]}>
-                    Entrez votre addresse manuellement
-                  </Text>
-                  <TextInput
-                    style={[styles.inputDesc, isDescFocused && styles.inputFocused, {height: 60}]}
-                    placeholder="ex: 98JM+HPR, Cotonou, Bénin"
-                    placeholderTextColor="#a2a2a9"
-                    numberOfLines={1}
-                    maxLength={200}
-                    value={addresse}
-                    onChangeText={setAddresse}
-                    onFocus={() => setIsDescFocused(true)}
-                    onBlur={() => setIsDescFocused(false)}
-                  />
+                  <View style={styles.dividerLine}></View>
+                  <Text style={styles.orText}>OU</Text>
+                  <View style={styles.dividerLine}></View>
+                </View>
+                <Text style={[styles.tapInstruction, { marginBottom: 10 }]}>
+                  Entrez votre addresse manuellement
+                </Text>
+                <TextInput
+                  style={[
+                    styles.inputDesc,
+                    isDescFocused && styles.inputFocused,
+                    { height: 60 },
+                  ]}
+                  placeholder="ex: 98JM+HPR, Cotonou, Bénin"
+                  placeholderTextColor="#a2a2a9"
+                  numberOfLines={1}
+                  maxLength={200}
+                  value={addresse}
+                  onChangeText={setAddresse}
+                  onFocus={() => setIsDescFocused(true)}
+                  onBlur={() => setIsDescFocused(false)}
+                />
               </View>
 
               {/* Submit Button */}
               <TouchableOpacity
-                style={[styles.submitButton, (chargement || userDataLoading) && styles.submitButtonDisabled]}
+                style={[
+                  styles.submitButton,
+                  (chargement || userDataLoading) &&
+                    styles.submitButtonDisabled,
+                ]}
                 onPress={handleConfirmationCommand}
                 disabled={chargement || userDataLoading}
               >
                 <Text style={styles.submitButtonText}>
-                  {userDataLoading ? "Chargement..." : chargement ? "Envoi en cours..." : "Valider la commande"}
+                  {userDataLoading
+                    ? "Chargement..."
+                    : chargement
+                    ? "Envoi en cours..."
+                    : "Valider la commande"}
                 </Text>
                 {(chargement || userDataLoading) && (
-                  <ActivityIndicator color="#fff" style={styles.loadingIndicator} />
+                  <ActivityIndicator
+                    color="#fff"
+                    style={styles.loadingIndicator}
+                  />
                 )}
               </TouchableOpacity>
 
@@ -1525,36 +1638,35 @@ const styles = StyleSheet.create({
   productItem: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-
+    borderBottomColor: "#eee",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   categoryText: {
     fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic'
+    color: "#666",
+    fontStyle: "italic",
   },
   smallProductIcon: {
     width: 24,
     height: 24,
-    marginRight: 10
+    marginRight: 10,
   },
   datePickerModal: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
-    width: '90%',
-    alignItems: 'center',
+    width: "90%",
+    alignItems: "center",
   },
   timePickerModal: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 15,
     padding: 25,
-    width: '85%',
-    alignItems: 'center',
-    shadowColor: '#000',
+    width: "85%",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1563,8 +1675,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  fourniList : {
-    shadowColor: '#000',
+  fourniList: {
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,
@@ -1572,52 +1684,52 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-    backgroundColor: "#FFF"
+    backgroundColor: "#FFF",
   },
   datePicker: {
-    width: '100%',
+    width: "100%",
     marginVertical: 20,
   },
   timePicker: {
-    width: '100%',
+    width: "100%",
     marginVertical: 15,
   },
   timePickerContainer: {
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     paddingVertical: 10,
   },
   timeDisplayContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
     padding: 12,
     marginVertical: 15,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: "#e9ecef",
   },
   timeDisplayText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2E3192',
+    fontWeight: "600",
+    color: "#2E3192",
   },
   emptyListText: {
-    textAlign: 'center',
-    color: '#666',
-    fontStyle: 'italic',
+    textAlign: "center",
+    color: "#666",
+    fontStyle: "italic",
     marginVertical: 40,
     fontSize: 14,
   },
   datePickerCloseButton: {
     marginTop: 15,
     padding: 10,
-    backgroundColor: '#45b308',
+    backgroundColor: "#45b308",
     borderRadius: 5,
   },
   datePickerCloseButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -1626,7 +1738,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   form: {
     marginTop: 20,
@@ -1634,29 +1746,28 @@ const styles = StyleSheet.create({
   textH1: {
     fontSize: 25,
     marginTop: 20,
-    color: '#000',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#000",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   descInput: {
-
     color: "#000",
     marginBottom: 10,
-    marginLeft: '10%',
-    fontWeight: "500"
+    marginLeft: "10%",
+    fontWeight: "500",
   },
   input: {
     height: 40,
     borderWidth: 2.5,
     borderRadius: 7,
-    width: '100%',
+    width: "100%",
     padding: 10,
-    color: '#111',
+    color: "#111",
     marginBottom: 20,
     marginTop: 5,
-    alignSelf: 'center',
-    backgroundColor: '#f8f8f8',
-    borderColor: '#666',
+    alignSelf: "center",
+    backgroundColor: "#f8f8f8",
+    borderColor: "#666",
   },
 
   input: {
@@ -1664,21 +1775,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
+    color: "#333",
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
     fontSize: 15,
   },
 
-  inputTextSearch : {
+  inputTextSearch: {
     height: 50,
-    width: '90%',
+    width: "90%",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
+    color: "#333",
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
     fontSize: 15,
   },
 
@@ -1687,18 +1798,16 @@ const styles = StyleSheet.create({
     height: 80,
     borderWidth: 2.5,
     borderRadius: 7,
-    width: '80%',
+    width: "80%",
     padding: 10,
-    color: '#111',
+    color: "#111",
     marginBottom: 20,
-    alignSelf: 'center',
-    backgroundColor: '#f8f8f8',
-    borderColor: '#666',
-
-
+    alignSelf: "center",
+    backgroundColor: "#f8f8f8",
+    borderColor: "#666",
   },
   datePickerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
     marginBottom: 20,
   },
@@ -1709,9 +1818,9 @@ const styles = StyleSheet.create({
     width: 180,
     height: 60,
     marginTop: 40,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 30,
   },
   textButton: {
@@ -1727,86 +1836,85 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     backgroundColor: "#B8E0FF",
     padding: 15,
-
   },
   titleProd: {
     fontSize: 18,
     fontWeight: "500",
     marginBottom: 10,
-    color: '#000',
-    textAlign: "center"
+    color: "#000",
+    textAlign: "center",
   },
   item: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: "500",
-    color: '#000',
+    color: "#000",
   },
   localisationText: {
-    color: '#000',
-    textAlign: 'center',
+    color: "#000",
+    textAlign: "center",
     marginTop: 10,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
-  modalTextSelected : {
+  modalTextSelected: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#555',
+    color: "#555",
     backgroundColor: "#f8f8f8",
     padding: 10,
-    width: '80%',
-    textAlign: 'center',
+    width: "80%",
+    textAlign: "center",
     fontWeight: "500",
     borderRadius: 7,
   },
   modalText: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#555',
+    color: "#555",
   },
   inputNB: {
     height: 40,
     borderWidth: 2.5,
     borderRadius: 7,
-    width: '80%',
+    width: "80%",
     padding: 10,
-    color: '#111',
+    color: "#111",
     marginBottom: 20,
     marginTop: 5,
-    alignSelf: 'center',
-    backgroundColor: '#f8f8f8',
-    borderColor: '#666',
+    alignSelf: "center",
+    backgroundColor: "#f8f8f8",
+    borderColor: "#666",
   },
   buttonModal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 15,
   },
   modalButtonOK: {
-    backgroundColor: '#45b308',
+    backgroundColor: "#45b308",
     padding: 10,
     borderRadius: 5,
     flex: 1,
     marginLeft: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonAnnul: {
     borderWidth: 1,
@@ -1815,29 +1923,29 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     borderColor: "#c51b18",
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalButtonTextAnnul: {
-    color: '#c51b18',
+    color: "#c51b18",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 
   productText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#45b308',
+    fontWeight: "bold",
+    color: "#45b308",
   },
 
   txtInput: {
     fontSize: 16,
     fontWeight: "400",
-    marginTop: 15
+    marginTop: 15,
   },
   inputNB: {
     width: 210,
@@ -1845,15 +1953,15 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderRadius: 7,
     padding: 10,
-    color: '#111',
-    backgroundColor: '#f8f8f8',
+    color: "#111",
+    backgroundColor: "#f8f8f8",
   },
   InputModal: {
-    borderColor: "#111"
+    borderColor: "#111",
   },
   buttonModal: {
     display: "flex",
-    flexDirection: "row"
+    flexDirection: "row",
   },
   containerProduct: {
     borderRadius: 7,
@@ -1863,35 +1971,35 @@ const styles = StyleSheet.create({
   },
 
   map: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   locationButtons: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   locationButton: {
-    backgroundColor: '#45b308',
+    backgroundColor: "#45b308",
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
   },
   locationButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   orText: {
     marginVertical: 5,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   tapText: {
     marginBottom: 10,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   coordinatesText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 10,
-    color: '#555',
+    color: "#555",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -1900,7 +2008,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
   },
   form: {
     marginTop: 15,
@@ -1910,9 +2018,9 @@ const styles = StyleSheet.create({
   textH1: {
     fontSize: 24,
     marginVertical: 15,
-    color: '#2E3192',
-    fontWeight: '700',
-    textAlign: 'center',
+    color: "#2E3192",
+    fontWeight: "700",
+    textAlign: "center",
   },
 
   // Input Fields
@@ -1927,9 +2035,9 @@ const styles = StyleSheet.create({
   },
 
   inputFocused: {
-    borderColor: '#2E3192',
+    borderColor: "#2E3192",
     borderWidth: 1.5,
-    shadowColor: '#2E3192',
+    shadowColor: "#2E3192",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.1,
     shadowRadius: 6,
@@ -1940,10 +2048,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    textAlignVertical: 'top',
+    color: "#333",
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
+    textAlignVertical: "top",
     fontSize: 15,
   },
 
@@ -1953,29 +2061,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   datePickerButtonText: {
-    color: '#333',
+    color: "#333",
     fontSize: 15,
   },
   calendarIcon: {
     width: 20,
     height: 20,
-    tintColor: '#555',
+    tintColor: "#555",
   },
 
   // Section Styles
   sectionContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 15,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -1985,23 +2093,23 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2E3192',
+    fontWeight: "600",
+    color: "#2E3192",
     marginBottom: 15,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
 
   // Product List
   productItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
+    borderBottomColor: "#f5f5f5",
   },
   productItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   smallProductIcon: {
     width: 24,
@@ -2010,8 +2118,8 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 15,
-    color: '#444',
-    fontWeight: '500',
+    color: "#444",
+    fontWeight: "500",
   },
 
   // Selected Products
@@ -2024,91 +2132,91 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#45b308',
+    borderLeftColor: "#45b308",
   },
 
   // Location Section
   locationHelpText: {
-    color: '#666',
+    color: "#666",
     fontSize: 13,
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   locationButtons: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 15,
   },
   locationButton: {
-    backgroundColor: '#2E3192',
+    backgroundColor: "#2E3192",
     padding: 12,
     borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
   locationIcon: {
     width: 16,
     height: 16,
-    tintColor: '#fff',
+    tintColor: "#fff",
     marginRight: 8,
   },
   locationButtonText: {
-    color: 'white',
-    fontWeight: '500',
+    color: "white",
+    fontWeight: "500",
   },
   orDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 15,
-    width: '100%',
+    width: "100%",
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: "#eee",
   },
   orText: {
     marginHorizontal: 10,
-    color: '#999',
+    color: "#999",
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   tapInstruction: {
-    color: '#666',
+    color: "#666",
     fontSize: 13,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   mapContainer: {
     height: 250,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
   map: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   mapControls: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 10,
   },
   mapControlButton: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginHorizontal: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -2117,38 +2225,37 @@ const styles = StyleSheet.create({
   controlIcon: {
     width: 20,
     height: 20,
-    tintColor: '#2E3192',
+    tintColor: "#2E3192",
   },
   coordinatesContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 10,
     padding: 8,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 5,
   },
   markerIcon: {
     width: 14,
     height: 14,
-    tintColor: '#2E3192',
+    tintColor: "#2E3192",
     marginRight: 6,
   },
   coordinatesText: {
     fontSize: 12,
-    color: '#555',
+    color: "#555",
   },
-
 
   submitButton: {
     backgroundColor: "#45b308",
     padding: 16,
     borderRadius: 8,
     marginTop: 25,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#45b308',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#45b308",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -2167,13 +2274,13 @@ const styles = StyleSheet.create({
   },
 
   mapControlsContainer: {
-    position: 'absolute',
+    position: "absolute",
     right: 15,
     top: 15,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -2182,29 +2289,29 @@ const styles = StyleSheet.create({
   mapControlButton: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white",
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   mapControlText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2E3192',
+    fontWeight: "bold",
+    color: "#2E3192",
   },
-  SearchInputText : {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+  SearchInputText: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
     marginBottom: 10,
   },
   productItem: {
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f5f5f5',
-    backgroundColor: '#fff',
+    borderBottomColor: "#f5f5f5",
+    backgroundColor: "#fff",
     marginVertical: 1,
     marginHorizontal: 5,
     borderRadius: 6,
@@ -2212,30 +2319,30 @@ const styles = StyleSheet.create({
 
   categoryText: {
     fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic'
+    color: "#666",
+    fontStyle: "italic",
   },
   smallProductIcon: {
     width: 24,
     height: 24,
-    marginRight: 10
+    marginRight: 10,
   },
   datePickerModal: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
-    width: '90%',
-    alignItems: 'center',
+    width: "90%",
+    alignItems: "center",
   },
   datePickerCloseButton: {
     marginTop: 15,
     padding: 10,
-    backgroundColor: '#45b308',
+    backgroundColor: "#45b308",
     borderRadius: 5,
   },
   datePickerCloseButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -2244,7 +2351,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   form: {
     marginTop: 20,
@@ -2252,35 +2359,35 @@ const styles = StyleSheet.create({
   textH1: {
     fontSize: 25,
     marginTop: 20,
-    color: '#000',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#000",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   descInput: {
     color: "#000",
     marginBottom: 10,
-    marginLeft: '10%',
-    fontWeight: "500"
+    marginLeft: "10%",
+    fontWeight: "500",
   },
   input: {
     height: 50,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
+    color: "#333",
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
     fontSize: 15,
   },
   inputTextSearch: {
     height: 50,
-    width: '90%',
+    width: "90%",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
+    color: "#333",
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
     fontSize: 15,
   },
   inputDesc: {
@@ -2289,14 +2396,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 15,
-    color: '#333',
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    textAlignVertical: 'top',
+    color: "#333",
+    backgroundColor: "#fff",
+    borderColor: "#ddd",
+    textAlignVertical: "top",
     fontSize: 15,
   },
   datePickerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
     marginBottom: 20,
   },
@@ -2307,9 +2414,9 @@ const styles = StyleSheet.create({
     width: 180,
     height: 60,
     marginTop: 40,
-    alignSelf: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignSelf: "center",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 30,
   },
   textButton: {
@@ -2330,33 +2437,33 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     marginBottom: 10,
-    color: '#000',
-    textAlign: "center"
+    color: "#000",
+    textAlign: "center",
   },
   item: {
     marginTop: 10,
     fontSize: 16,
     fontWeight: "500",
-    color: '#000',
+    color: "#000",
   },
   localisationText: {
-    color: '#000',
-    textAlign: 'center',
+    color: "#000",
+    textAlign: "center",
     marginTop: 10,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: '#FFF',
+    width: "80%",
+    backgroundColor: "#FFF",
     borderRadius: 10,
     padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2367,51 +2474,51 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
-    color: '#333',
+    color: "#333",
   },
   modalTextSelected: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#555',
+    color: "#555",
     backgroundColor: "#f8f8f8",
     padding: 10,
-    width: '80%',
-    textAlign: 'center',
+    width: "80%",
+    textAlign: "center",
     fontWeight: "500",
     borderRadius: 7,
   },
   modalText: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#555',
+    color: "#555",
   },
   inputNB: {
     height: 40,
     borderWidth: 2.5,
     borderRadius: 7,
-    width: '80%',
+    width: "80%",
     padding: 10,
-    color: '#111',
+    color: "#111",
     marginBottom: 20,
     marginTop: 5,
-    alignSelf: 'center',
-    backgroundColor: '#f8f8f8',
-    borderColor: '#666',
+    alignSelf: "center",
+    backgroundColor: "#f8f8f8",
+    borderColor: "#666",
   },
   buttonModal: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 15,
   },
   modalButtonOK: {
-    backgroundColor: '#45b308',
+    backgroundColor: "#45b308",
     padding: 10,
     borderRadius: 5,
     flex: 1,
     marginLeft: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonAnnul: {
     borderWidth: 1,
@@ -2420,30 +2527,30 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     borderColor: "#c51b18",
-    alignItems: 'center',
+    alignItems: "center",
   },
   modalButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   modalButtonTextAnnul: {
-    color: '#c51b18',
+    color: "#c51b18",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   productText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#45b308',
+    fontWeight: "bold",
+    color: "#45b308",
   },
   txtInput: {
     fontSize: 16,
     fontWeight: "400",
-    marginTop: 15
+    marginTop: 15,
   },
   InputModal: {
-    borderColor: "#111"
+    borderColor: "#111",
   },
   containerProduct: {
     borderRadius: 8,
@@ -2451,10 +2558,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
     padding: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#45b308',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderLeftColor: "#45b308",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   productInfo: {
     flex: 1,
@@ -2462,86 +2569,86 @@ const styles = StyleSheet.create({
   productInfoText: {
     fontSize: 16,
     fontWeight: "500",
-    color: '#333',
+    color: "#333",
   },
   productActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   deleteButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#ffebee',
+    backgroundColor: "#ffebee",
     borderWidth: 1,
-    borderColor: '#ffcdd2',
+    borderColor: "#ffcdd2",
   },
   imageSearch: {
     width: 20,
     height: 20,
-    tintColor: '#666',
+    tintColor: "#666",
   },
   testButton: {
-    backgroundColor: '#2E3192',
+    backgroundColor: "#2E3192",
     padding: 16,
     borderRadius: 8,
     marginTop: 25,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#2E3192',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#2E3192",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 3,
   },
   testButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   dateDisplayContainer: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     borderRadius: 8,
     padding: 12,
     marginVertical: 15,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: "#e9ecef",
   },
   dateDisplayText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2E3192',
+    fontWeight: "600",
+    color: "#2E3192",
   },
-    productListContainer: {
+  productListContainer: {
     height: 250, // Fixed height for the scrollable area
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
     borderRadius: 8,
-    backgroundColor: '#fafafa',
+    backgroundColor: "#fafafa",
   },
 
   productFlatList: {
     flex: 1,
     paddingHorizontal: 5,
   },
-   productTextContainer: {
+  productTextContainer: {
     flex: 1,
   },
-    productUnit: {
+  productUnit: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginTop: 2,
   },
 
   productCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 20,
     marginVertical: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2550,21 +2657,21 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    position: 'relative',
+    borderColor: "#F1F5F9",
+    position: "relative",
   },
 
   cheapestCard: {
-    borderColor: '#2E7D32',
+    borderColor: "#2E7D32",
     borderWidth: 2,
-    backgroundColor: '#F8FFF8',
+    backgroundColor: "#F8FFF8",
   },
 
   bestPriceBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     right: 16,
-    backgroundColor: '#2E7D32',
+    backgroundColor: "#2E7D32",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
@@ -2572,16 +2679,16 @@ const styles = StyleSheet.create({
   },
 
   bestPriceText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     letterSpacing: 0.5,
   },
 
   supplierHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
 
@@ -2592,26 +2699,26 @@ const styles = StyleSheet.create({
 
   supplierName: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1E293B',
+    fontWeight: "bold",
+    color: "#1E293B",
     marginBottom: 4,
   },
 
   productPrice: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2E7D32',
+    fontWeight: "bold",
+    color: "#2E7D32",
   },
 
   cartButton: {
     marginTop: 10,
-    backgroundColor: '#FF8C00', // Orange background
+    backgroundColor: "#FF8C00", // Orange background
     width: 44,
     height: 44,
     borderRadius: 7,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#FF8C00',
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#FF8C00",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2626,25 +2733,25 @@ const styles = StyleSheet.create({
   },
 
   detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
 
   detailText: {
     fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
+    color: "#64748B",
+    fontWeight: "500",
   },
 
   productGrid: {
     paddingBottom: 20,
   },
-  bouttonExpress : {
+  bouttonExpress: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    shadowColor: '#585755ff',
+    shadowColor: "#585755ff",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -2658,29 +2765,28 @@ const styles = StyleSheet.create({
   },
   productPriceText: {
     fontSize: 14,
-    color: '#2E7D32',
-    fontWeight: '500',
+    color: "#2E7D32",
+    fontWeight: "500",
     marginVertical: 2,
   },
   totalContainer: {
     marginTop: 15,
     paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
-    alignItems: 'flex-end',
+    borderTopColor: "#eee",
+    alignItems: "flex-end",
   },
   totalText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2E3192',
+    fontWeight: "bold",
+    color: "#2E3192",
   },
   modalPrice: {
-  fontSize: 16,
-  fontWeight: 'bold',
-  color: '#2E7D32',
-  marginBottom: 15,
-},
-
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginBottom: 15,
+  },
 });
 
 export default Formulaire;

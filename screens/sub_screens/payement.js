@@ -34,10 +34,10 @@ const payement = ({ navigation, route }) => {
             },
             body: JSON.stringify({ referenceId })
           });
-      
+
           const result = await response.json();
           console.log("Statut du paiement:", result.status);
-      
+
           if (result.status === 'SUCCESSFUL') {
             Alert.alert('✅ Paiement Réussi', 'Merci pour votre paiement !');
             try{
@@ -46,14 +46,14 @@ const payement = ({ navigation, route }) => {
                 headers: {
                   'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                  idcmd: formData.id, 
-                  number: phoneNumber, 
-                  externalId: referenceId, 
-                  amount: formData.amount 
+                body: JSON.stringify({
+                  idcmd: formData.id,
+                  number: phoneNumber,
+                  externalId: referenceId,
+                  amount: formData.amount
                 })
               });
-              
+
               const confirmResult = await response.json();
               if (confirmResult.ok) {
                 Alert.alert('Paiement enregistré', 'Le paiement a été enregistré avec succès.');
@@ -92,14 +92,14 @@ const payement = ({ navigation, route }) => {
           Alert.alert('Erreur', 'Veuillez entrer un numéro MoMo');
           return;
         }
-      
+
         if (!isValidNumber) {
           Alert.alert('Erreur', 'Format de numéro invalide. Utilisez le format: 2250XXXXXXXX');
           return;
         }
-      
+
         setIsLoading(true);
-      
+
         try {
           const response = await fetch('https://backend-logistique-api-latest.onrender.com/payement.php', {
             method: 'POST',
@@ -111,10 +111,10 @@ const payement = ({ navigation, route }) => {
               amount: formData.amount.toString()
             })
           });
-      
+
           const data = await response.json();
           console.log("Référence de la transaction:", data.referenceId);
-      
+
           if (data.referenceId) {
             Alert.alert('Paiement en cours', `Référence: ${data.referenceId}`);
             setTimeout(() => checkStatus(data.referenceId), 5000); // delay to give MTN time to process
@@ -128,9 +128,9 @@ const payement = ({ navigation, route }) => {
           setIsLoading(false);
         }
       };
-      
 
-      
+
+
 
       return (
         <ScrollView style={styles.container}>
@@ -161,7 +161,7 @@ const payement = ({ navigation, route }) => {
               <Text style={styles.inputLabel}>Numéro Mobile Money (MOMO)</Text>
               <Text style={styles.inputHint}>Format: 2250XXXXXXXX</Text>
               <View style={[styles.inputContainer, isValidNumber && styles.validInput]}>
-                <Text style={styles.countryCode}>🇨🇮 +225</Text>
+                <Text style={styles.countryCode}>🇧🇯 +225</Text>
                 <TextInput
                   style={styles.textInput}
                   keyboardType="phone-pad"
