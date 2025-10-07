@@ -51,7 +51,7 @@ const enregistrer = ({route, navigation }) => {
   const showOrganizationSection = data === "fo";
 
   //const sha256 = new SHA256();
-  
+
   const getDeviceId = async () => {
     const uniqueId = Device.osInternalBuildId || Device.modelId || Device.modelName;
     console.log("Identifiant unique :", uniqueId);
@@ -67,11 +67,11 @@ const enregistrer = ({route, navigation }) => {
         await fileManager.modify_value_local_storage(
          "name", form.nom
          ,'auto.json');
-        
+
          await fileManager.modify_value_local_storage(
            "firstname", Prenom
            ,'auto.json');
-        
+
              await fileManager.modify_value_local_storage(
               "type", form.data
               ,'auto.json');
@@ -81,17 +81,17 @@ const enregistrer = ({route, navigation }) => {
       }
   };
 
-  const save_storage = async (data, file) => {          
+  const save_storage = async (data, file) => {
         try {
             const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
             if (!dirInfo.exists) {
               console.log("Document directory doesn't exist");
               return;
-            }            
+            }
             const fileUri = FileSystem.documentDirectory + file;
             console.log('Data:', data);
             const jsonString = JSON.stringify(data);
-            
+
             console.log('Full file path:', fileUri);
             await FileSystem.writeAsStringAsync(fileUri, jsonString, {
               encoding: FileSystem.EncodingType.UTF8
@@ -99,7 +99,7 @@ const enregistrer = ({route, navigation }) => {
             const fileInfo = await FileSystem.getInfoAsync(fileUri);
             if (fileInfo.exists) {
               console.log('fichier ecris:', fileInfo.uri, 'Size:', fileInfo.size);
-    
+
               const fileContents = await FileSystem.readAsStringAsync(fileUri);
               console.log('File contents:', fileContents);
             } else {
@@ -110,7 +110,7 @@ const enregistrer = ({route, navigation }) => {
             if (error.message) console.error('Error message:', error.message);
             if (error.stack) console.error('Error stack:', error.stack);
           }
-          
+
         };
   const data_to_type = {
     "cl": "client",
@@ -129,8 +129,8 @@ const enregistrer = ({route, navigation }) => {
     try {
       const deviceId = await getDeviceId();
       const ip =  getIP();
-      
-      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php", 
+
+      const response = await fetch("https://backend-logistique-api-latest.onrender.com/user_log_manage.php",
         {
           method: 'POST',
           headers: {
@@ -143,13 +143,13 @@ const enregistrer = ({route, navigation }) => {
           })
         }
       );
-      
+
       console.log("User log response:", await response.json());
     } catch (error) {
       debbug_lib.debbug_log("Erreur lors de l'enregistrement de l'utilisateur dans log", 'red');
     }
   }
-  
+
   const get_key = async (type) => {
     try {
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/create_key.php', {
@@ -158,21 +158,21 @@ const enregistrer = ({route, navigation }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: id_choosen,              
+          id: id_choosen,
         })
       });
-      
+
       const data = await response.json();
-      console.log("data received : ", data); 
-      
+      console.log("data received : ", data);
+
       if(data.message === "OK"){
-        console.log("The key was created successfully"); 
+        console.log("The key was created successfully");
         const data_sent = {
           type: data_to_type[type],
           key: data.key,
           id: id_choosen
-        } 
-        await save_storage(data_sent, 'key.json');       
+        }
+        await save_storage(data_sent, 'key.json');
       }else{
         console.log("The key was not created");
       }
@@ -202,7 +202,7 @@ const enregistrer = ({route, navigation }) => {
         'Annuler',
         null
       );
-      
+
         return averti;
     }
     if (Email && (!Email.includes('@') || !Email.includes('.'))) {
@@ -228,8 +228,8 @@ const enregistrer = ({route, navigation }) => {
         getAlertRef().current?.showAlert('Attention', 'Veuillez entrer le nom de votre organisation', true, "OK", null);
         return false;
       }
-      if (!ville.trim()) {
-        getAlertRef().current?.showAlert('Attention', 'Veuillez entrer la ville de votre organisation', true, "OK", null);
+      if (!ville.trim() && !(selectedLocation.latitude && selectedLocation.longitude)) {
+        getAlertRef().current?.showAlert('Attention', 'Veuillez entrer au moins une localisation de votre organisation', true, "OK", null);
         return false;
       }
     }
@@ -242,36 +242,39 @@ const enregistrer = ({route, navigation }) => {
       id: id_choosen,
       nom,
       Prenom,
-      Email: Email ? await hash_256(Email) : '',
-      Tel: await hash_256(Tel),
+      //Email: Email ? await hash_256(Email) : '',
+      Email: Email ? Email : '',
+      //Tel: await hash_256(Tel),
+      Tel: Tel,
       Password: await hash_256(Password),
       data,
-      email_unhash: Email,
-      phone_unhash: Tel
+      //email_unhash: Email,
+      //phone_unhash: Tel
     };
-    
+
     // Add organization data only if it's a "fo" (fournisseur)
     if (showOrganizationSection) {
       formData.organisation = organisation;
+      formData.ville = ville;
       formData.ville = ville;
       if (selectedLocation) {
         formData.latitude = selectedLocation.latitude;
         formData.longitude = selectedLocation.longitude;
       }
     }
-    
+
     return formData;
   };
 
   const register = async () => {
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-  
+
     try {
       const formData = await buildFormData();
       console.log("sent data : ", formData);
-  
+
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/register.php', {
         method: 'POST',
         headers: {
@@ -279,16 +282,16 @@ const enregistrer = ({route, navigation }) => {
         },
         body: JSON.stringify(formData)
       });
-  
+
       console.log('Response status:', response.status);
-      
+
       const text = await response.text();
       console.log('Raw response:', text);
-      
+
       let data;
       try {
         data = text ? JSON.parse(text) : {};
-        
+
         if (!response.ok) {
           throw new Error(data.message || `HTTP error! status: ${response.status}`);
         }
@@ -296,17 +299,17 @@ const enregistrer = ({route, navigation }) => {
         console.error('JSON parse error:', e);
         throw new Error(text || 'Invalid JSON response');
       }
-  
+
       console.log('Parsed response:', data);
       if (data.status === 'success') {
         await AutoSave(formData);
-        
+
         debbug_lib.debbug_log("formData: " + JSON.stringify(formData), "cyan");
         debbug_lib.debbug_log("data: " + JSON.stringify(data), "cyan");
-        if (data.user_data) {
-          await fileManager.modify_value_local_storage(
-            'session_id', data.user_data.session_id, 'auto.json'
-          );
+          if (data.user_data) {
+            await fileManager.modify_value_local_storage(
+              'session_id', data.user_data.session_id, 'auto.json'
+            );
         } else {
           Alert.alert('Erreur', "L'inscription a échoué : identifiant de session manquant. Veuillez réessayer.");
           setIsLoading(false);
@@ -324,7 +327,7 @@ const enregistrer = ({route, navigation }) => {
         }else{
           navigation.navigate('Login');
         }
-        
+
         try {
           await get_key(data);
           await handle_user_log(id_choosen);
@@ -337,7 +340,7 @@ const enregistrer = ({route, navigation }) => {
     } catch (error) {
       console.error('Error details:', error);
       if (error.message.includes("already")){
-        Alert.alert('Erreur', "Cet email a déja été utilisé pour un autre compte. Veuillez en choisir un autre.");  
+        Alert.alert('Erreur', "Cet email a déja été utilisé pour un autre compte. Veuillez en choisir un autre.");
       }
       Alert.alert('Erreur', "Une erreur est survenue lors de la création de l'enregistrement");
     } finally {
@@ -428,7 +431,7 @@ const enregistrer = ({route, navigation }) => {
           placeholderTextColor="#a2a2a9"
           value={nom}
           onChangeText={setNom}
-        /> 
+        />
 
         <Text style={styles.descInput}>Prénom</Text>
         <TextInput
@@ -438,7 +441,7 @@ const enregistrer = ({route, navigation }) => {
           placeholderTextColor="#a2a2a9"
           value={Prenom}
           onChangeText={setPrenom}
-        />  
+        />
 
         <Text style={styles.descInput}>Email</Text>
         <TextInput
@@ -473,7 +476,7 @@ const enregistrer = ({route, navigation }) => {
         {/* Conditionally render organization section */}
         {showOrganizationSection && (
           <>
-            <Text style={styles.sectionTitle}>Information sur votre Organisation</Text>        
+            <Text style={styles.sectionTitle}>Information sur votre Organisation</Text>
 
             <Text style={styles.descInput}>Nom de votre Organisation</Text>
             <TextInput
@@ -493,21 +496,21 @@ const enregistrer = ({route, navigation }) => {
               placeholderTextColor="#a2a2a9"
               value={ville}
               onChangeText={setVille}
-            />  
-            
+            />
+
             <View style={styles.orDivider}>
               <View style={styles.dividerLine}></View>
               <Text style={styles.orText}>OU</Text>
               <View style={styles.dividerLine}></View>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.locationButton, isLocationLoading && styles.locationButtonDisabled]}
               onPress={() => getCurrentLocation()}
               disabled={isLocationLoading}
             >
-              <Image 
-                source={require('../../assets/Icons/location-icon.png')} 
+              <Image
+                source={require('../../assets/Icons/location-icon.png')}
                 style={[styles.locationIcon, isLocationLoading && {opacity: 0.5}]}
               />
               {isLocationLoading ? (
@@ -531,8 +534,8 @@ const enregistrer = ({route, navigation }) => {
               />
               {selectedLocation && selectedLocation.latitude && selectedLocation.longitude && (
                 <View style={styles.coordinatesContainer}>
-                  <Image 
-                    source={require('../../assets/Icons/marker-icon.png')} 
+                  <Image
+                    source={require('../../assets/Icons/marker-icon.png')}
                     style={styles.markerIcon}
                   />
                   <Text style={styles.coordinatesText}>
@@ -546,15 +549,15 @@ const enregistrer = ({route, navigation }) => {
 
         <View style={styles.condition}>
           <Text style={styles.condText}>
-            En vous inscrivant, vous acceptez nos 
+            En vous inscrivant, vous acceptez nos
             <TouchableOpacity onPress={() => navigation.navigate('Confidentialite')}>
               <Text style={styles.conditionBoutton}>Conditions générales</Text>
             </TouchableOpacity>.
           </Text>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.button, isLoading && styles.buttonDisabled]} 
+        <TouchableOpacity
+          style={[styles.button, isLoading && styles.buttonDisabled]}
           onPress={register}
           disabled={isLoading}
         >
@@ -577,29 +580,29 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   title: {
-    fontSize: 25, 
-    fontWeight: "800", 
-    marginLeft: 15, 
-    marginBottom: 5, 
+    fontSize: 25,
+    fontWeight: "800",
+    marginLeft: 15,
+    marginBottom: 5,
     marginTop: 20
   },
   subtitle: {
-    fontSize: 16, 
-    fontWeight: "500", 
-    marginLeft: 25, 
+    fontSize: 16,
+    fontWeight: "500",
+    marginLeft: 25,
     marginBottom: 25
   },
   sectionTitle: {
-    fontWeight: "600", 
-    fontSize: 18, 
-    textAlign: "center", 
+    fontWeight: "600",
+    fontSize: 18,
+    textAlign: "center",
     marginTop: 25,
     marginBottom: 25
   },
   sectionSubtitle: {
-    fontWeight: "600", 
-    fontSize: 14, 
-    marginBottom: 25, 
+    fontWeight: "600",
+    fontSize: 14,
+    marginBottom: 25,
     textAlign: "center"
   },
   orDivider: {
@@ -661,8 +664,8 @@ const styles = StyleSheet.create({
     marginBottom: 35
   },
   buttonText: {
-    color: "#fff", 
-    fontSize: 19, 
+    color: "#fff",
+    fontSize: 19,
     fontWeight: "500"
   },
   buttonDisabled: {

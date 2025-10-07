@@ -102,7 +102,7 @@ const Login = ({ navigation }) => {
 
   const buildFormData = async () => {
     const formData = {
-      username: await hash_256(username),
+      username: username,
       password: await hash_256(password)
     };
     return formData;
@@ -138,7 +138,7 @@ const Login = ({ navigation }) => {
         //await fileManager.modify_value_local_storage(
         //  'id', data.user_data[`id_${data.user_type}`] // Fixed: use actual ID from response
         //, 'auto.json');
-        
+
         debbug_lib.debbug_log("data.user_data[`id_${data.user_type}`]: " + data.user_data[`id_${data.user_type}`], "magenta");
         debbug_lib.debbug_log("data.user_data: " + data.user_data, "magenta");
 
@@ -266,7 +266,16 @@ const Login = ({ navigation }) => {
         onPress={() => navigation.navigate("mdp_oubli")}
 
         style={styles.BouttonOubli}>
-          <Text style={styles.textOubli}>Mot de Passe Oublié?</Text>
+          <Text style={styles.textOubli}>Mot de Passe Oublié</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.oubliVue}>
+        <TouchableOpacity
+        onPress={() => navigation.navigate("enregister")}
+
+        style={styles.BouttonOubli}>
+          <Text style={styles.textOubli}>Pas encore de compte</Text>
         </TouchableOpacity>
       </View>
 

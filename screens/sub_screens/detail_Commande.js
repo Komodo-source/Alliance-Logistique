@@ -692,7 +692,7 @@ const DetailCommande = ({ route, navigation }) => {
                 <TouchableOpacity style={[styles.button, styles.clientButton]}
                 onPress={() => {getAlertRef().current?.showAlert(
                      'Code Personnel',
-                     'Votre code client est: '+ item.code_echange,
+                     'Votre code client est: '+ item.code_echange + '(Vous ne devez donner ce code qu\'à votre couriser)',
                      true,
                      "OK",
                      null
@@ -746,7 +746,7 @@ const DetailCommande = ({ route, navigation }) => {
               <Text style={styles.infoText}>Code de commande: <Text style={styles.infoValue}>{(typeUser === "client" ?  item.code_echange : item.code_echange_fourni) || 'Code Introuvable'}</Text></Text>
             </View>
           </View>
-          
+
         {!isAdresse && typeUser === "coursier"  ? (
           <View style={styles.navButton}>
               <TouchableOpacity

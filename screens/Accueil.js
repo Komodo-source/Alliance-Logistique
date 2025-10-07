@@ -22,6 +22,7 @@ const { width, height } = Dimensions.get("window");
 //import axios from 'axios';
 //import { debbug_log } from './util/debbug.js';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Snackbar from "./util/SnackBar.js";
 
 const Accueil = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
@@ -39,6 +40,7 @@ const Accueil = ({ navigation }) => {
   const [sponsoredProducts, setSponsoredProducts] = useState({});
   const [bestProducts, setBestProducts] = useState({});
   const { width } = useWindowDimensions();
+  const snackBarRef = useRef();
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -48,6 +50,7 @@ const Accueil = ({ navigation }) => {
 
       // Update current time
       setCurrentTime(new Date());
+      snackBarRef.current?.show("COmmande mis à jour(" + new Date() + ")", "info");
     } catch (error) {
       console.error("Error during refresh:", error);
     } finally {
@@ -463,7 +466,7 @@ const Accueil = ({ navigation }) => {
     return (
       <TouchableOpacity
         style={styles.sponsoredCard}
-        //onPress={() => navigation.navigate('ProfilPublic', {id: item.id_fournisseur, type: "fournisseur"})}
+        onPress={() => navigation.navigate('ProfilPublic', {id: item.id_fournisseur, type: "fournisseur"})}
       >
         {/*<View style={styles.sponsoredImageContainer}>
           <Image

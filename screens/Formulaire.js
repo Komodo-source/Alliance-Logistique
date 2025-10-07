@@ -866,7 +866,7 @@ const Formulaire = ({ navigation, route }) => {
     }
 
     // Check if dataUser exists and has an id
-    if (!dataUser || !dataUser.id) {
+    if (!dataUser) {
       Alert.alert(
         "Erreur",
         "Erreur de connexion utilisateur. Veuillez vous reconnecter."
@@ -1188,6 +1188,7 @@ const Formulaire = ({ navigation, route }) => {
                             selectedProduct.originalItem,
                             fourni[0]?.prix_produit || 0 // Use the first supplier's price or default to 0
                           );
+                          nombre = null;
                         }
                       }}
                       activeOpacity={0.8}

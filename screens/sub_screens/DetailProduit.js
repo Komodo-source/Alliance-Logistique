@@ -187,6 +187,9 @@ const renderFourniChoix = ({ item: fourni, index }) => {
   }, []);
 
   return (
+  <ScrollView
+    scrollEnabled={!mapInteracting}
+  >
     <SafeAreaView style={styles.container}>
       <View style={styles.main}>
             <View >
@@ -246,7 +249,7 @@ const renderFourniChoix = ({ item: fourni, index }) => {
 
       </SafeAreaView >
     </SafeAreaView>
-
+  </ScrollView>
   );
 };
 

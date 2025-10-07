@@ -48,7 +48,7 @@ export default function NotificationService() {
           fetch("https://backend-logistique-api-latest.onrender.com/send_notification.php", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: id }) // trigger from backend
+            body: JSON.stringify({ user_id: id, payload_num: 1}) // trigger from backend
           });
         }}
       />

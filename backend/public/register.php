@@ -42,9 +42,8 @@ try {
     //$Password = hash('sha256', $data['Password']);
     $Password = $data['Password'];
     $flag = $data['data'];
-
-    $email_unhash = $data['email_unhash'];
-    $phone_unhash = $data['phone_unhash'];
+    //$email_unhash = $data['email_unhash'];
+    //$phone_unhash = $data['phone_unhash'];
 
     if ($data["organisation"]){
         //l'user est fournisseur et rempli les organisation input
@@ -57,7 +56,7 @@ try {
             $stmt2->execute();
 
         }else if($data["latitude"]){
-            $loc_orga = $data["latitude"] + ";" + $data["longitude"];
+            $loc_orga = $data["latitude"] . ";" . $data["longitude"];
             $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, localisation_orga) VALUES (?, ?, ?)");
             $stmt2->bind_param("sss", $id_orga, $nom_organisation, $loc_orga);
             $stmt2->execute();
@@ -87,8 +86,8 @@ try {
 
     // Prepare the appropriate insert statement
     if($flag == "cl"){
-        $stmt = $conn->prepare("INSERT INTO CLIENT(id_client, nom_client, prenom_client, email_client, telephone_client, mdp_client, email_unhash_client, tel_unhash_client) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $email_unhash, $phone_unhash);
+        $stmt = $conn->prepare("INSERT INTO CLIENT(...) VALUES (?, ?, ?, ?, ?, ?)");
+$stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
         $user_data = [
             'id_client' => $id,
             'nom_client' => $nom,
@@ -97,8 +96,8 @@ try {
             'telephone_client' => $Tel
         ];
     } else if($flag == "fo"){
-        $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur, email_unhash_fournisseur, tel_unhash_fournisseur, id_orga) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $email_unhash, $phone_unhash, $id_orga);
+        $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur, id_orga) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $id_orga);
         $user_data = [
             'id_fournisseur' => $id,
             'nom_fournisseur' => $nom,
@@ -112,9 +111,9 @@ try {
         // COURSIER n'est pas update
         //pour l'instant on ne s'occupe pas des coursier donc plein de chose ne
         //sont pas update
-        $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe, email_unhash_coursier, tel_unhash_coursier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $occupied = 1;
-        $stmt->bind_param("sssssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);
+        $stmt->bind_param("sssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);
         $user_data = [
             'id_coursier' => $id,
             'nom_coursier' => $nom,
