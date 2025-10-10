@@ -402,11 +402,11 @@ const Accueil = ({ navigation }) => {
           >
             <View style={styles.statusDot} />
             <Text style={styles.statusText}>
-              {item.id_status == 1
-                ? "En préparation"
-                : item.id_status == 1
+              {item.id_status === 1
+                ? "Livré"
+                : item.id_status === 2
                 ? "En cours de livraison"
-                : "Livré"}
+                : "En Préparation"}
             </Text>
           </View>
         </View>

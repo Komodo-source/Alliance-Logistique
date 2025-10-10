@@ -361,7 +361,7 @@ const DetailCommande = ({ route, navigation }) => {
               <div class="company-section">
                   <h3>DESTINATAIRE</h3>
                   <p><strong>${item.nom_dmd || 'Client'}</strong></p>
-                  <p>${adresse || "pas d'adresse physique"}</p>
+                  
                   <p>Email: ${email || "pas d'adresse email"}</p>
                   <p>Code commande: ${item.id_public_cmd || 'N/A'}</p>
               </div>
@@ -692,7 +692,7 @@ const DetailCommande = ({ route, navigation }) => {
                 <TouchableOpacity style={[styles.button, styles.clientButton]}
                 onPress={() => {getAlertRef().current?.showAlert(
                      'Code Personnel',
-                     'Votre code client est: '+ item.code_echange + '(Vous ne devez donner ce code qu\'à votre couriser)',
+                     'Votre code client est: '+ item.code_echange + '\n\n(Vous ne devez donner ce code qu\'à votre couriser)',
                      true,
                      "OK",
                      null
