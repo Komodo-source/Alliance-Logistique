@@ -16,7 +16,7 @@ error_reporting(E_ALL);
 try {
     $input = file_get_contents("php://input");
     $data = json_decode($input, true);
-    $list_fourni = $data['list_fourni'];
+
 
     function calculate_dist($x, $y) {
         // Ensure both inputs are non-empty strings
@@ -98,6 +98,7 @@ try {
         }
 
         $count_product = 0;
+        $list_fourni = $data['list_fourni'];
         // 3. For each category, create a COMMANDE and link products
         foreach ($products_by_category as $category_id => $products) {
             // Find best supplier for this category
@@ -150,7 +151,7 @@ try {
                 throw new Exception("Prepare failed for INSERT: " . $conn->error);
             }
             $stmt->bind_param(
-                "ssissiis",
+                "ssissiiss",
                 $cmd_id,
                 $public_id,
                 $best_supplier['id_fournisseur'],

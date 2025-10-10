@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, FlatList, D
 import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 import * as FileManager from '../screens/util/file-manager.js'
-
+import { NavBarData } from './util/UI_navbar.js';
 
 export const loadImages = (id_produit) => {
   switch(id_produit){
@@ -183,7 +183,8 @@ const Produit = ({ navigation, route}) => {
         numColumns={2}
         contentContainerStyle={styles.productGrid}
       />
-
+      <NavBarData navigation={navigation} active_page="produit" />
+    {/**}
     <View style={styles.navbar}>
       <TouchableOpacity
         style={[styles.navButton, styles.activeButton]}
@@ -236,7 +237,7 @@ const Produit = ({ navigation, route}) => {
         </View>
         <Text style={styles.navButtonText}>Profil</Text>
       </TouchableOpacity>
-    </View>
+    </View> */}
     </View>
   );
 };

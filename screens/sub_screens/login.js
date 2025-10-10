@@ -270,25 +270,24 @@ const Login = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.oubliVue}>
         <TouchableOpacity
-        onPress={() => navigation.navigate("enregister")}
+        onPress={() => navigation.navigate("choixType" )}
+        style={styles.oubliVue2}
+        >
+          <Text style={{fontWeight: 500, fontSize: 17}}>Pas encore de compte?</Text>
+        </TouchableOpacity>
 
-        style={styles.BouttonOubli}>
-          <Text style={styles.textOubli}>Pas encore de compte</Text>
+      <View style={{flex: 1, justifyContent: 'flex-end', marginBottom: 20}}>
+        <TouchableOpacity
+          style={[styles.LoginButton, isLoading && styles.buttonDisabled]}
+          onPress={login}
+          disabled={isLoading}
+        >
+          <Text style={{color: "#fff", fontSize: 19, fontWeight: "500"}}>
+            {isLoading ? 'Connexion en cours...' : 'Connexion'}
+          </Text>
         </TouchableOpacity>
       </View>
-
-
-      <TouchableOpacity
-        style={[styles.LoginButton, isLoading && styles.buttonDisabled]}
-        onPress={login}
-        disabled={isLoading}
-      >
-        <Text style={{color: "#fff", fontSize: 19, fontWeight: "500"}}>
-          {isLoading ? 'Connexion en cours...' : 'Connexion'}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -297,11 +296,24 @@ const styles = StyleSheet.create({
     oubliVue : {
       alignSelf: 'center',
       marginTop: 20,
-      marginBottom: 20,
+      marginBottom: 15,
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
 
+    },
+    oubliVue2 : {
+      marginBottom: 50,
+      alignSelf: 'center',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: "#111",
+      paddingBottom: 10,
+      paddingTop: 10,
+      width: "80%",
+      borderRadius: 7
     },
     textOubli : {
       fontSize: 15,
@@ -339,6 +351,8 @@ const styles = StyleSheet.create({
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
+      bottom: 0,
+      position: "static"
     },
     buttonDisabled: {
       backgroundColor: '#666',

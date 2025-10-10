@@ -4,6 +4,8 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react
 import * as fileManager from '../util/file-manager';
 import * as debbug_lib from '../util/debbug.js';
 import { useFocusEffect } from '@react-navigation/native';
+import { NavBarData } from '../util/UI_navbar.js';
+
 
 var headers = {
   'Accept': 'application/json',
@@ -32,23 +34,23 @@ const commande_reccurente = ({ navigation }) => {
         try {
             const nouvelleCommande = {
                 "id": randomId(),
-                "nom": "Commande Anonyme", 
+                "nom": "Commande Anonyme",
                 "nb_produit": 0,
                 "produits": ""
             };
-            
+
             // Read existing commands
             let existingCommands = await fileManager.read_file("reccurente.json", true);
             if (!Array.isArray(existingCommands)) {
                 existingCommands = [];
             }
-            
+
             // Add new command to array
             existingCommands.push(nouvelleCommande);
-            
+
             // Save the entire array
             await fileManager.save_storage_local_storage_data(existingCommands, "reccurente.json");
-            
+
             actualiser_commande();
         } catch (error) {
             Alert.alert("Erreur", "Impossible de créer une nouvelle commande");
@@ -73,7 +75,7 @@ const commande_reccurente = ({ navigation }) => {
 // Updated renderItem with delete and rename options
 const renderItem = ({ item }) => {
     return (
-        <TouchableOpacity 
+        <TouchableOpacity
             style={styles.item_list}
             onPress={() => navigation.navigate('detail_commande_reccurente', { item })}
             onLongPress={() => {
@@ -104,15 +106,15 @@ const supprimer_commande = async (commandeId) => {
             "Êtes-vous sûr de vouloir supprimer cette commande récurrente ?",
             [
                 { text: "Annuler", style: "cancel" },
-                { 
-                    text: "Supprimer", 
+                {
+                    text: "Supprimer",
                     style: "destructive",
                     onPress: async () => {
                         let existingCommands = await fileManager.read_file("reccurente.json");
                         if (Array.isArray(existingCommands)) {
                             const updatedCommands = existingCommands.filter(obj => obj.id !== commandeId);
                             await fileManager.save_storage_local_storage_data(updatedCommands, "reccurente.json");
-                                                        
+
                             debbug_lib.debbug_log("commande deleted: " + JSON.stringify(updatedCommands), "cyan");
                             actualiser_commande();
                         }
@@ -136,7 +138,7 @@ const renommer_commande = async (commandeId, nouveauNom) => {
 
         let existingCommands = await fileManager.read_file("reccurente.json", true);
         if (Array.isArray(existingCommands)) {
-            const updatedCommands = existingCommands.map(cmd => 
+            const updatedCommands = existingCommands.map(cmd =>
                 cmd.id === commandeId ? { ...cmd, nom: nouveauNom.trim() } : cmd
             );
             await fileManager.save_storage_local_storage_data(updatedCommands, "reccurente.json");
@@ -155,8 +157,8 @@ const demander_nouveau_nom = (item) => {
         "Entrez le nouveau nom:",
         [
             { text: "Annuler", style: "cancel" },
-            { 
-                text: "Renommer", 
+            {
+                text: "Renommer",
                 onPress: (nouveauNom) => renommer_commande(item.id, nouveauNom)
             }
         ],
@@ -173,8 +175,8 @@ const demander_nouveau_nom = (item) => {
                 <Text style={styles.title}>Vos commandes récurrentes</Text>
             </View>
             <View style={styles.main}>
-                <TouchableOpacity 
-                    style={styles.button} 
+                <TouchableOpacity
+                    style={styles.button}
                     onPress={nouvelle_commande}
                 >
                     <Text style={styles.buttonText}>Nouvelle Commande</Text>
@@ -193,8 +195,9 @@ const demander_nouveau_nom = (item) => {
                         <Text style={styles.emptyText}>Vous n'avez pas de commande réccurentes</Text>
                     </View>
                 )}
-                
+
             </View>
+            <NavBarData navigation={navigation} active_page="hub" />
         </View>
     );
 };
@@ -235,7 +238,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold'
     },
     commandes: {
-        height: '100%'  
+        height: '100%'
     },
     item_list: {
         backgroundColor: 'white',

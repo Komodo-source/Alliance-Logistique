@@ -13,6 +13,7 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 //import * as FileSystem from 'expo-file-system';
 import CarouselCards from "./sub_screens/CarouselCards";
@@ -23,8 +24,11 @@ const { width, height } = Dimensions.get("window");
 //import { debbug_log } from './util/debbug.js';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Snackbar from "./util/SnackBar.js";
+import { NavBarData } from "./util/UI_navbar.js";
+import { useRef } from "react";
 
 const Accueil = ({ navigation }) => {
+
   const [commande, setCommande] = useState([]);
   const [userData, setUserData] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -527,12 +531,14 @@ const Accueil = ({ navigation }) => {
   }, [commande]);
 
   // Update jours_restants when commandes or time changes
-  useEffect(() => {
-    if (commande.length > 0) {
-      setJours_restants(getDaysDifference(commande[0].date_fin));
-    }
-    getFileCommand();
-  }, [commande, currentTime]);
+  useFocusEffect(
+      React.useCallback(() => {
+        if (commande.length > 0) {
+          setJours_restants(getDaysDifference(commande[0].date_fin));
+        }
+        getFileCommand();
+      }, [commande, currentTime])
+    );
 
   // Load sponsored data on mount
   useEffect(() => {
@@ -813,8 +819,8 @@ const Accueil = ({ navigation }) => {
         {/* Extra padding for bottom navigation */}
         <View style={styles.bottomPadding} />
       </ScrollView>
-
-      {/* Enhanced Bottom Navigation */}
+        <NavBarData navigation={navigation} active_page="accueil" />
+      {/* Enhanced Bottom Navigation
       <View style={styles.navbar}>
         <TouchableOpacity
           style={styles.navButton}
@@ -867,7 +873,7 @@ const Accueil = ({ navigation }) => {
           </View>
           <Text style={styles.navButtonText}>Profil</Text>
         </TouchableOpacity>
-      </View>
+      </View>*/}
     </SafeAreaView>
   );
 };

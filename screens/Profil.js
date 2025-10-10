@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Image, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
   ScrollView,
   SafeAreaView,
   Alert,
@@ -14,7 +14,9 @@ import {
 
 import * as fileManager from './util/file-manager.js';
 import * as debbug_lib from './util/debbug.js';
+import { NavBarData } from './util/UI_navbar.js';
 const { width } = Dimensions.get('window');
+
 
 const Profile = ({ navigation }) => {
   const [userData, setUserData] = useState({
@@ -31,13 +33,13 @@ const Profile = ({ navigation }) => {
       name: (data.nom_client || data.nom_fournisseur || data.name || userData.name || '') + " " + (data.prenom_client || data.prenom_fournisseur || data.firstname || ''),
       email: data.email_client || data.email_fournisseur || userData.email || '',
     };
-    
+
     // Save profile data if it comes from server
     if (data.nom_client || data.nom_fournisseur) {
       save_profil(data.nom_client || data.nom_fournisseur,
         data.prenom_client || data.prenom_fournisseur);
     }
-  
+
     setUserData(prev => ({
       ...prev,
       ...mappedData
@@ -62,8 +64,8 @@ const Profile = ({ navigation }) => {
     try {
       debbug_lib.debbug_log('load profile from backend', 'blue');
       const file = await fileManager.read_file('auto.json');
-      //console.log("1");  
-      
+      //console.log("1");
+
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_user_info.php', {
         method: 'POST',
         headers: {
@@ -72,22 +74,22 @@ const Profile = ({ navigation }) => {
         },
         body: JSON.stringify(file)
       });
-  //console.log("2");  
+  //console.log("2");
       const data = await response.json();
       console.log('Data Received:', data);
-  // console.log("3");  
+  // console.log("3");
       if (data.err) {
         throw new Error('Mauvaise Réponse du serveur');
       }
-  
+
       modify_profile(data);
       return data;
-  
+
     } catch (error) {
       console.log('Erreur lors de la récupération des données + ' + error.message);
-      
+
     }
-  }; 
+  };
 
   const fetchUserData = async () => {
     ///
@@ -103,7 +105,7 @@ const Profile = ({ navigation }) => {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        
+
       });
       const data = await response.json();
       console.log("data user: ", data);
@@ -119,7 +121,7 @@ const Profile = ({ navigation }) => {
     }
   };
 
-  const handleDisconnect = async () => {
+ const handleDisconnect = async () => {
     Alert.alert(
       "Déconnexion",
       "Voulez-vous vraiment vous déconnecter ?",
@@ -128,8 +130,8 @@ const Profile = ({ navigation }) => {
           text: "Annuler",
           style: "cancel"
         },
-        { 
-          text: "Déconnecter", 
+        {
+          text: "Déconnecter",
           style: "destructive",
           onPress: async () => {
             try {
@@ -140,7 +142,7 @@ const Profile = ({ navigation }) => {
               await fileManager.modify_value_local_storage("type", "", 'auto.json');
               await fileManager.modify_value_local_storage("stay_loogged", false, 'auto.json');
               //await fileManager.modify_value_local_storage("first_conn", true, 'auto.json');
-              
+
               debbug_lib.debbug_log('User logged out successfully', 'green');
               navigation.navigate('HomePage');
             } catch (error) {
@@ -161,9 +163,9 @@ const Profile = ({ navigation }) => {
       // First, try to read the saved profile from local storage
       const profil_saved = await fileManager.read_file('auto.json');
       console.log('Saved profile:', profil_saved);
-      
+
       // Check if we have valid name and firstname in local storage
-      if (profil_saved && profil_saved.name && profil_saved.firstname && 
+      if (profil_saved && profil_saved.name && profil_saved.firstname &&
           profil_saved.name.trim() !== "" && profil_saved.firstname.trim() !== "") {
         // Use local data
         modify_profile(profil_saved);
@@ -186,8 +188,8 @@ const Profile = ({ navigation }) => {
                 navigation.navigate('Login');
               }
             },
-            { 
-              text: "OK", 
+            {
+              text: "OK",
               style: "destructive",
               onPress: () => {
                 // Logique de déconnexion
@@ -209,8 +211,8 @@ const Profile = ({ navigation }) => {
   }, []);
 
   const ProfileOption = ({ icon, title, onPress, isDestructive = false }) => (
-    <TouchableOpacity 
-      style={[styles.optionItem, isDestructive && styles.destructiveOption]} 
+    <TouchableOpacity
+      style={[styles.optionItem, isDestructive && styles.destructiveOption]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -227,8 +229,8 @@ const Profile = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -238,7 +240,7 @@ const Profile = ({ navigation }) => {
           <View style={styles.avatarContainer}>
             <Image
               source={
-                userData.avatar 
+                userData.avatar
                   ? { uri: userData.avatar }
                   : require('../assets/Icons/add_photo.png')
               }
@@ -248,12 +250,12 @@ const Profile = ({ navigation }) => {
               <Text style={styles.editAvatarText}>✎</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{userData.name}</Text>
             <Text style={styles.userEmail}>{userData.email}</Text>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.editProfileButton}
               onPress={() => navigation.navigate('ModifProfil')}
               activeOpacity={0.8}
@@ -266,23 +268,23 @@ const Profile = ({ navigation }) => {
         {/* Section Options */}
         <View style={styles.optionsSection}>
           <Text style={styles.sectionTitle}>Paramètres du compte</Text>
-          
+
           <View style={styles.optionsContainer}>
             <ProfileOption
               title="Modifier mon profil"
               onPress={() => navigation.navigate('ModifProfil')}
             />
-            
+
             <ProfileOption
               title="Confidentialité"
               onPress={() => navigation.navigate('Confidentialite')}
             />
-            
+
             <ProfileOption
               title="Sécurité de mes données"
               onPress={() => navigation.navigate('NotificationService')}
             />
-            
+
           </View>
         </View>
 
@@ -296,9 +298,11 @@ const Profile = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Navigation Bar */}
-      <View style={styles.navbar}> 
-      <TouchableOpacity 
+      <NavBarData navigation={navigation} active_page="profil" />
+
+      {/* Navigation Bar
+      <View style={styles.navbar}>
+      <TouchableOpacity
           style={styles.navButton}
           onPress={() => navigation.navigate('Produit')}
         >
@@ -311,7 +315,7 @@ const Profile = ({ navigation }) => {
           <Text style={styles.navButtonText}>Produit</Text>
         </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.navButton}
         onPress={() => navigation.navigate('Accueil')}
       >
@@ -323,8 +327,8 @@ const Profile = ({ navigation }) => {
         </View>
         <Text style={styles.navButtonText}>Accueil</Text>
       </TouchableOpacity>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={styles.navButton}
         onPress={() => navigation.navigate('Hub')}
       >
@@ -337,7 +341,7 @@ const Profile = ({ navigation }) => {
         <Text style={styles.navButtonText}>Hub</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.navButton, styles.activeButton]}
         onPress={() => navigation.navigate('Profil')}
       >
@@ -349,7 +353,7 @@ const Profile = ({ navigation }) => {
         </View>
         <Text style={[styles.navButtonText, styles.activeText]}>Profil</Text>
       </TouchableOpacity>
-    </View>
+    </View>*/}
     </SafeAreaView>
   );
 };
@@ -365,7 +369,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 100, // Espace pour la navbar
   },
-  
+
   // Header Profile
   profileHeader: {
     backgroundColor: '#fff',
@@ -551,7 +555,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minHeight: 60,
   },
-  
+
   activeButton: {
     backgroundColor: '#3B82F6',
     shadowColor: '#3B82F6',
@@ -563,24 +567,24 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  
+
   iconContainer: {
     marginBottom: 4,
     padding: 2,
   },
-  
+
   logoNavBar: {
     width: 24,
     height: 24,
     tintColor: '#666666',
   },
-  
+
   activeIcon: {
     tintColor: '#FFFFFF',
     width: 26,
     height: 26,
   },
-  
+
   navButtonText: {
     fontSize: 12,
     fontWeight: '500',
@@ -597,17 +601,17 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
   },
-  
+
   activeIconWrapper: {
     backgroundColor: '#007bff',
     borderRadius: 20,
     padding: 10,
   },
-  
+
   activeNavButton: {
     alignItems: 'center',
   },
-  
+
   activeNavText: {
     color: '#007bff',
     fontWeight: '600',

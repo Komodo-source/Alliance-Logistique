@@ -12,8 +12,8 @@ const CarouselCards = () => {
 
   // Option 1: Convert to array (your current approach - already working)
   const data = useMemo(() => {
-    return (data_carousel && Array.isArray(data_carousel.items)) 
-      ? data_carousel.items 
+    return (data_carousel && Array.isArray(data_carousel.items))
+      ? data_carousel.items
       : [];
   }, []);
 
