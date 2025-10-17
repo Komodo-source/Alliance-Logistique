@@ -16,6 +16,7 @@ import * as fileManager from './util/file-manager.js';
 import * as debbug_lib from './util/debbug.js';
 import { NavBarData } from './util/UI_navbar.js';
 const { width } = Dimensions.get('window');
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 
 const Profile = ({ navigation }) => {
@@ -24,6 +25,7 @@ const Profile = ({ navigation }) => {
     email: '',
     avatar: null
   });
+  const [idFourni, SetIdFourni] = useState('');
   const [loading, setLoading] = useState(false);
 
   const modify_profile = (data) => {
@@ -77,6 +79,7 @@ const Profile = ({ navigation }) => {
   //console.log("2");
       const data = await response.json();
       console.log('Data Received:', data);
+      SetIdFourni(data.id_fournisseur || '');
   // console.log("3");
       if (data.err) {
         throw new Error('Mauvaise Réponse du serveur');
@@ -288,6 +291,18 @@ const Profile = ({ navigation }) => {
           </View>
         </View>
 
+        <View>
+          {idFourni ?
+            (<View style={styles.Promotion}>
+              <TouchableOpacity style={styles.PromotionButton}>
+                <FontAwesome6 name="money-bill-trend-up" size={30} color="black" />
+                <Text style={{fontSize: 18, fontWeight: "600"}}>Promouvoir mes produits</Text>
+              </TouchableOpacity>
+            </View>)
+
+          : null}
+        </View>
+
         {/* Section Déconnexion */}
         <View style={styles.logoutSection}>
           <ProfileOption
@@ -359,6 +374,30 @@ const Profile = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  Promotion : {
+  marginTop: 24,
+      marginHorizontal: 20,
+      backgroundColor: '#f7d00bff',
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 2.22,
+      elevation: 3,
+      height : 70,
+    overflow: "hidden",
+  },
+  PromotionButton : {
+    display : "flex",
+      flexDirection : "row",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 15,
+      marginTop: 20
+  },
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',

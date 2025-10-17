@@ -205,13 +205,22 @@ const enregistrer = ({route, navigation }) => {
 
         return averti;
     }
-    if (Email && (!Email.includes('@') || !Email.includes('.'))) {
-      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer un email valide', true, "OK", null);
-      return false;
-    }
-    if (!Tel.trim()) {
-      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre numéro de téléphone', true, "OK", null);
-      return false;
+
+    if(!Email.trim() && !Tel.trim()){
+      getAlertRef().current?.showAlert('Attention', 'Veuillez entrer au moins un email ou numéro de téléphone', true, "OK", null);
+    }else{
+      if (Email && (!Email.includes('@') || !Email.includes('.'))) {
+        getAlertRef().current?.showAlert('Attention', 'Veuillez entrer un email valide', true, "OK", null);
+        return false;
+      }else if (Email.trim()){
+        return true;
+      }
+      else if (!Tel.trim()) {
+        getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre numéro de téléphone', true, "OK", null);
+        return false;
+      }else{
+        return true;
+      }
     }
     if (!Password.trim()) {
       getAlertRef().current?.showAlert('Attention', 'Veuillez entrer un mot de passe', true, "OK", null);
@@ -245,7 +254,7 @@ const enregistrer = ({route, navigation }) => {
       //Email: Email ? await hash_256(Email) : '',
       Email: Email ? Email : '',
       //Tel: await hash_256(Tel),
-      Tel: Tel,
+      Tel: Tel ? Tel : '',
       Password: await hash_256(Password),
       data,
       //email_unhash: Email,

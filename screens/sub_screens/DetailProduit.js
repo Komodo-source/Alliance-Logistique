@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, Image, TouchableOpacity, FlatList, SafeAreaView, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, Image, TouchableOpacity,ScrollView, FlatList, SafeAreaView, Alert } from 'react-native';
 import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debbug_log } from '../util/debbug';

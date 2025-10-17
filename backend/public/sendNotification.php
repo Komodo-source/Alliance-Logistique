@@ -5,10 +5,12 @@ include_once('db.php');
 $data = json_decode(file_get_contents("php://input"), true);
 $user_id = $data["user_id"];
 $payload_id = $data["payload_num"];
+$idCommand = $data["IdCommande"] ?? "Unknown";
+$nomCommand = $data["nomCommand"] ?? "Unknown";
+
 if(isset($data["IdCommande"])){
     $idCommand = $data["IdCommande"];
 }
-
 if(isset($data["nomCommand"])){
     $nomCommand = $data["nomCommand"];
 }
@@ -83,7 +85,18 @@ if (!$token) {
 }
 
 // Send push notification to Expo API
-$payload = client_depart_payload($token);
+
+$payloads = [
+  1 => 'fourni_payload',
+  2 => 'coursier_payload',
+  3 => 'client_depart_payload',
+  4 => 'client_livre_payload',
+  5 => 'client_commande_a_payer'
+];
+
+
+$payload_func = $payloads[$payload_id] ?? 'client_depart_payload';
+$payload = $payload_func($token);
 
 $ch = curl_init("https://exp.host/--/api/v2/push/send");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

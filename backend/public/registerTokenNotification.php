@@ -13,3 +13,4 @@ $stmt->bind_param("is", $user_id, $token);
 $stmt->execute();
 
 echo json_encode(["success" => true]);
+?>

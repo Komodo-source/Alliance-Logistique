@@ -25,48 +25,30 @@ try {
 
     function create_session($conn, $id){
         $id_session = hash('sha256', uniqid('', true));
-        $stmt = $conn->prepare("INSERT INTO SESSION (id_key, key_value, id_user, date_expiration) VALUES (?, 'temp_key', ?, DATE('2026-06-15 09:34:21'))");
-        $stmt->bind_param("ss", $id_session, $id);
+        $expiration = date('Y-m-d H:i:s', strtotime('+1 year'));
+        $stmt = $conn->prepare("INSERT INTO SESSION (id_key, key_value, id_user, date_expiration) VALUES (?, 'temp_key', ?, ?)");
+        $stmt->bind_param("sis", $id_session, $id, $expiration);
         $stmt->execute();
         $stmt->close();
         return $id_session;
     }
 
-    $id = $data['id'];
-    $nom = $data['nom'];
-    $Prenom = $data['Prenom'];
-    //$Email = hash('sha256', $data['Email']);
-    $Email = $data['Email'];
-    //Tel = hash('sha256', $data['Tel']);
-    $Tel = $data['Tel'];
-    //$Password = hash('sha256', $data['Password']);
-    $Password = $data['Password'];
-    $flag = $data['data'];
-    //$email_unhash = $data['email_unhash'];
-    //$phone_unhash = $data['phone_unhash'];
-
-    if ($data["organisation"]){
-        //l'user est fournisseur et rempli les organisation input
-        $nom_organisation = $data["organisation"];
-        $id_orga = rand(0, 99999);
-        if($data["ville"]){
-            $ville_organisation = $data["ville"];
-            $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, ville_organisation) VALUES (?, ?, ?)");
-            $stmt2->bind_param("sss", $id_orga, $nom_organisation, $ville_organisation);
-            $stmt2->execute();
-
-        }else if($data["latitude"]){
-            $loc_orga = $data["latitude"] . ";" . $data["longitude"];
-            $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, localisation_orga) VALUES (?, ?, ?)");
-            $stmt2->bind_param("sss", $id_orga, $nom_organisation, $loc_orga);
-            $stmt2->execute();
-        }
-
-    }
+    $id = (int)$data['id'];
+    $nom = trim($data['nom']);
+    $Prenom = trim($data['Prenom']);
+    $Email = trim($data['Email']);
+    $Tel = trim($data['Tel']);
+    $Password = hash('sha256', $data['Password']);
+    $flag = trim($data['data']);
 
     // Validate user type
     if (!in_array($flag, ['cl', 'fo', 'co'])) {
         throw new Exception('Invalid user type');
+    }
+
+    // Validate email format
+    if (!filter_var($Email, FILTER_VALIDATE_EMAIL)) {
+        throw new Exception('Invalid email format');
     }
 
     // Check if email exists
@@ -84,10 +66,33 @@ try {
     }
     $check_email->close();
 
+    // Handle organisation creation for suppliers
+    $id_orga = null;
+    if ($flag == "fo" && isset($data["organisation"]) && !empty($data["organisation"])) {
+        $nom_organisation = trim($data["organisation"]);
+        $id_orga = rand(0, 99999);
+
+        if (isset($data["ville"]) && !empty($data["ville"])) {
+            $ville_organisation = trim($data["ville"]);
+            $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, ville_organisation) VALUES (?, ?, ?)");
+            $stmt2->bind_param("iss", $id_orga, $nom_organisation, $ville_organisation);
+            $stmt2->execute();
+            $stmt2->close();
+        } else if (isset($data["latitude"]) && isset($data["longitude"]) && !empty($data["latitude"]) && !empty($data["longitude"])) {
+            $latitude = floatval($data["latitude"]);
+            $longitude = floatval($data["longitude"]);
+            $loc_orga = $latitude . ";" . $longitude;
+            $stmt2 = $conn->prepare("INSERT INTO ORGANISATION(id_orga, nom_orga, localisation_orga) VALUES (?, ?, ?)");
+            $stmt2->bind_param("iss", $id_orga, $nom_organisation, $loc_orga);
+            $stmt2->execute();
+            $stmt2->close();
+        }
+    }
+
     // Prepare the appropriate insert statement
-    if($flag == "cl"){
-        $stmt = $conn->prepare("INSERT INTO CLIENT(...) VALUES (?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
+    if ($flag == "cl") {
+        $stmt = $conn->prepare("INSERT INTO CLIENT(id_client, nom_client, prenom_client, email_client, telephone_client, mdp_client) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("isssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
         $user_data = [
             'id_client' => $id,
             'nom_client' => $nom,
@@ -95,9 +100,9 @@ $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
             'email_client' => $Email,
             'telephone_client' => $Tel
         ];
-    } else if($flag == "fo"){
+    } else if ($flag == "fo") {
         $stmt = $conn->prepare("INSERT INTO FOURNISSEUR(id_fournisseur, nom_fournisseur, prenom_fournisseur, email_fournisseur, telephone_fournisseur, mdp_fournisseur, id_orga) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $id_orga);
+        $stmt->bind_param("isssssi", $id, $nom, $Prenom, $Email, $Tel, $Password, $id_orga);
         $user_data = [
             'id_fournisseur' => $id,
             'nom_fournisseur' => $nom,
@@ -105,15 +110,11 @@ $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
             'email_fournisseur' => $Email,
             'telephone_fournisseur' => $Tel
         ];
-
-
     } else {
-        // COURSIER n'est pas update
-        //pour l'instant on ne s'occupe pas des coursier donc plein de chose ne
-        //sont pas update
+        // COURSIER
+        $occupied = 0;
         $stmt = $conn->prepare("INSERT INTO COURSIER(id_coursier, nom_coursier, prenom_coursier, email_coursier, telephone_coursier, mdp_coursier, est_occupe) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $occupied = 1;
-        $stmt->bind_param("sssssss", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);
+        $stmt->bind_param("isssssi", $id, $nom, $Prenom, $Email, $Tel, $Password, $occupied);
         $user_data = [
             'id_coursier' => $id,
             'nom_coursier' => $nom,
@@ -129,6 +130,8 @@ $stmt->bind_param("ssssss", $id, $nom, $Prenom, $Email, $Tel, $Password);
 
     $session_id = create_session($conn, $id);
     $user_data['session_id'] = $session_id;
+
+    http_response_code(200);
     echo json_encode([
         'message' => 'Registration successful',
         'status' => 'success',

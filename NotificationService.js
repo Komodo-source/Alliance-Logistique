@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, Button, Text } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import * as FileManager from './screens/util/file-manager' ;
 
 // Configure how notifications are shown when app is foregrounded
 Notifications.setNotificationHandler({
@@ -13,50 +12,11 @@ Notifications.setNotificationHandler({
   }),
 });
 
-export default function NotificationService() {
+export default function NotificationService({ userId }) {
   const [expoPushToken, setExpoPushToken] = useState("");
-  var id = null;
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
-      if (token) {
-        setExpoPushToken(token);
-        // Send token to backend
-        fetch("https://backend-logistique-api-latest.onrender.com/save_token.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: id,   // replace with logged-in user id
-            token: token
-          })
-        });
-      }
-    });
-  }, []);
-
-  useEffect(async() => {
-    id = await FileManager.read_file("auto.json")["id"];
-  }, [id])
-
-  return (
-    <View style={{ marginTop: 50, padding: 20 }}>
-      <Text>Your Expo Push Token:</Text>
-      <Text selectable>{expoPushToken}</Text>
-      <Button
-        title="Test Notification"
-        onPress={() => {
-          fetch("https://backend-logistique-api-latest.onrender.com/send_notification.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: id, payload_num: 1}) // trigger from backend
-          });
-        }}
-      />
-    </View>
-  );
-}
-
-
+  
 async function registerForPushNotificationsAsync() {
   let token;
 
@@ -70,7 +30,7 @@ async function registerForPushNotificationsAsync() {
     }
 
     if (finalStatus !== "granted") {
-      alert("Failed to get push token!");
+      alert("Failed to get push notification permissions!");
       return null;
     }
 
@@ -81,4 +41,106 @@ async function registerForPushNotificationsAsync() {
   }
 
   return token;
+}
+
+
+  // Register for push notifications and save token
+  useEffect(() => {
+    registerForPushNotificationsAsync()
+      .then(token => {
+        if (token) {
+          setExpoPushToken(token);
+          console.log("Token registered:", token);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Save token to backend when userId or token changes
+  useEffect(() => {
+    if (userId && expoPushToken) {
+      saveTokenToBackend(userId, expoPushToken);
+    }
+  }, [userId, expoPushToken]);
+
+  // Listen for notifications when app is foregrounded
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        console.log("Notification received:", notification);
+      }
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  const saveTokenToBackend = async (user_id, token) => {
+    try {
+      const response = await fetch(
+        "https://backend-logistique-api-latest.onrender.com/save_token.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id, token }),
+        }
+      );
+      const data = await response.json();
+      console.log("Token saved to backend:", data);
+    } catch (error) {
+      console.error("Failed to save token:", error);
+    }
+  };
+
+  const testNotification = async () => {
+    if (!userId) {
+      alert("User ID not available");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://backend-logistique-api-latest.onrender.com/send_notification.php",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userId,
+            payload_num: 1,
+          }),
+        }
+      );
+      const data = await response.json();
+      console.log("Notification sent:", data);
+    } catch (error) {
+      console.error("Failed to send notification:", error);
+      alert("Failed to send notification");
+    }
+  };
+
+  return (
+    <View style={{ marginTop: 50, padding: 20 }}>
+      <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>
+        Expo Push Token:
+      </Text>
+      <Text
+        selectable
+        style={{
+          padding: 10,
+          backgroundColor: "#f0f0f0",
+          marginBottom: 20,
+          borderRadius: 5,
+        }}
+      >
+        {loading ? "Loading..." : expoPushToken || "No token"}
+      </Text>
+      <Text style={{ marginBottom: 10, color: "#666" }}>
+        User ID: {userId || "Not provided"}
+      </Text>
+      <Button
+        title="Test Notification"
+        onPress={testNotification}
+        disabled={!userId || loading}
+      />
+    </View>
+  );
 }
