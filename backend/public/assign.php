@@ -99,34 +99,48 @@ try {
 
         $count_product = 0;
         $list_fourni = $data['list_fourni'];
-        // 3. For each category, create a COMMANDE and link products
+        $commands_by_supplier = [];
+
+        // 3. For each category, group products by supplier and create commands
         foreach ($products_by_category as $category_id => $products) {
-            // Find best supplier for this category
-            if($list_fourni[$count_product] == null){
-                //le fournisseur est par defaut
-                $best_supplier = null;
-                $min_distance = PHP_FLOAT_MAX;
-                if (isset($suppliers_by_category[$category_id])) {
-                    foreach ($suppliers_by_category[$category_id] as $supplier) {
-                        $distance = calculate_dist($hub_location, $supplier['localisation_fournisseur']);
-                        if ($distance < $min_distance) {
-                            $min_distance = $distance;
-                            $best_supplier = $supplier;
+            foreach ($products as $product) {
+                $supplier_id = $list_fourni[$count_product] ?? null;
+
+                if ($supplier_id === null) {
+                    // Default supplier logic
+                    $best_supplier = null;
+                    $min_distance = PHP_FLOAT_MAX;
+                    if (isset($suppliers_by_category[$category_id])) {
+                        foreach ($suppliers_by_category[$category_id] as $supplier) {
+                            $distance = calculate_dist($hub_location, $supplier['localisation_fournisseur']);
+                            if ($distance < $min_distance) {
+                                $min_distance = $distance;
+                                $best_supplier = $supplier;
+                            }
                         }
                     }
+                    if (!$best_supplier) continue;
+                    $supplier_id = $best_supplier['id_fournisseur'];
                 }
-                if (!$best_supplier) continue;
-            }else {
-                //sinon on prend le fournisseur que l'user a choisi
-                $best_supplier = getIdSession($list_fourni[$count_product]);
-            }
 
+                // Group products by supplier
+                if (!isset($commands_by_supplier[$supplier_id])) {
+                    $commands_by_supplier[$supplier_id] = [];
+                }
+                $commands_by_supplier[$supplier_id][] = $product;
+
+                $count_product++;
+            }
+        }
+
+        // 4. Create commands for each supplier
+        foreach ($commands_by_supplier as $supplier_id => $products) {
             // Find best courier
             $best_courier = null;
             $min_courier_dist = PHP_FLOAT_MAX;
             $courier_index = -1;
             foreach ($available_couriers as $index => $courier) {
-                $distance = calculate_dist($best_supplier['localisation_fournisseur'], $courier['localisation_coursier']);
+                $distance = calculate_dist($suppliers_by_category[$category_id][0]['localisation_fournisseur'], $courier['localisation_coursier']);
                 if ($distance < $min_courier_dist) {
                     $min_courier_dist = $distance;
                     $best_courier = $courier;
@@ -135,9 +149,7 @@ try {
             }
             if (!$best_courier) continue;
 
-            $count_product += 1;
-
-            // Insert COMMANDE row for this category
+            // Insert COMMANDE row for this supplier
             $cmd_id = rand(0, 99999);
             $public_id = uniqid("CMD_");
             $exchange_code = rand(0, 99999);
@@ -154,7 +166,7 @@ try {
                 "ssissiiss",
                 $cmd_id,
                 $public_id,
-                $best_supplier['id_fournisseur'],
+                $supplier_id,
                 $hub['id_client'],
                 $hub_id,
                 $best_courier['id_coursier'],
@@ -180,7 +192,7 @@ try {
             }
             $stmt->close();
 
-            // Insert all products for this category into COMMANDE_PRODUIT
+            // Insert all products for this supplier into COMMANDE_PRODUIT
             foreach ($products as $prod) {
                 $stmt_prod = $conn->prepare("INSERT INTO COMMANDE_PRODUIT(id_cmd, id_produit, nb_produit) VALUES (?, ?, ?)");
                 if (!$stmt_prod) {
@@ -193,6 +205,7 @@ try {
                 $stmt_prod->close();
             }
         }
+
         // Mark HUB as processed
         $stmt = $conn->prepare("UPDATE HUB SET est_commande = 1 WHERE id_dmd = ?");
         if (!$stmt) {

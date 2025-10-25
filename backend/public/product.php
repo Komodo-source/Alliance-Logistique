@@ -1,9 +1,9 @@
 <?php
 header('Content-Type: application/json');
-include_once('db.php'); 
+include_once('db.php');
 
-$sql = "SELECT P.id_produit, nom_produit,nom_categorie, type_vendu,ROUND(AVG(FR.prix_produit) * 1.45, 2) as prix_produit, COUNT(id_fournisseur) as nb_fournisseur
-FROM PRODUIT P 
+$sql = "SELECT P.id_produit, nom_produit,nom_categorie, type_vendu,ROUND(AVG(FR.prix_produit) * 1.20) as prix_produit, COUNT(id_fournisseur) as nb_fournisseur
+FROM PRODUIT P
 INNER JOIN CATEGORIE C ON P.id_categorie = C.id_categorie
 LEFT JOIN FOURNIR FR ON FR.id_produit = P.id_produit
 GROUP BY P.id_produit, nom_produit,nom_categorie, type_vendu; ";

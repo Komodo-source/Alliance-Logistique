@@ -165,7 +165,7 @@ const getIconName = (productName) => {
   return ICON_MAPPING.default;
 };
 
-// Memoized Product Item Component
+// Memoized Product Item Componentm
 const ProductItem = memo(({ item, onPress }) => {
   const productName = item.nom_produit || "Produit sans nom";
   const unitLabel = item.type_vendu === "poids" ? "kg" : "unité(s)";
@@ -682,6 +682,17 @@ const Formulaire = ({ navigation, route }) => {
       })),
       liste_fourni: fournisseurListeRef.current,
     };
+
+    getAlertRef().current?.showAlert(
+      "Multiple Fournisseur",
+      "Cette commande contient des multples fournisseurs elle va donc être divisé en mutiple commande souhaitez vous continuer?",
+      true,
+      "Oui",
+      () => null,
+      true,
+      "Non",
+      () => null
+    );
 
     console.log("Form data to send:", JSON.stringify(formData, null, 2));
 

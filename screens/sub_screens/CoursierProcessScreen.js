@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,131 +24,157 @@ const CoursierProcessScreen = ({ navigation, route }) => {
   const [fournisseurCode, setFournisseurCode] = useState('');
   const [clientCode, setClientCode] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
-  const [animation] = useState(new Animated.Value(0));
+  const animation = useRef(new Animated.Value(0)).current;
+  const [sessionID, setSessionID] = useState(null);
 
-  const item = route?.params?.item || null;
+  // route param item may be undefined; guard early
+  const item = route?.params?.item ?? null;
 
   useEffect(() => {
     fetchCommandData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    // Animation when step changes
+    // Play a short animation on step change
+    animation.setValue(0);
     Animated.timing(animation, {
       toValue: 1,
-      duration: 500,
+      duration: 400,
       easing: Easing.out(Easing.ease),
-      useNativeDriver: true
-    }).start(() => {
-      animation.setValue(0);
-    });
-  }, [currentStep]);
+      useNativeDriver: true,
+    }).start();
+  }, [currentStep, animation]);
 
   const fetchCommandData = async () => {
     try {
-      const userData = await FileManager.read_file("auto.json");
-      const session_id = userData.session_id;
-      const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_itin_coursier.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({session_id: session_id, id_cmd: item.id_cmd})
-      });
+      if (!item) {
+        // if no item passed, show friendly message and stop loading
+        debbug_log('No item passed in route.params', 'red');
+        Alert.alert('Erreur', 'Aucune commande sélectionnée.');
+        setLoading(false);
+        return;
+      }
+
+      const userData = await FileManager.read_file('auto.json');
+      if (!userData || !userData.session_id) {
+        debbug_log('No session data found in auto.json', 'red');
+        Alert.alert('Erreur', 'Utilisateur non authentifié. Veuillez vous reconnecter.');
+        setLoading(false);
+        return;
+      }
+
+      setSessionID(userData);
+      debbug_log(userData, 'yellow');
+
+      const response = await fetch(
+        'https://backend-logistique-api-latest.onrender.com/get_itin_coursier.php',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: userData.session_id, id_cmd: item.id_cmd }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
 
+      const data = await response.json();
+      debbug_log(data, 'yellow');
+
+      // Server may return array or object
+      const orderData = Array.isArray(data) ? data[0] : data;
+      if (!orderData) {
+        throw new Error('No order data received from server');
+      }
+
+      debbug_log('Processed orderData:', 'cyan');
+      debbug_log(orderData, 'cyan');
 
       const simulatedData = {
-        id_public_cmd: item.id_public_cmd,
+        id_public_cmd: item.id_public_cmd ?? orderData.id_public_cmd ?? 'N/A',
         fournisseur: {
-          prenom: data.prenom_fournisseur,
-          organisation: data.orga_fourni,
-          code_echange: data.code_echange_fourni,
-          localisation: data.localisation_fourni,
-          //telephone: "+33 1 23 45 67 89"
+          prenom: orderData.prenom_fournisseur ?? '—',
+          organisation: orderData.orga_fourni ?? '—',
+          code_echange: orderData.code_echange_fourni ?? orderData.code_echange ?? '',
+          localisation: orderData.localisation_fourni ?? '—',
         },
         client: {
-          nom: data.nom_client,
-          organisation: data.orga_client,
-          localisation: data.localisation_client,
-          code_echange_client: item.localisation_dmd
-          //telephone: "+33 1 98 76 54 32"
+          nom: orderData.nom_client ?? '—',
+          organisation: orderData.orga_client ?? '—',
+          localisation: orderData.localisation_client ?? item.localisation_dmd ?? '—',
+          code_echange: orderData.code_echange ?? '',
         },
         produits: [
-          item.produits
-          /*
           {
-            id_produit: 1,
-            nom_produit: "Produit A",
-            quantite: 2,
-            statut: "À récupérer",
-            image: "📦"
+            nom_produit: orderData.nom_produit ?? 'Produit',
+            quantite: orderData.nb_produit ?? 1,
+            statut: 'À récupérer',
+            image: '📦',
           },
-          {
-            id_produit: 2,
-            nom_produit: "Produit B",
-            quantite: 1,
-            statut: "À récupérer",
-            image: "📱"
-          },
-          {
-            id_produit: 3,
-            nom_produit: "Produit C",
-            quantite: 3,
-            statut: "À récupérer",
-            image: "💻"
-          }*/
         ],
         details: {
-          nom_dmd: data.nom_dmd,
-          date_debut: item.date_debut,
-          //instructions: "Fragile - Manipuler avec précaution"
-        }
+          nom_dmd: orderData.nom_dmd ?? null,
+          date_debut: item.date_debut ?? orderData.date_debut ?? null,
+        },
       };
 
       setCommandData(simulatedData);
       setLoading(false);
     } catch (error) {
       console.error('Erreur lors de la récupération des données:', error);
-      Alert.alert('Erreur', 'Impossible de charger les données de la commande');
+      debbug_log(error?.message ?? error, 'red');
+      // Friendly alert for users and stop the loader
+      Alert.alert('Erreur', 'Impossible de charger les données de la commande.');
       setLoading(false);
     }
   };
 
-  const changeStatusCommand = async(nv_status) => {
-    try{
-    const response = await("https://backend-logistique-api-latest.onrender.com/change_status.php",{
-      method: "POST",
-      headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
+  const changeStatusCommand = async (nv_status) => {
+    try {
+      if (!item) {
+        debbug_log('changeStatusCommand called without item', 'red');
+        return;
+      }
+
+      const response = await fetch(
+        'https://backend-logistique-api-latest.onrender.com/change_status.php',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
           },
-          body: JSON.stringify({id_cmd: item.id_cmd, status: nv_status}),
-          })
+          body: JSON.stringify({ id_cmd: item.id_cmd, status: nv_status }),
+        }
+      );
+
+      if (!response.ok) {
+        debbug_log(`change status HTTP ${response.status}`, 'red');
+        return;
+      }
 
       const result = await response.json();
-      debbug_log("== Response API, change status == ", 'cyan');
+      debbug_log('== Response API, change status == ', 'cyan');
       debbug_log(result, 'cyan');
-
-    }catch(error){
-      debbug_log("An error occured", "red");
+    } catch (error) {
+      debbug_log('An error occured', 'red');
+      console.error(error);
     }
-
-  }
+  };
 
   const handleFournisseurCodeSubmit = () => {
     if (!commandData) return;
-
+    console.log(commandData.fournisseur.code_echange)
+    console.log(fournisseurCode)
     if (fournisseurCode === commandData.fournisseur.code_echange) {
-      // Mettre à jour le statut des produits
       const updatedData = {
         ...commandData,
-        produits: commandData.produits.map(produit => ({
+        produits: commandData.produits.map((produit) => ({
           ...produit,
-          statut: "En transit"
-        }))
+          statut: 'En transit',
+        })),
       };
       setCommandData(updatedData);
       setCurrentStep(2);
@@ -162,13 +188,19 @@ const CoursierProcessScreen = ({ navigation, route }) => {
   const handleClientCodeSubmit = () => {
   if (!commandData) return;
 
-  if (clientCode === commandData.client.code_echange) {
+  const expectedCode = String(commandData.client.code_echange).trim();
+  const enteredCode = String(clientCode).trim();
+
+  console.log('Expected client code:', JSON.stringify(expectedCode));
+  console.log('Entered client code:', JSON.stringify(enteredCode));
+
+  if (enteredCode === expectedCode) {
     const updatedData = {
       ...commandData,
-      produits: commandData.produits.map(produit => ({
+      produits: commandData.produits.map((produit) => ({
         ...produit,
-        statut: "Livré"
-      }))
+        statut: 'Livré',
+      })),
     };
     setCommandData(updatedData);
     setCurrentStep(3);
@@ -180,25 +212,29 @@ const CoursierProcessScreen = ({ navigation, route }) => {
 };
 
   const getStepIcon = (stepNumber) => {
-    switch(stepNumber) {
-      case 1: return "business";
-      case 2: return "car";
-      case 3: return "person";
-      default: return "checkmark-circle";
+    switch (stepNumber) {
+      case 1:
+        return 'business';
+      case 2:
+        return 'car';
+      case 3:
+        return 'person';
+      default:
+        return 'checkmark-circle';
     }
   };
 
   const getStepStatus = (stepNumber) => {
-    if (stepNumber < currentStep) return "completed";
-    if (stepNumber === currentStep) return "active";
-    return "pending";
+    if (stepNumber < currentStep) return 'completed';
+    if (stepNumber === currentStep) return 'active';
+    return 'pending';
   };
 
   const renderProgressSteps = () => {
     const steps = [
-      { title: "Fournisseur", key: 1 },
-      { title: "Transport", key: 2 },
-      { title: "Client", key: 3 }
+      { title: 'Fournisseur', key: 1 },
+      { title: 'Transport', key: 2 },
+      { title: 'Client', key: 3 },
     ];
 
     return (
@@ -207,24 +243,24 @@ const CoursierProcessScreen = ({ navigation, route }) => {
           const status = getStepStatus(step.key);
           return (
             <View key={step.key} style={styles.stepWrapper}>
-              <View style={[styles.stepIcon,
-                status === "completed" && styles.stepCompleted,
-                status === "active" && styles.stepActive
-              ]}>
-                <Ionicons
-                  name={getStepIcon(step.key)}
-                  size={20}
-                  color={status === "pending" ? "#ccc" : "#fff"}
-                />
+              <View
+                style={[
+                  styles.stepIcon,
+                  status === 'completed' && styles.stepCompleted,
+                  status === 'active' && styles.stepActive,
+                ]}
+              >
+                <Ionicons name={getStepIcon(step.key)} size={20} color={status === 'pending' ? '#ccc' : '#fff'} />
               </View>
-              <Text style={[
-                styles.stepLabel,
-                status === "active" && styles.stepLabelActive
-              ]}>{step.title}</Text>
+              <Text style={[styles.stepLabel, status === 'active' && styles.stepLabelActive]}>{step.title}</Text>
               {index < steps.length - 1 && (
-                <View style={[styles.stepConnector,
-                  (status === "completed" || status === "active") && styles.stepConnectorActive
-                ]} />
+                <View
+                  style={[
+                    styles.stepConnector,
+                    (getStepStatus(steps[index].key) === 'completed' || getStepStatus(steps[index + 1].key) === 'active') &&
+                      styles.stepConnectorActive,
+                  ]}
+                />
               )}
             </View>
           );
@@ -234,6 +270,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
   };
 
   const renderProductFlow = () => {
+    if (!commandData) return null;
     return (
       <View style={styles.flowContainer}>
         <View style={styles.flowStep}>
@@ -241,8 +278,12 @@ const CoursierProcessScreen = ({ navigation, route }) => {
             <Ionicons name="business" size={24} color="#4A90E2" />
           </View>
           <Text style={styles.flowStepTitle}>Fournisseur</Text>
-          <Text numberOfLines={1} style={styles.flowStepText}>{commandData.fournisseur.prenom}</Text>
-          <Text numberOfLines={1} style={styles.flowStepSubText}>{commandData.fournisseur.organisation}</Text>
+          <Text numberOfLines={1} style={styles.flowStepText}>
+            {commandData.fournisseur.prenom}
+          </Text>
+          <Text numberOfLines={1} style={styles.flowStepSubText}>
+            {commandData.fournisseur.organisation}
+          </Text>
         </View>
 
         <View style={styles.arrowContainer}>
@@ -259,9 +300,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
               {produit.nom_produit} (x{produit.quantite})
             </Text>
           ))}
-          {commandData.produits.length > 2 && (
-            <Text style={styles.moreProducts}>+{commandData.produits.length - 2} autres</Text>
-          )}
+          {commandData.produits.length > 2 && <Text style={styles.moreProducts}>+{commandData.produits.length - 2} autres</Text>}
         </View>
 
         <View style={styles.arrowContainer}>
@@ -273,29 +312,40 @@ const CoursierProcessScreen = ({ navigation, route }) => {
             <Ionicons name="person" size={24} color="#4A90E2" />
           </View>
           <Text style={styles.flowStepTitle}>Client</Text>
-          <Text numberOfLines={1} style={styles.flowStepText}>{commandData.client.nom}</Text>
-          <Text numberOfLines={1} style={styles.flowStepSubText}>{commandData.client.organisation}</Text>
+          <Text numberOfLines={1} style={styles.flowStepText}>
+            {commandData.client.nom}
+          </Text>
+          <Text numberOfLines={1} style={styles.flowStepSubText}>
+            {commandData.client.organisation}
+          </Text>
         </View>
       </View>
     );
   };
 
   const renderStepContent = () => {
-    switch(currentStep) {
+    if (!commandData) return null;
+
+    const commonAnimatedStyle = {
+      opacity: animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+      }),
+      transform: [
+        {
+          translateY: animation.interpolate({
+            inputRange: [0, 1],
+            outputRange: [20, 0],
+          }),
+        },
+      ],
+    };
+
+    switch (currentStep) {
       case 1:
         return (
-          <Animated.View style={[styles.stepContent, {
-            opacity: animation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 1]
-            }),
-            transform: [{
-              translateY: animation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [20, 0]
-              })
-            }]
-          }]}>
+          <Animated.View style={[styles.stepContent, commonAnimatedStyle]}>
+            {/* Step 1 content (unchanged) */}
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, styles.stepNumberActive]}>
                 <Text style={styles.stepNumberText}>1</Text>
@@ -324,12 +374,6 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                   <Ionicons name="location" size={16} color="#666" />
                   <Text style={styles.infoText}>{commandData.fournisseur.localisation}</Text>
                 </View>
-
-                {/*<View style={styles.infoRow}>
-                  <Ionicons name="call" size={16} color="#666" />
-                  <Text style={styles.infoText}>{commandData.fournisseur.telephone}</Text>
-
-                </View>*/}
               </View>
             </View>
 
@@ -341,7 +385,6 @@ const CoursierProcessScreen = ({ navigation, route }) => {
               <View style={styles.infoContent}>
                 {commandData.produits.map((produit, index) => (
                   <View key={index} style={styles.productItem}>
-                    <Text style={styles.productEmoji}>{produit.image}</Text>
                     <View style={styles.productDetails}>
                       <Text style={styles.productName}>{produit.nom_produit}</Text>
                       <Text style={styles.productQuantity}>Quantité: {produit.quantite}</Text>
@@ -363,11 +406,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                 onChangeText={setFournisseurCode}
                 keyboardType="numeric"
               />
-              <TouchableOpacity
-                style={[styles.button, !fournisseurCode && styles.buttonDisabled]}
-                onPress={handleFournisseurCodeSubmit}
-                disabled={!fournisseurCode}
-              >
+              <TouchableOpacity style={[styles.button, !fournisseurCode && styles.buttonDisabled]} onPress={handleFournisseurCodeSubmit} disabled={!fournisseurCode}>
                 <Text style={styles.buttonText}>Valider la récupération</Text>
               </TouchableOpacity>
             </View>
@@ -376,18 +415,8 @@ const CoursierProcessScreen = ({ navigation, route }) => {
 
       case 2:
         return (
-          <Animated.View style={[styles.stepContent, {
-            opacity: animation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 1]
-            }),
-            transform: [{
-              translateY: animation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [20, 0]
-              })
-            }]
-          }]}>
+          <Animated.View style={[styles.stepContent, commonAnimatedStyle]}>
+            {/* Step 2 content (unchanged) */}
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, styles.stepNumberActive]}>
                 <Text style={styles.stepNumberText}>2</Text>
@@ -447,10 +476,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => setCurrentStep(2.5)}
-            >
+            <TouchableOpacity style={styles.button} onPress={() => setCurrentStep(2.5)}>
               <Text style={styles.buttonText}>J'arrive chez le client</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -459,27 +485,15 @@ const CoursierProcessScreen = ({ navigation, route }) => {
       case 2.5:
       case 3:
         return (
-          <Animated.View style={[styles.stepContent, {
-            opacity: animation.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, 1]
-            }),
-            transform: [{
-              translateY: animation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [20, 0]
-              })
-            }]
-          }]}>
+          <Animated.View style={[styles.stepContent, commonAnimatedStyle]}>
+            {/* Step 3 content (unchanged) */}
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, currentStep === 3 ? styles.stepNumberCompleted : styles.stepNumberActive]}>
                 <Text style={styles.stepNumberText}>3</Text>
               </View>
               <View style={styles.stepTitleContainer}>
                 <Text style={styles.stepTitle}>Chez le client</Text>
-                <Text style={styles.stepSubtitle}>
-                  {currentStep === 3 ? "Livraison terminée" : "Remise des produits"}
-                </Text>
+                <Text style={styles.stepSubtitle}>{currentStep === 3 ? 'Livraison terminée' : 'Remise des produits'}</Text>
               </View>
             </View>
 
@@ -501,11 +515,6 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                   <Ionicons name="location" size={16} color="#666" />
                   <Text style={styles.infoText}>{commandData.client.localisation}</Text>
                 </View>
-                {/*}
-                <View style={styles.infoRow}>
-                  <Ionicons name="call" size={16} color="#666" />
-                  <Text style={styles.infoText}>{commandData.client.telephone}</Text>
-                </View>*/}
               </View>
             </View>
 
@@ -519,11 +528,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                   onChangeText={setClientCode}
                   keyboardType="numeric"
                 />
-                <TouchableOpacity
-                  style={[styles.button, !clientCode && styles.buttonDisabled]}
-                  onPress={handleClientCodeSubmit}
-                  disabled={!clientCode}
-                >
+                <TouchableOpacity style={[styles.button, !clientCode && styles.buttonDisabled]} onPress={handleClientCodeSubmit} disabled={!clientCode}>
                   <Text style={styles.buttonText}>Valider la livraison</Text>
                 </TouchableOpacity>
               </View>
@@ -556,16 +561,16 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                   </View>
                 </View>
 
-                <TouchableOpacity
-                  style={[styles.button, styles.buttonSecondary]}
-                  onPress={() => navigation.goBack()}
-                >
+                <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={() => navigation.goBack()}>
                   <Text style={styles.buttonText}>Retour à l'accueil</Text>
                 </TouchableOpacity>
               </View>
             )}
           </Animated.View>
         );
+
+      default:
+        return null;
     }
   };
 
@@ -589,11 +594,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Processus de Livraison</Text>
         <Text style={styles.subtitle}>Commande: {commandData.id_public_cmd}</Text>
 
@@ -605,6 +606,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
   );
 };
 
+// ... styles remain unchanged (use your existing styles)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -822,9 +824,7 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
     marginLeft: 8,
   },
-  infoContent: {
-    // Additional content styling if needed
-  },
+  infoContent: {},
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -922,9 +922,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  directionContainer: {
-    // Styling for direction container
-  },
+  directionContainer: {},
   directionRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',

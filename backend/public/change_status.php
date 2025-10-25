@@ -4,20 +4,34 @@ include_once('db.php');
 
 $input = json_decode(file_get_contents("php://input"), true);
 
-$id_cmd = $data["id_cmd"];
-$nv_status = $data["status"]; //le status est l'id correspondant
-//(1, 'Livraison en cours'),
-//(2, 'Livré'),
-//(3, 'En cours de préparation');
+// ERREUR 1: Vous utilisez $data au lieu de $input
+$id_cmd = $input["id_cmd"];  // Changé de $data à $input
+$nv_status = $input["status"];  // Changé de $data à $input
+
 try{
-$sql = "UPDATE COMMANDE SET id_status = ? WHERE id_cmd = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ii", $session_id, $nv_status);
-$stmt->execute();
-echo json_encode(["ok" => "succes"]);
-}catch(Exception $e){
-   echo json_encode([
-      "message" => $e->getMessage()
-   ]);
+    $sql = "UPDATE COMMANDE SET id_status = ? WHERE id_cmd = ?";
+    $stmt = $conn->prepare($sql);
+
+    // ERREUR 2: Vous utilisez $session_id au lieu de $nv_status
+    // ERREUR 3: L'ordre des paramètres est inversé (status d'abord, puis id_cmd)
+    $stmt->bind_param("ii", $nv_status, $id_cmd);  // Corrigé
+
+    $stmt->execute();
+
+    // ERREUR 4 (optionnelle): Vérifier si la mise à jour a réussi
+    if($stmt->affected_rows > 0) {
+        echo json_encode(["ok" => "success", "updated" => true]);
+    } else {
+        echo json_encode(["ok" => "success", "updated" => false, "message" => "No rows affected"]);
+    }
+
+    $stmt->close();
+} catch(Exception $e){
+    echo json_encode([
+        "error" => true,
+        "message" => $e->getMessage()
+    ]);
 }
+
+$conn->close();
 ?>

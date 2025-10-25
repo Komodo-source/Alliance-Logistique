@@ -4,7 +4,7 @@ include_once('db.php');
 //include_once("lib/api.php");
 include_once('lib/get_session_info.php');
 
-$input = json_decode(file_get_contents("php://input"), true);
+$data = json_decode(file_get_contents("php://input"), true);
 
 if (!isset($data['session_id'])) {
     echo json_encode(['error' => 'session_id is required']);

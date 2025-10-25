@@ -54,7 +54,7 @@ const Accueil = ({ navigation }) => {
 
       // Update current time
       setCurrentTime(new Date());
-      snackBarRef.current?.show("COmmande mis à jour(" + new Date() + ")", "info");
+      snackBarRef.current?.show("Commande mis à jour(" + new Date() + ")", "info");
     } catch (error) {
       console.error("Error during refresh:", error);
     } finally {
@@ -166,11 +166,19 @@ const Accueil = ({ navigation }) => {
 
       setIsClient(data.type === "client");
       setUserData(data);
+      let url_recup_cmd;
+      if(data.type == "client"){
+        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
+      }else if(data.type == "fournisseur"){
+        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_fourni.php"
+      }else{
+        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cour.php"
+      }
       const session_id = data.session_id;
       console.log("session_id : ", session_id);
 
       const response = await fetch(
-        "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php",
+        url_recup_cmd,
         {
           method: "POST",
           headers: {
@@ -531,18 +539,18 @@ const Accueil = ({ navigation }) => {
   }, [commande]);
 
   // Update jours_restants when commandes or time changes
-  useFocusEffect(
-      React.useCallback(() => {
-        if (commande.length > 0) {
-          setJours_restants(getDaysDifference(commande[0].date_fin));
-        }
-        getFileCommand();
-      }, [commande, currentTime])
-    );
+  useEffect(() => {
+    if (commande.length > 0) {
+        setJours_restants(getDaysDifference(commande[0].date_fin));
+    }
+    //
+}, [commande, currentTime]);
+
 
   // Load sponsored data on mount
   useEffect(() => {
     loadSponsoredData();
+    getFileCommand();
   }, []);
 
   return (

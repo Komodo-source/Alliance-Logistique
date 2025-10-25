@@ -16,7 +16,7 @@ export default function NotificationService({ userId }) {
   const [expoPushToken, setExpoPushToken] = useState("");
   const [loading, setLoading] = useState(true);
 
-  
+
 async function registerForPushNotificationsAsync() {
   let token;
 
@@ -25,7 +25,7 @@ async function registerForPushNotificationsAsync() {
     let finalStatus = existingStatus;
 
     if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
+      const { status } = await Notificatkfoions.requestPermissionsAsync();
       finalStatus = status;
     }
 

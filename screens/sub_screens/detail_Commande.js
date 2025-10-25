@@ -361,7 +361,7 @@ const DetailCommande = ({ route, navigation }) => {
               <div class="company-section">
                   <h3>DESTINATAIRE</h3>
                   <p><strong>${item.nom_dmd || 'Client'}</strong></p>
-                  
+
                   <p>Email: ${email || "pas d'adresse email"}</p>
                   <p>Code commande: ${item.id_public_cmd || 'N/A'}</p>
               </div>
@@ -584,9 +584,9 @@ const DetailCommande = ({ route, navigation }) => {
   };
 
   const dic_status = {
-    1: "En préparation",
-    2: "En cours de livraison",
-    3: "Livré"
+    1: "Livraison en cours",
+    2: "Livré",
+    3: "En cours de préparation"
   }
 
   const dic_status_color = {
@@ -721,7 +721,7 @@ const DetailCommande = ({ route, navigation }) => {
                 <Text style={styles.description}>Consultez les détails de cette livraison</Text>
                 <TouchableOpacity style={[styles.button, styles.courierButton]}
                 onPress={() => {navigation.navigate("CoursierProcessScreen", {item})}}>
-                  <Text style={styles.buttonText}>Voir les détails</Text>
+                  <Text style={[styles.buttonText, {color: "#FFF"}]}>Voir les détails</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -741,10 +741,11 @@ const DetailCommande = ({ route, navigation }) => {
               <FontAwesome name="map-marker" size={20} color="#2E3192" />
               <Text style={styles.infoText}>Lieu de livraison: <Text style={styles.infoValue}>{shorten_localisation_data(item.localisation_dmd)}</Text></Text>
             </View>
+            {typeUser != "coursier" ? (
             <View style={styles.infoRow}>
               <FontAwesome name="qrcode" size={20} color="#2E3192" />
               <Text style={styles.infoText}>Code de commande: <Text style={styles.infoValue}>{(typeUser === "client" ?  item.code_echange : item.code_echange_fourni) || 'Code Introuvable'}</Text></Text>
-            </View>
+            </View>): null}
           </View>
 
         {!isAdresse && typeUser === "coursier"  ? (
@@ -880,9 +881,9 @@ const DetailCommande = ({ route, navigation }) => {
               isPaying && { opacity: 0.7 },
               { backgroundColor: "#fa0985ff", marginTop: 10 }
             ]}
-            onPress={() => {navigation.navigate("CoursierProcessScreen", item)}}
+            onPress={() => {navigation.navigate("CoursierProcessScreen", {item})}}
           >
-            <MaterialIcons name="truck-fast" size={24} color="white" />
+            <MaterialCommunityIcons name="truck-fast-outline" size={30} color="white" />
             <Text style={styles.invoiceButtonText}>
               Information sur la course
             </Text>

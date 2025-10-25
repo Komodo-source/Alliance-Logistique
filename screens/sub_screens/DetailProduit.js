@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
 
   cartButton: {
     marginTop: 10,
-    backgroundColor: '#FF8C00', // Orange background
+    backgroundColor: '#FF8C00',
     width: 44,
     height: 44,
     borderRadius: 7,

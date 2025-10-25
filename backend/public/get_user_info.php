@@ -53,7 +53,7 @@ $data_fournisseur_produits = $conn->prepare(
 $data_coursier = $conn->prepare("SELECT id_coursier, nom_coursier, prenom_coursier, telephone_coursier FROM COURSIER WHERE id_coursier = ?");
 
 try {
-    if($type == "client"){
+    if($type === "client"){
         $data_client->bind_param("i", $id);
         $data_client->execute();
         $result = $data_client->get_result();
@@ -64,7 +64,7 @@ try {
             echo json_encode(['error' => 'Aucun client trouvé pour cet ID', 'id' => $id]);
         }
 
-    } else if($type == "fournisseur"){
+    } else if($type === "fournisseur"){
         // Récupérer les données de base
         $data_fournisseur_base->bind_param("i", $id);
         $data_fournisseur_base->execute();
@@ -95,7 +95,7 @@ try {
             echo json_encode(['error' => 'Aucun fournisseur trouvé pour cet ID', 'id' => $id]);
         }
 
-    } else if($type == "coursier"){
+    } else if($type === "coursier"){
         $data_coursier->bind_param("i", $id);
         $data_coursier->execute();
         $result = $data_coursier->get_result();
