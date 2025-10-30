@@ -14,6 +14,7 @@ import * as debbug_lib from '../util/debbug.js';
 import { getAlertRef } from '../util/AlertService';
 import LeafletMap from '../../components/LeafletMap'
 import * as Location from 'expo-location';
+import { Ionicons } from '@expo/vector-icons';
 
 var headers = {
   'Accept' : 'application/json',
@@ -36,6 +37,7 @@ const enregistrer = ({route, navigation }) => {
   const [stayLoggedIn, setStayLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const id_choosen = Math.floor(Math.random() * 1000000);
   const [mapInteracting, setMapInteracting] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -190,8 +192,9 @@ const enregistrer = ({route, navigation }) => {
       getAlertRef().current?.showAlert('Attention', 'Veuillez entrer votre prénom', true, "OK", null);
       return false;
     }
+    var averti = false
     if (!Email.trim()) {
-      let averti = false
+
       getAlertRef().current?.showAlert(
         '⚠️Attention',
         'Attention si vous n\'entrez pas d\'email vous ne pourrez pas récupérer le mot de passe en cas de parte',
@@ -463,14 +466,26 @@ const enregistrer = ({route, navigation }) => {
         />
 
         <Text style={styles.descInput}>Mot de passe</Text>
-        <TextInput
-          style={styles.input}
-          secureTextEntry={true}
-          placeholder="Mot de passe"
-          placeholderTextColor="#a2a2a9"
-          value={Password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.inputU}
+            secureTextEntry={!showPassword}
+            placeholder="Mot de passe"
+            placeholderTextColor="#a2a2a9"
+            value={Password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            style={styles.eyeIcon}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off' : 'eye'}
+              size={30}
+              color="#666"
+            />
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.descInput}>Téléphone</Text>
         <TextInput
@@ -647,19 +662,43 @@ const styles = StyleSheet.create({
     marginLeft: '10%',
     fontWeight: "500"
   },
-  input: {
+  passwordContainer: {
+    position: 'relative',
+    width: '80%',
+    alignSelf: 'center',
+  },
+  inputU: {
     height: 50,
     borderWidth: 2.5,
     borderRadius: 7,
-    width: '80%',
+    width: '100%',
     padding: 10,
+    paddingRight: 50,
     color: '#111',
     borderColor: '#666',
     marginBottom: 20,
     marginTop: 5,
-    alignSelf: 'center',
     backgroundColor: '#fff',
   },
+  input: {
+      height: 50,
+      borderWidth: 2.5,
+      borderRadius: 7,
+      width: '80%',
+      padding: 10,
+      color: '#111',
+      borderColor: '#666',
+      marginBottom: 20,
+      marginTop: 5,
+      alignSelf: 'center',
+      backgroundColor: '#fff',
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 15,
+      top: 10,
+      padding: 5,
+    },
   button: {
     height: 50,
     borderRadius: 7,

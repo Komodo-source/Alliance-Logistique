@@ -139,7 +139,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
       }
 
       const response = await fetch(
-        'https://backend-logistique-api-latest.onrender.com/change_status.php',
+        'https://backend-logistique-api-latest.onrender.com/changec_status.php',
         {
           method: 'POST',
           headers: {
@@ -164,37 +164,46 @@ const CoursierProcessScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleFournisseurCodeSubmit = () => {
-    if (!commandData) return;
-    console.log(commandData.fournisseur.code_echange)
-    console.log(fournisseurCode)
-    if (fournisseurCode === commandData.fournisseur.code_echange) {
-      const updatedData = {
-        ...commandData,
-        produits: commandData.produits.map((produit) => ({
-          ...produit,
-          statut: 'En transit',
-        })),
-      };
-      setCommandData(updatedData);
-      setCurrentStep(2);
-      changeStatusCommand(1);
-      Alert.alert('Succès', 'Code validé! Produits récupérés. Vous pouvez maintenant vous diriger vers le client.');
-    } else {
-      Alert.alert('Erreur', 'Code incorrect. Veuillez réessayer.');
-    }
-  };
+const handleFournisseurCodeSubmit = () => {
+  if (!commandData) return;
 
-  const handleClientCodeSubmit = () => {
+  const expectedCode = String(commandData.fournisseur.code_echange).trim();
+  const enteredCode = String(fournisseurCode).trim();
+
+  console.log('Expected:', expectedCode, '| Type:', typeof expectedCode, '| Length:', expectedCode.length);
+  console.log('Entered:', enteredCode, '| Type:', typeof enteredCode, '| Length:', enteredCode.length);
+  console.log('Match:', expectedCode === enteredCode);
+
+  // Try loose comparison as backup
+  if (expectedCode === enteredCode || Number(expectedCode) === Number(enteredCode)) {
+    const updatedData = {
+      ...commandData,
+      produits: commandData.produits.map((produit) => ({
+        ...produit,
+        statut: 'En transit',
+      })),
+    };
+    setCommandData(updatedData);
+    setCurrentStep(2);
+    changeStatusCommand(1);
+    Alert.alert('Succès', 'Code validé! Produits récupérés. Vous pouvez maintenant vous diriger vers le client.');
+  } else {
+    Alert.alert('Erreur', `Code incorrect. Attendu: "${expectedCode}", Reçu: "${enteredCode}"`);
+  }
+};
+
+const handleClientCodeSubmit = () => {
   if (!commandData) return;
 
   const expectedCode = String(commandData.client.code_echange).trim();
   const enteredCode = String(clientCode).trim();
 
-  console.log('Expected client code:', JSON.stringify(expectedCode));
-  console.log('Entered client code:', JSON.stringify(enteredCode));
+  console.log('Expected:', expectedCode, '| Type:', typeof expectedCode, '| Length:', expectedCode.length);
+  console.log('Entered:', enteredCode, '| Type:', typeof enteredCode, '| Length:', enteredCode.length);
+  console.log('Match:', expectedCode === enteredCode);
 
-  if (enteredCode === expectedCode) {
+  // Try loose comparison as backup
+  if (expectedCode == enteredCode || Number(expectedCode) === Number(enteredCode)) {
     const updatedData = {
       ...commandData,
       produits: commandData.produits.map((produit) => ({
@@ -207,7 +216,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
     changeStatusCommand(2);
     Alert.alert('Succès', 'Commande terminée! Livraison validée.');
   } else {
-    Alert.alert('Erreur', 'Code incorrect. Veuillez réessayer.');
+    Alert.alert('Erreur', `Code incorrect. Attendu: "${expectedCode}", Reçu: "${enteredCode}"`);
   }
 };
 
@@ -438,7 +447,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                     <Ionicons name="location" size={16} color="#4A90E2" />
                     <View>
                       <Text style={styles.directionLabel}>De:</Text>
-                      <Text style={styles.directionText}>{commandData.fournisseur.localisation}</Text>
+                      <Text style={styles.directionText}>{commandData.fournisseur.prenom}</Text>
                     </View>
                   </View>
 
@@ -539,7 +548,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                 </View>
                 <Text style={styles.completedTitle}>Livraison terminée avec succès!</Text>
                 <Text style={styles.completedText}>Tous les produits ont été livrés au client.</Text>
-
+{/*
                 <View style={styles.infoCard}>
                   <View style={styles.infoHeader}>
                     <Ionicons name="list" size={20} color="#4A90E2" />
@@ -559,7 +568,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
                       </View>
                     ))}
                   </View>
-                </View>
+                </View>*/}
 
                 <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={() => navigation.goBack()}>
                   <Text style={styles.buttonText}>Retour à l'accueil</Text>
@@ -824,7 +833,9 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
     marginLeft: 8,
   },
-  infoContent: {},
+  infoContent: {
+    width: "100%"
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -851,7 +862,7 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 16,
-    color: '#2c3e50',
+    color: '#000000ff',
     marginBottom: 4,
   },
   productQuantity: {
@@ -918,7 +929,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   buttonText: {
-    color: 'white',
+    color: '#111',
     fontWeight: 'bold',
     fontSize: 16,
   },

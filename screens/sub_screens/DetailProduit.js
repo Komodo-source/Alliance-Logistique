@@ -4,6 +4,8 @@ import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debbug_log } from '../util/debbug';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { getUserDataType } from '../util/Polyvalent';
+import * as FileManager from '../util/file-manager'
 
 var headers = {
   'Accept' : 'application/json',
@@ -39,6 +41,7 @@ const DetailProduit = ({ route, navigation }) => {
   const [fourni, setFourni] = useState(null);
   const [estCharge, setFourniCharge] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
+  const [userType, setIsClient] = useState('');
 
     const { item } = route.params;
     console.log(item );
@@ -180,16 +183,26 @@ const renderFourniChoix = ({ item: fourni, index }) => {
     </TouchableOpacity>
   );
 };
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      const data = await getUserDataType(); // or FileManager.read_file("auto.json")
+      debbug_log(data.type, "cyan");
+      setIsClient(data.type);
 
-    useEffect(() => {
-    getCurrentLocation();
-    getFourni();
-  }, []);
+      // Use data.type directly, not userType state
+      if(data.type === "client"){
+        getCurrentLocation();
+        getFourni();
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
 
+  loadData();
+}, []);
   return (
-  <ScrollView
-    scrollEnabled={!mapInteracting}
-  >
     <SafeAreaView style={styles.container}>
       <View style={styles.main}>
             <View >
@@ -202,54 +215,55 @@ const renderFourniChoix = ({ item: fourni, index }) => {
 
 
         <Text style={styles.description}>Ceci est une description du produit le temps que l'on introduise la description du produit</Text>
+      {userType === "client" ? (<View>
+  <TouchableOpacity
+          style={styles.Panier}
+          onPress={() => navigation.navigate('commande_reccurente')}
+        >
+          <Text style={{color: "#fff", fontSize: 19, fontWeight: "500", numberOfLines:1, adjustsFontSizeToFit:true}}>
+            Ajouter à une commande récurrente
+          </Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.Panier}
-        onPress={() => navigation.navigate('commande_reccurente')}
-      >
-        <Text style={{color: "#fff", fontSize: 19, fontWeight: "500", numberOfLines:1, adjustsFontSizeToFit:true}}>
-          Ajouter à une commande récurrente
-        </Text>
-      </TouchableOpacity>
-
-      <SafeAreaView style={styles.listFourni}>
-        <Text style={styles.NbFourni}>Nombre de fournisseur produisant<Text style={{color: "#2757F5"}}> {item.nom_produit}</Text> : {item.nb_fournisseur}</Text>
-        {item.nb_fournisseur == 0 ? (
-          <View style={styles.card}>
-            <View style={styles.iconContainer}>
-              <MaterialCommunityIcons
-                name="truck-remove-outline"
-                size={48}
-                color="#94a3b8"
-              />
+        <SafeAreaView style={styles.listFourni}>
+          <Text style={styles.NbFourni}>Nombre de fournisseur produisant<Text style={{color: "#2757F5"}}> {item.nom_produit}</Text> : {item.nb_fournisseur}</Text>
+          {item.nb_fournisseur == 0 ? (
+            <View style={styles.card}>
+              <View style={styles.iconContainer}>
+                <MaterialCommunityIcons
+                  name="truck-remove-outline"
+                  size={48}
+                  color="#94a3b8"
+                />
+              </View>
+              <Text style={styles.title}>Aucun fournisseur disponible</Text>
+              <Text style={styles.description}>
+                Aucun fournisseur ne peut actuellement remplir votre commande.
+                Veuillez réessayer ultérieurement.
+              </Text>
             </View>
-            <Text style={styles.title}>Aucun fournisseur disponible</Text>
-            <Text style={styles.description}>
-              Aucun fournisseur ne peut actuellement remplir votre commande.
-              Veuillez réessayer ultérieurement.
-            </Text>
-          </View>
-        ) : estCharge ? (
-          <FlatList
-            data={fourni}
-            renderItem={renderFourniChoix}
-            keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
-            numColumns={1}
-            contentContainerStyle={styles.productGrid}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingSpinner}>
-              <Text style={styles.loadingEmoji}>⏳</Text>
+          ) : estCharge ? (
+            <FlatList
+              data={fourni}
+              renderItem={renderFourniChoix}
+              keyExtractor={(fourni) => fourni.id_fournisseur.toString()}
+              numColumns={1}
+              contentContainerStyle={styles.productGrid}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <View style={styles.loadingContainer}>
+              <View style={styles.loadingSpinner}>
+                <Text style={styles.loadingEmoji}>⏳</Text>
+              </View>
+              <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
             </View>
-            <Text style={styles.loadingText}>Chargement des Fournisseurs...</Text>
-          </View>
-        )}
+          )}
 
-      </SafeAreaView >
+        </SafeAreaView >
+      </View>) : null}
+
     </SafeAreaView>
-  </ScrollView>
   );
 };
 

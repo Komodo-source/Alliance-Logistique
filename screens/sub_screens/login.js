@@ -11,6 +11,7 @@ import Checkbox from 'expo-checkbox';
 //pour une araison bizarre les checkbox de react native ne fonctionnent pas
 //import CheckBox from '@react-native-community/checkbox';
 import { getAlertRef } from '../util/AlertService';
+import { Ionicons } from '@expo/vector-icons'; // or another icon library
 
 var headers = {
   'Accept' : 'application/json',
@@ -22,6 +23,7 @@ const Login = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setSelection] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   //const sha256 = new SHA256();
 
   const validateForm = () => {
@@ -35,16 +37,7 @@ const Login = ({ navigation }) => {
       );
       return false;
     }
-    if (!username.includes('@') || !username.includes('.')) {
-      getAlertRef().current?.showAlert(
-        'Erreur',
-        'Veuillez entrer un email valide',
-        true,
-        'OK',
-        null
-      );
-      return false;
-    }
+
     if (!password.trim()) {
       getAlertRef().current?.showAlert(
         'Erreur',
@@ -228,7 +221,7 @@ const Login = ({ navigation }) => {
       <View style={styles.nom}>
         <Text style={styles.descInput}>Email/Téléphone</Text>
         <TextInput
-          style={styles.input}
+          style={styles.inputU}
           keyboardType="email-address"
           placeholder="Email"
           placeholderTextColor="#a2a2a9"
@@ -239,14 +232,26 @@ const Login = ({ navigation }) => {
 
       <View style={styles.nom}>
         <Text style={styles.descInput}>Mot de Passe</Text>
-        <TextInput
-          style={styles.input}
-          secureTextEntry={true}
-          placeholder="Mot de passe"
-          placeholderTextColor="#a2a2a9"
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.passwordContainer}>
+          <TextInput
+            style={styles.input}
+            secureTextEntry={!showPassword}
+            placeholder="Mot de passe"
+            placeholderTextColor="#a2a2a9"
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            style={styles.eyeIcon}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons
+              name={showPassword ? 'eye-off' : 'eye'}
+              size={30}
+              color="#666"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.checkboxContainer}>
@@ -328,7 +333,12 @@ const styles = StyleSheet.create({
       marginLeft: '10%',
       fontWeight: "500"
     },
-    input: {
+    passwordContainer: {
+      position: 'relative',
+      width: '80%',
+      alignSelf: 'center',
+    },
+    inputU: {
       height: 50,
       borderWidth: 2.5,
       borderRadius: 7,
@@ -340,6 +350,25 @@ const styles = StyleSheet.create({
       marginTop: 5,
       alignSelf: 'center',
       backgroundColor: '#fff',
+    },
+    input: {
+      height: 50,
+      borderWidth: 2.5,
+      borderRadius: 7,
+      width: '100%',
+      padding: 10,
+      paddingRight: 50,
+      color: '#111',
+      borderColor: '#666',
+      marginBottom: 20,
+      marginTop: 5,
+      backgroundColor: '#fff',
+    },
+    eyeIcon: {
+      position: 'absolute',
+      right: 15,
+      top: 10,
+      padding: 5,
     },
     LoginButton : {
       height: 40,

@@ -1,11 +1,19 @@
 <?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Headers: Content-Type');
 
 header('Content-Type: application/json');
 include_once('db.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
-$email = $data['email'];
 
+if (!isset($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(['error' => 'Invalid or missing email']);
+    exit;
+}
+
+$email = $data['email'];
 $temp_code = str_pad(rand(0, 9999), 4, '0', STR_PAD_LEFT);
 $id_code = rand(100000, 999999);
 
@@ -13,10 +21,10 @@ try {
     // Fetch client id from email
     $hashed_email = hash('sha256', $email);
     $select_stmt = $conn->prepare("SELECT id_client FROM CLIENT WHERE email_client = ?");
-    $select_stmt->bind_param("s", $hashed_email); 
+    $select_stmt->bind_param("s", $hashed_email);
     $select_stmt->execute();
     $result = $select_stmt->get_result();
-    
+
     if ($row = $result->fetch_assoc()) {
         $id = $row['id_client'];
         $select_stmt->close();
@@ -48,7 +56,7 @@ L'équipe Alliance logistique vous remercie de votre compréhension.";
         if (mail($to, $subject, $message, $headers)) {
             $insert_stmt = $conn->prepare("INSERT INTO TEMP_CODE_RESET_PSSWD(id_code, code_temp, id_user) VALUES(?,?,?)");
             $insert_stmt->bind_param("isi", $id_code, $temp_code, $id);
-            
+
             if ($insert_stmt->execute()) {
                 echo json_encode(['success' => 'Code sent to email']);
             } else {

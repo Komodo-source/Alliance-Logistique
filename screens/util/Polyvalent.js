@@ -1,4 +1,17 @@
 import { Linking, Alert, Platform } from 'react-native';
+import * as FileManager from './file-manager';
+
+export const getUserData = async() =>{
+    const data = await FileManager.read_file("auto.json");
+    return data;
+}
+
+export const getUserDataType = async() =>{
+    const data = await FileManager.read_file("auto.json");
+    return data.type;
+}
+
+
 
 export const openNavigationWithChoice = async (latitude, longitude, label = 'Destination') => {
   const urls = {

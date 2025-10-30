@@ -36,7 +36,7 @@ const fournisseur_produit = ({ navigation }) => {
           console.error("Erreur lors de la récupération des produits:", error);
         }
     };
-    
+
     const handleSearchTextChange = (text) => {
         setSearchText(text);
         if (text.trim() === "") {
@@ -104,7 +104,7 @@ const fournisseur_produit = ({ navigation }) => {
         }
 
         setSupplierProducts(updatedProducts);
-        
+
         setQuantityModalVisible(false);
         setModalVisible(false);
         setSelectedProduct(null);
@@ -112,7 +112,7 @@ const fournisseur_produit = ({ navigation }) => {
         setPrice('0');
         setSearchText('');
         setProduits(produit);
-        
+
         //Alert.alert("Succès", existingProductIndex !== -1 ? "Quantité mise à jour" : "Produit ajouté à votre liste");
 
     };
@@ -195,7 +195,7 @@ const fournisseur_produit = ({ navigation }) => {
             }))
 
             const result = await response.json();
-            
+
             if (result.success) {
 
             getAlertRef().current?.showAlert(
@@ -205,8 +205,8 @@ const fournisseur_produit = ({ navigation }) => {
                 "OK",
                 //() => navigation.navigate("ProductPhotos", {id: session_id}),*/}
                 () => navigation.navigate("Accueil")
-              ); 
-                
+              );
+
             } else {
                 Alert.alert("Erreur", result.error || "Erreur lors de la sauvegarde");
             }
@@ -227,15 +227,15 @@ const fournisseur_produit = ({ navigation }) => {
         setModalVisible(true);
     };
 
-    useEffect(() => {        
+    useEffect(() => {
         getAlertRef().current?.showAlert(
             "",
             "Ici vous devez ajouter les produits que vous pouvez fournir",
             true,
             "Compris",
             null,
-    
-          ); 
+
+          );
         getProduct();
     }, []);
 
@@ -251,26 +251,26 @@ const fournisseur_produit = ({ navigation }) => {
                         Quantité disponible: {item.quantite}
                     </Text>
                 </View>
-                
+
                 <View style={styles.quantity_controls}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.quantity_button}
                         onPress={() => updateProductQuantity(index, parseInt(item.quantite) - 1)}
                     >
                         <Text style={styles.quantity_button_text}>-</Text>
                     </TouchableOpacity>
-                    
+
                     <Text style={styles.quantity_text}>{item.quantite}</Text>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                         style={styles.quantity_button}
                         onPress={() => updateProductQuantity(index, parseInt(item.quantite) + 1)}
                     >
                         <Text style={styles.quantity_button_text}>+</Text>
                     </TouchableOpacity>
                 </View>
-                
-                <TouchableOpacity 
+
+                <TouchableOpacity
                     style={styles.remove_button}
                     onPress={() => removeProductFromSupplier(index)}
                 >
@@ -289,15 +289,15 @@ const fournisseur_produit = ({ navigation }) => {
             </View>
 
             <View style={styles.options}>
-                <TouchableOpacity 
-                    style={styles.button} 
+                <TouchableOpacity
+                    style={styles.button}
                     onPress={modifier_liste_produit}
                 >
                     <Text style={styles.buttonText}>Ajouter des produits</Text>
                 </TouchableOpacity>
-                
-                <TouchableOpacity 
-                    style={[styles.button, styles.saveButton]} 
+
+                <TouchableOpacity
+                    style={[styles.button, styles.saveButton]}
                     onPress={saveSupplierProducts}
                     disabled={loading}
                 >
@@ -329,7 +329,7 @@ const fournisseur_produit = ({ navigation }) => {
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalView}>              
+                    <View style={styles.modalView}>
                         <Text style={styles.inputLabel}>Rechercher vos produits</Text>
                         <View style={styles.SearchInputText}>
                             <TextInput
@@ -339,13 +339,13 @@ const fournisseur_produit = ({ navigation }) => {
                                 placeholderTextColor="#a2a2a9"
                                 value={searchText}
                                 onChangeText={handleSearchTextChange}
-                            />      
-                            <Image 
+                            />
+                            <Image
                                 source={require('../../assets/Icons/Dark-Search.png')}
                                 style={styles.imageSearch}
-                            />  
+                            />
                         </View>
-                        
+
                         <View style={styles.sectionContainer}>
                             <Text style={styles.sectionTitle}>Produits disponibles</Text>
                             <FlatList
@@ -360,9 +360,9 @@ const fournisseur_produit = ({ navigation }) => {
                                 }
                             />
                         </View>
-                        
-                        <TouchableOpacity 
-                            style={styles.closeButton} 
+
+                        <TouchableOpacity
+                            style={styles.closeButton}
                             onPress={() => {
                                 setModalVisible(false);
                                 setSearchText('');
@@ -371,7 +371,7 @@ const fournisseur_produit = ({ navigation }) => {
                             <Text style={styles.closeButtonText}>Fermer</Text>
                         </TouchableOpacity>
                     </View>
-                </View>     
+                </View>
             </Modal>
 
             {/* Modal for quantity and price selection */}
@@ -385,9 +385,9 @@ const fournisseur_produit = ({ navigation }) => {
                         <Text style={styles.quantityModalTitle}>
                             Ajouter {selectedProduct?.nom_produit}
                         </Text>
-                        
+
                         <View style={styles.quantityInputContainer}>
-                            <Text style={styles.quantityLabel}>Quantité disponible:</Text>
+                            <Text style={styles.quantityLabel}>{selectedProduct?.nom_categorie}s disponible:</Text>
                             <TextInput
                                 style={styles.quantityInput}
                                 value={quantity}
@@ -407,16 +407,16 @@ const fournisseur_produit = ({ navigation }) => {
                                 placeholder="0"
                             />
                         </View>
-                        
+
                         <View style={styles.quantityModalButtons}>
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[styles.quantityModalButton, styles.cancelQuantityButton]}
                                 onPress={() => setQuantityModalVisible(false)}
                             >
                                 <Text style={styles.quantityModalButtonText}>Annuler</Text>
                             </TouchableOpacity>
-                            
-                            <TouchableOpacity 
+
+                            <TouchableOpacity
                                 style={[styles.quantityModalButton, styles.addQuantityButton]}
                                 onPress={addProductToSupplier}
                             >

@@ -3,9 +3,7 @@ header('Content-Type: application/json');
 include_once('db.php');
 
 $input = json_decode(file_get_contents("php://input"), true);
-
-// ERREUR 1: Vous utilisez $data au lieu de $input
-$id_cmd = $input["id_cmd"];  // Changé de $data à $input
+$id_cmd = $input["id_cmd"];
 $nv_status = $input["status"];  // Changé de $data à $input
 
 try{

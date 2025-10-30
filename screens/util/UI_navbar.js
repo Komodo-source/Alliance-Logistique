@@ -9,6 +9,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import Entypo from '@expo/vector-icons/Entypo';
 
 
 export const NavBarData = ({ navigation, active_page }) => {
@@ -73,7 +74,7 @@ export const NavBarData = ({ navigation, active_page }) => {
     {
       name: "Accueil",
       page: "accueil",
-      icon: <MaterialCommunityIcons name="home" size={28} />,
+      icon: <Entypo name="home" size={24} color="black" />,
       navigate: "Accueil",
     },
     {

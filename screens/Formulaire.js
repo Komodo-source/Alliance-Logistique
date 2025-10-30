@@ -500,6 +500,15 @@ const Formulaire = ({ navigation, route }) => {
     setModalFourniVisible(false);
 
     if (selectedProduct) {
+      if(fournisseurListeRef.current.length == 2){
+        getAlertRef().current?.showAlert(
+          "Multiple Fournisseur",
+          "Cette commande contient des multples fournisseurs elle va donc être divisé en mutiple commande",
+          true,
+          "OK",
+          () => null
+        );
+      }
       add_product(
         selectedProduct.key,
         nombre,
@@ -670,7 +679,7 @@ const Formulaire = ({ navigation, route }) => {
       //A checker renvoie 1, alors que c'est faux
       nom_dmd: commandeName.trim(),
       desc_dmd: description.trim(),
-      date_fin: formatDate(date),
+      date_fin: formatDate(new Date()),
       id_client: dataUser.session_id || 1,
       localisation_dmd:
         addresse !== ""
@@ -683,16 +692,7 @@ const Formulaire = ({ navigation, route }) => {
       liste_fourni: fournisseurListeRef.current,
     };
 
-    getAlertRef().current?.showAlert(
-      "Multiple Fournisseur",
-      "Cette commande contient des multples fournisseurs elle va donc être divisé en mutiple commande souhaitez vous continuer?",
-      true,
-      "Oui",
-      () => null,
-      true,
-      "Non",
-      () => null
-    );
+
 
     console.log("Form data to send:", JSON.stringify(formData, null, 2));
 
@@ -962,6 +962,7 @@ const Formulaire = ({ navigation, route }) => {
               </View>
 
               {/* Date Picker */}
+              {/*
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Date de livraison</Text>
                 <TouchableOpacity style={styles.datePickerButton} onPress={openDatePicker}>
@@ -983,7 +984,7 @@ const Formulaire = ({ navigation, route }) => {
                     minimumDate={new Date()}
                   />
                 )}
-              </View>
+              </View>*/}
 
               {/* Product Modal */}
               <Modal

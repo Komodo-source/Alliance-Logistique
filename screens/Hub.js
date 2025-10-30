@@ -20,7 +20,7 @@ import { NavBarData } from "./util/UI_navbar.js";
 import * as fileManager from "./util/file-manager.js";
 import { getAlertRef } from "./util/AlertService";
 import { debbug_log } from "./util/debbug.js";
-
+import { getUserDataType } from "./util/Polyvalent.js";
 
 
 const Hub = ({ navigation }) => {
@@ -29,6 +29,8 @@ const Hub = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [filter, setFilter] = useState("all"); // all, pending, completed, cancelled
+  const [userType, setUserType] = useState('')
+
 const handleDisconnect = async () => {
   getAlertRef().current?.showAlert(
     "Aïe",
@@ -116,9 +118,20 @@ const handleDisconnect = async () => {
       }
       setUserData(data);
       const session_id = data.session_id;
+      setUserType(data.type);
+
+      debbug_log("UserType: " + userType.type, "cyan");
+      let url_recup_cmd;
+      if(userType == "client"){
+        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
+      }else if(userType == "fournisseur"){
+        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_fourni.php"
+      }else{
+        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cour.php"
+      }
 
       const response = await fetch(
-        "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php",
+        url_recup_cmd,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -411,17 +424,18 @@ const handleDisconnect = async () => {
       <View style={styles.container}>
         {/* Header with gradient background */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Mes Commandes</Text>
+          {userType === "coursier" ? (<Text style={styles.headerTitle}>Mes livraisons</Text>):
+          (<Text style={styles.headerTitle}>Mes commandes</Text>)}
           <Text style={styles.headerSubtitle}>
             {userData !== null
               ? userData.firstname + " " + userData.name
               : "Utilisateur"}{" "}
-            • {commande.length} commande{commande.length > 1 ? "s" : ""}
+            • {commande.length} {userType === "coursier" ? "livraison" : "commande" }{commande.length > 1 ? "s" : ""}
           </Text>
         </View>
 
         {/* Quick Actions Section */}
-        <View style={styles.quickActionsSection}>
+        {userType  === "client" ? (<View style={styles.quickActionsSection}>
           <TouchableOpacity
             style={styles.quickActionCard}
             onPress={() => {
@@ -447,7 +461,8 @@ const handleDisconnect = async () => {
               color="#64748B"
             />
           </TouchableOpacity>
-        </View>
+        </View>) : null}
+
 
         {/* Filter Section */}
         <View style={styles.filtersSection}>

@@ -22,10 +22,11 @@ import { debbug_log } from "./util/debbug.js";
 const { width, height } = Dimensions.get("window");
 //import axios from 'axios';
 //import { debbug_log } from './util/debbug.js';
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Snackbar from "./util/SnackBar.js";
 import { NavBarData } from "./util/UI_navbar.js";
 import { useRef } from "react";
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 const Accueil = ({ navigation }) => {
 
@@ -33,7 +34,7 @@ const Accueil = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [nb_commande_livraison, setNbCommandeLivraison] = useState(0);
-  const [isClient, setIsClient] = useState(true);
+  const [userType, setIsClient] = useState('');
   // Update time every minute for dynamic greeting
   const [jours_restants, setJours_restants] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -164,7 +165,7 @@ const Accueil = ({ navigation }) => {
         return;
       }
 
-      setIsClient(data.type === "client");
+      setIsClient(data.type);
       setUserData(data);
       let url_recup_cmd;
       if(data.type == "client"){
@@ -227,7 +228,7 @@ const Accueil = ({ navigation }) => {
 
   // Enhanced quick actions with better visual hierarchy
   const quickActions = [
-    ...(isClient
+    ...(userType === "client"
       ? [
           {
             id: 1,
@@ -256,6 +257,8 @@ const Accueil = ({ navigation }) => {
       gradient: ["#4facfe", "#00f2fe"],
       action: () => navigation.navigate("Produit"),
     },
+    ...(userType === "client"
+      ? [
     {
       id: 4,
       title: "Planifier",
@@ -264,6 +267,8 @@ const Accueil = ({ navigation }) => {
       gradient: ["#43e97b", "#38f9d7"],
       action: () => navigation.navigate("commande_reccurente"),
     },
+    ]
+      : []),
   ];
 
   const categorie_produit = [
@@ -289,31 +294,31 @@ const Accueil = ({ navigation }) => {
       id: 4,
       title: "Fruit",
       action: () => navigation.navigate("Produit", { category: "Fruit" }),
-      icon: "food-apple",
+      icon: "apple-whole",
     },
     {
       id: 5,
       title: "Féculent",
       action: () => navigation.navigate("Produit", { category: "Féculent" }),
-      icon: "pasta",
+      icon: "wheat-awn",
     },
     {
       id: 6,
       title: "Divers",
       action: () => navigation.navigate("Produit", { category: "Divers" }),
-      icon: "minus-box",
+      icon: "random",
     },
     {
       id: 7,
       title: "Epice",
       action: () => navigation.navigate("Produit", { category: "Epice" }),
-      icon: "chili-mild",
+      icon: "pepper-hot",
     },
     {
       id: 8,
       title: "Volaille",
       action: () => navigation.navigate("Produit", { category: "Volaille" }),
-      icon: "food-drumstick",
+      icon: "drumstick-bite",
     },
   ];
 
@@ -326,7 +331,8 @@ const Accueil = ({ navigation }) => {
       <View style={styles.cardContent}>
         {/* Icon Container */}
         <View style={styles.iconContainer}>
-          <MaterialCommunityIcons name={item.icon} size={32} color="#2773F5" />
+          <FontAwesome6 name={item.icon} size={32} color="#2773F5" />
+
         </View>
 
         {/* Title */}
@@ -724,7 +730,9 @@ const Accueil = ({ navigation }) => {
         {/* Recent Orders with horizontal scroll */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Commandes Récentes</Text>
+            {userType  === "coursier" ?
+            (<Text style={styles.sectionTitle}>Commandes à livrer</Text>):
+            (<Text style={styles.sectionTitle}>Commandes récentes</Text>) }
             <TouchableOpacity onPress={() => navigation.navigate("Hub")}>
               <Text style={styles.seeAllText}>Voir tout</Text>
             </TouchableOpacity>

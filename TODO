@@ -14,7 +14,6 @@ Alliance logistique
         - affiche des produits randoms discount
 	x	Refresh les commandes
        - sinon get 1fois les commandes
-	x	regarder si on devrait store dans un json ou sql avec SQLite
 	◦ enlever les logs quand l'app est en prod
 	x fix les session_id
 	◦ modifier le profil
@@ -23,6 +22,18 @@ Alliance logistique
 	x checker pour remove id in auto.json
 	◦ hasher les code
 	X ouvrir les loc dans une app (maps ...)
-	◦ séparer par fournisseur
-	
+	x séparer par fournisseur
+	x voir le mot de passe
+	X DATE LIVRAISON
+
+	bsilic botte
+	gigot kilos
+	boeuf kilo
+	cote porc kilo
+	viange porc générique kilo
+	banane kilo
+	avocat unité
+	pomme kilo
+	tout les poulet unité
+
 
