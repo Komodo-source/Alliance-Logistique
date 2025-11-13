@@ -1,12 +1,19 @@
 <?php
 // send_notification.php
 include_once('db.php');
-
+include_once('lib/get_session_info.php');
 $data = json_decode(file_get_contents("php://input"), true);
-$user_id = $data["user_id"];
+   if (!isset($data['session_id'])) {
+      echo json_encode(['error' => 'session_id is required']);
+      exit;
+   }
+   $session_id = $data['session_id'];
+   $user_id = getIdSession($session_id);
+
 $payload_id = $data["payload_num"];
-$idCommand = $data["IdCommande"] ?? "Unknown";
-$nomCommand = $data["nomCommand"] ?? "Unknown";
+$type = $data["type"];
+$idCommand = $data["IdCommande"] ?? " ";
+$nomCommand = $data["nomCommand"] ?? " ";
 
 if(isset($data["IdCommande"])){
     $idCommand = $data["IdCommande"];
@@ -20,7 +27,7 @@ function fourni_payload($token) { //1
     return json_encode([
     "to" => $token,
     "sound" => "default",
-    "title" => "Nouvelle Commande!",
+    "title" => "Nouvelle Commande 📦",
     "body" => "Vous avez une nouvelle commande, allez dans le hub pour en découvrir les détails",
     "data" => ["extra" => "info"]
     ]);
@@ -30,7 +37,7 @@ function coursier_payload($token) { //2
     return json_encode([
     "to" => $token,
     "sound" => "default",
-    "title" => "Nouvelle Commande!",
+    "title" => "Nouvelle Commande 📦",
     "body" => "Vous devez livrez une commande, allez dans le hub pour en découvrir les détails",
     "data" => ["extra" => "info"]
 ]);
@@ -42,8 +49,8 @@ function client_depart_payload($token) { //3
     return json_encode([
     "to" => $token,
     "sound" => "default",
-    "title" => "Commande ".$idCommand,
-    "body" => "Votre ".$nomCommand . " commande vient de partir",
+    "title" => "Commande ".$idCommand . " est partie 🚚",
+    "body" => "Votre ".$nomCommand . " commande vient de partir du fournisseur ",
     "data" => ["extra" => "info"]
 ]);
 }
@@ -53,7 +60,7 @@ function client_livre_payload($token) { //4
     return json_encode([
     "to" => $token,
     "sound" => "default",
-    "title" => "Livraison " . $idCommand,
+    "title" => "Livraison " . $idCommand . " livré ✅",
     "body" => "Votre Commande ". $idCommand ." vient d'être livré, allez d'en le Hub pour pouvoir la récupérer",
     "data" => ["extra" => "info"]
 ]);
@@ -63,7 +70,7 @@ function client_commande_a_payer($token) { //5
     return json_encode([
     "to" => $token,
     "sound" => "default",
-    "title" => "Commande " . $idCommand . "a payé " ,
+    "title" => "Commande " . $idCommand . " a payé " ,
     "body" => "Votre Commande ". $idCommand ." doit être payé, rendez vous dans le Hub",
     "data" => ["extra" => "info"]
 ]);
@@ -72,8 +79,8 @@ function client_commande_a_payer($token) { //5
 
 
 //get token
-$stmt = $conn->prepare("SELECT token FROM user_tokens WHERE user_id = ?");
-$stmt->bind_param("i", $user_id);
+$stmt = $conn->prepare("SELECT token FROM user_tokens WHERE user_id = ? AND type = ?");
+$stmt->bind_param("is", $user_id, $type);
 $stmt->execute();
 $stmt->bind_result($token);
 $stmt->fetch();

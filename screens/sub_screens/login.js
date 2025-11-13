@@ -11,7 +11,8 @@ import Checkbox from 'expo-checkbox';
 //pour une araison bizarre les checkbox de react native ne fonctionnent pas
 //import CheckBox from '@react-native-community/checkbox';
 import { getAlertRef } from '../util/AlertService';
-import { Ionicons } from '@expo/vector-icons'; // or another icon library
+import { Ionicons } from '@expo/vector-icons';
+import * as NotificationService from '../../NotificationService.js';
 
 var headers = {
   'Accept' : 'application/json',
@@ -101,6 +102,12 @@ const Login = ({ navigation }) => {
     return formData;
   };
 
+    const registerTokenNotificationService = async() => {
+      const token = await NotificationService.registerForPushNotificationsAsync();
+      await NotificationService.saveTokenToBackend(token);
+      fileManager.modify_value_local_storage("token", "1", "auto.json");
+    }
+
   const login = async () => {
     if (!validateForm()) return;
     setIsLoading(true);
@@ -171,7 +178,10 @@ const Login = ({ navigation }) => {
             'stay_loogged', true, 'auto.json'
           );
         }
-        await fileManager.read_file('auto.json');
+        const data = await fileManager.read_file('auto.json');
+        if(!data.token || data.token === ""){
+          await registerTokenNotificationService()
+        }
 
         // Fixed Alert.alert call - proper format with buttons array
         getAlertRef().current?.showAlert(

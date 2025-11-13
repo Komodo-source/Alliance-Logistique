@@ -33,12 +33,25 @@ import ModifProfil from './screens/sub_screens/ModifProfil';
 import ProfilPublic from './screens/sub_screens/ProfilPublic';
 import ProductPhotos from './screens/sub_screens/ProductPhotos';
 import CoursierProcessScreen from './screens/sub_screens/CoursierProcessScreen';
-
+import { setupNotificationListener, setupNotificationResponseListener } from './NotificationService';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  //Notification block 
+  useEffect(() => {
+    // Set up once when app starts
+    setupNotificationListener((notification) => {
+      console.log("Notification received while app is open:", notification);
+    });
+
+    setupNotificationResponseListener((response) => {
+      console.log("User tapped notification:", response);
+      // Navigate to a specific screen, update UI, etc.
+    });
+  }, []); // Empty dependency array = run once on mount
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

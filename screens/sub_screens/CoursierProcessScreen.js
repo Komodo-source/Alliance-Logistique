@@ -139,7 +139,7 @@ const CoursierProcessScreen = ({ navigation, route }) => {
       }
 
       const response = await fetch(
-        'https://backend-logistique-api-latest.onrender.com/changec_status.php',
+        'https://backend-logistique-api-latest.onrender.com/change_status.php',
         {
           method: 'POST',
           headers: {

@@ -286,7 +286,7 @@ const Profile = ({ navigation }) => {
 
             <ProfileOption
               title="Sécurité de mes données"
-              onPress={() => navigation.navigate('NotificationService')}
+              onPress={() => navigation.navigate('ProductPhotos')}
             />
 
           </View>

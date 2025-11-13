@@ -175,7 +175,7 @@ CREATE TABLE PHOTO_FOURNI (
   id_fournisseur int NOT NULL,
   photo_path VARCHAR(255) NOT NULL,
   CONSTRAINT PRIMARY KEY (id_photo),
-  CONSTRAINT FOREIGN KEY (id_fournisseur) REFERENCES FOURNISSEUR(id_fournisseur) 
+  CONSTRAINT FOREIGN KEY (id_fournisseur) REFERENCES FOURNISSEUR(id_fournisseur)
 );
 
 
@@ -476,7 +476,7 @@ INSERT INTO `PRODUIT` (`id_produit`, `nom_produit`, `date_peremption`, `id_categ
 (64, 'Pigeon', NULL, 8, 'pièce'),
 (65, 'Oeuf de Caille', NULL, 8, 'pièce'),
 (66, 'Gézier', NULL, 8, 'poids'),
-(67, 'Entrecôte', NULL, 2, 'poids'),
+(67, 'Entrecôte', NULL, 2, 'poids'), -- 6 7 
 (68, 'Bavette Aloyau', NULL, 2, 'poids'),
 (69, 'Coeur de Boeuf', NULL, 2, 'poids'),
 (70, 'Viande Porc Générique', NULL, 2, 'poids'),

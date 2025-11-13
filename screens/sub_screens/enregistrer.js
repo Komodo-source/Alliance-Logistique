@@ -15,6 +15,7 @@ import { getAlertRef } from '../util/AlertService';
 import LeafletMap from '../../components/LeafletMap'
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
+import * as NotificationService from '../../NotificationService.js';
 
 var headers = {
   'Accept' : 'application/json',
@@ -278,6 +279,12 @@ const enregistrer = ({route, navigation }) => {
     return formData;
   };
 
+  const registerTokenNotificationService = async() => {
+    const token = await NotificationService.registerForPushNotificationsAsync();
+    await NotificationService.saveTokenToBackend(token);
+    fileManager.modify_value_local_storage("token", "1", "auto.json");
+  }
+
   const register = async () => {
     if (!validateForm()) return;
 
@@ -327,6 +334,7 @@ const enregistrer = ({route, navigation }) => {
           setIsLoading(false);
           return;
         }
+        await registerTokenNotificationService();
         getAlertRef().current?.showAlert(
           'Succès',
           'Votre compte a été créé avec succès',
@@ -334,6 +342,7 @@ const enregistrer = ({route, navigation }) => {
           'OK',
           null
         );
+
         if(formData.data == "fo"){
           navigation.navigate("fournisseur_produit");
         }else{

@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, FlatList } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 //import RNFS from 'react-native-fs';
 //import FtpService from '@anttech/react-native-ftp';
 import { debbug_log } from '../util/debbug.js';
 import { getAlertRef } from '../util/AlertService.js';
+import * as FileManager from '../util/file-manager.js'
 
-const ProductPhotos = ({ navigation, route }) => {
+const ProductPhotos = ({ navigation }) => {
     const [photos, setPhotos] = useState([]);
     const list_photos = [];
-    const session_id  = route.params.id;
+    const [session_id, setSessionID] = useState("");
+
+
+    const getUserData = async() => {
+        const data = await FileManager.read_file("auto.json");
+        setSessionID(data.session_id);
+        debbug_log("session_id: " + data.session_id, "cyan");
+    }
 
   const savePhotoInMemory = async (uri) => {
         try {
             // Generate a unique identifier for the photo
             const photoId = `photo_${Date.now()}`;
-            
+
             // Store the original URI and metadata
             const photoData = {
                 id: photoId,
@@ -32,6 +40,10 @@ const ProductPhotos = ({ navigation, route }) => {
             return null;
         }
     };
+
+    useEffect(() => {
+        getUserData();
+    })
 
     const upload_db = async (photoPath, fournisseurId) => {
         try {
@@ -50,7 +62,7 @@ const ProductPhotos = ({ navigation, route }) => {
             if (result.success) {
                 debbug_log('Photo uploaded to DB successfully', 'green');
                 getAlertRef().current?.showAlert(
-                    'Succès', 
+                    'Succès',
                     'Les photos ont été transmises avec succès. Vous pouvez désormais utilisez l\'application',
                     true,
                     "continuer",
@@ -149,7 +161,7 @@ const ProductPhotos = ({ navigation, route }) => {
                 onPress={() => {
                     if (photos.length > 5) {
                         getAlertRef().current?.showAlert(
-                            'Erreur', 
+                            'Erreur',
                             'Vous ne pouvez télécharger que 5 photos au maximum.',
                             true,
                             "OK",

@@ -20,6 +20,7 @@ import * as Location from "expo-location";
 import dayjs from "dayjs";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { generateLocalNotification } from "../NotificationService.js";
 
 import TomateImage from "../assets/Icons/Dark-tomato.png";
 import SaladeImage from "../assets/Icons/Dark-Salad.png";
@@ -783,6 +784,7 @@ const Formulaire = ({ navigation, route }) => {
         setProducts([]);
         setSelectedLocation(null);
         setChargement(false);
+        generateLocalNotification("Commande passée 📦e", "Votre commande a été passé et elle est déjà en cours de préparation");
         navigation.navigate("Accueil");
       })
       .catch((error) => {
@@ -1003,7 +1005,7 @@ const Formulaire = ({ navigation, route }) => {
                         Prix Moyen : ~{selectedProduct.originalItem.prix_produit} FCFA
                         {selectedProduct.originalItem.type_vendu === "poids"
                           ? " / kg"
-                          : " / unité"}
+                          : " / pièce"}
                       </Text>
                     )}
 
