@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, Button, Text, ActivityIndicator, Image, StyleSheet, Alert } from 'react-native';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 
+// (NOBRIDGE) ERROR  Camera error: [TypeError: Cannot read property 'launchCamera' of null]
+ //(NOBRIDGE) ERROR  Gallery error: [TypeError: Cannot read property 'launchImageLibrary' of null]
+
 const UPLOAD_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co/functions/v1/upload-photo';
 const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
 
