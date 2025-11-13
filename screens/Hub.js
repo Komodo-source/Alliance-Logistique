@@ -120,7 +120,7 @@ const handleDisconnect = async () => {
       const session_id = data.session_id;
       setUserType(data.type);
 
-      debbug_log("UserType: " + userType.type, "cyan");
+      debbug_log("UserType: " + data.type, "cyan");
       let url_recup_cmd;
       if(userType == "client"){
         url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"

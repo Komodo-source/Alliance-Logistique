@@ -286,7 +286,12 @@ const Profile = ({ navigation }) => {
 
             <ProfileOption
               title="Sécurité de mes données"
-              onPress={() => navigation.navigate('ProductPhotos')}
+              onPress={() => navigation.navigate('UploadPhoto')}
+            />
+
+            <ProfileOption
+              title="< Debbug >"
+              onPress={() => navigation.navigate('DebbugMenu')}
             />
 
           </View>

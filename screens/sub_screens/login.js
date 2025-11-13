@@ -178,9 +178,16 @@ const Login = ({ navigation }) => {
             'stay_loogged', true, 'auto.json'
           );
         }
-        const data = await fileManager.read_file('auto.json');
+
         if(!data.token || data.token === ""){
-          await registerTokenNotificationService()
+          try{
+            await registerTokenNotificationService()
+            debbug_lib.debbug_log("Notification token registered", "magenta")
+          }catch (error){
+            debbug_lib.debbug_log(`error Registering Notification token ${error}`, "red");
+          }
+        }else{
+          debbug_lib.debbug_log(" Notification token already registered", "green")
         }
 
         // Fixed Alert.alert call - proper format with buttons array

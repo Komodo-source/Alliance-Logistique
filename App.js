@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -31,16 +31,20 @@ import Confidentialite from './screens/sub_screens/Confidentialite';
 import ProtectionDonnee from './screens/sub_screens/ProtectionDonnee';
 import ModifProfil from './screens/sub_screens/ModifProfil';
 import ProfilPublic from './screens/sub_screens/ProfilPublic';
-import ProductPhotos from './screens/sub_screens/ProductPhotos';
+//import ProductPhotos from './screens/sub_screens/ProductPhotos';
 import CoursierProcessScreen from './screens/sub_screens/CoursierProcessScreen';
 import { setupNotificationListener, setupNotificationResponseListener } from './NotificationService';
+import UploadPhoto from './screens/sub_screens/UploadPhotos';
+import DebbugMenu from './screens/util/debbugMenu';
+
+
 const Stack = createNativeStackNavigator();
 
 const App = () => {
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
 
-  //Notification block 
+  //Notification block
   useEffect(() => {
     // Set up once when app starts
     setupNotificationListener((notification) => {
@@ -85,8 +89,10 @@ const App = () => {
             <Stack.Screen name="ProtectionDonnee" component={ProtectionDonnee} options={{ headerTitle: "Donnée" }}/>
             <Stack.Screen name="ModifProfil" component={ModifProfil} options={{ headerTitle: "Modification de profil" }}/>
             <Stack.Screen name="ProfilPublic" component={ProfilPublic} options={{ headerShown: false }}/>
-            <Stack.Screen name="ProductPhotos" component={ProductPhotos} options={{ headerShown: false }}/>
+            {/*<Stack.Screen name="ProductPhotos" component={ProductPhotos} options={{ headerShown: false }}/>*/}
             <Stack.Screen name="CoursierProcessScreen" component={CoursierProcessScreen} options={{ headerShown: false }}/>
+            <Stack.Screen name="UploadPhoto" component={UploadPhoto} options={{ headerShown: false }}/>
+            <Stack.Screen name="DebbugMenu" component={DebbugMenu} />
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>
