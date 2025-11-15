@@ -122,9 +122,9 @@ const handleDisconnect = async () => {
 
       debbug_log("UserType: " + data.type, "cyan");
       let url_recup_cmd;
-      if(userType == "client"){
+      if(data.type == "client"){
         url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
-      }else if(userType == "fournisseur"){
+      }else if(data.type == "fournisseur"){
         url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_fourni.php"
       }else{
         url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cour.php"

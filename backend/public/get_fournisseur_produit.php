@@ -1,5 +1,4 @@
     <?php
-    header('Content-Type: application/json');
     include_once('db.php');
 
     $input = json_decode(file_get_contents("php://input"), true);
@@ -12,17 +11,24 @@
     $id_produit = $input['id_produit'];
 
     $sql = "SELECT
-            F.id_fournisseur,
-            ROUND((prix_produit * 1.20), 2) as prix_produit,
-            nb_produit_fourni,
-            nom_orga,
-            ville_organisation,
-            localisation_orga
-        FROM FOURNISSEUR F
-        INNER JOIN FOURNIR FR ON F.id_fournisseur = FR.id_fournisseur
-        LEFT JOIN ORGANISATION O ON O.id_orga = F.id_orga
-        WHERE FR.id_produit = ?
-        ORDER BY prix_produit ASC";
+    F.id_fournisseur,
+    ROUND(AVG(FR.prix_produit) * 1.20) AS prix_produit,
+    COUNT(*) AS nb_produit_fourni,
+    O.nom_orga,
+    O.ville_organisation,
+    O.localisation_orga
+    FROM FOURNISSEUR F
+    INNER JOIN FOURNIR FR
+        ON F.id_fournisseur = FR.id_fournisseur
+    LEFT JOIN ORGANISATION O
+        ON O.id_orga = F.id_orga
+    WHERE FR.id_produit = ?
+    GROUP BY
+        F.id_fournisseur,
+        O.nom_orga,
+        O.ville_organisation,
+        O.localisation_orga
+    ORDER BY prix_produit ASC;";
 
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("s", $id_produit);

@@ -250,7 +250,8 @@ const Profile = ({ navigation }) => {
               }
               style={styles.avatar}
             />
-            <TouchableOpacity style={styles.editAvatarButton}>
+            <TouchableOpacity style={styles.editAvatarButton}
+            onPress={() => navigation.navigate('ModifProfil')}>
               <Text style={styles.editAvatarText}>✎</Text>
             </TouchableOpacity>
           </View>
@@ -286,7 +287,7 @@ const Profile = ({ navigation }) => {
 
             <ProfileOption
               title="Sécurité de mes données"
-              onPress={() => navigation.navigate('UploadPhoto')}
+              onPress={() => navigation.navigate('ProtectionDonnee')}
             />
 
             <ProfileOption
@@ -297,30 +298,48 @@ const Profile = ({ navigation }) => {
           </View>
         </View>
 
-        <View>
-          {idFourni ?
-            (<View style={styles.Promotion}>
-              <TouchableOpacity style={styles.PromotionButton}>
-                <FontAwesome6 name="money-bill-trend-up" size={30} color="black" />
-                <Text style={{fontSize: 18, fontWeight: "600"}}>Promouvoir mes produits</Text>
+        {/* Fournisseur actions - clearly pop out like promotion */}
+        {!idFourni ? (
+          <View style={styles.fournisseurWrap}>
+            <Text style={styles.sectionTitle}>Espace fournisseur</Text>
+            <View style={styles.fournisseurActions}>
+              <TouchableOpacity
+                style={[styles.fournisseurCard, styles.fournisseurCardLeft]}
+                onPress={() => navigation.navigate('UploadPhoto')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.cardIconWrap}>
+                  <FontAwesome6 name="image" size={24} color="#fff" />
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>Ajouter des photos</Text>
+                  <Text style={styles.cardSub}>Présentez vos produits</Text>
+                </View>
               </TouchableOpacity>
-            </View>)
 
-          : null}
-        </View>
-
-        <View>
-          {idFourni ?
-            (<View style={styles.Promotion}>
-              <TouchableOpacity style={styles.PromotionButton}
-              onPress={() => navigation.navigate()}>
-                <MaterialCommunityIcons name="basket-plus-outline" size={30} color="black" />
-                <Text style={{fontSize: 18, fontWeight: "600"}}>Ajouter mes produits</Text>
+              <TouchableOpacity
+                style={[styles.fournisseurCard, styles.fournisseurCardRight]}
+                onPress={() => navigation.navigate('fournisseur_produit')}
+                activeOpacity={0.85}
+              >
+                <View style={styles.cardIconWrap}>
+                  <MaterialCommunityIcons name="basket-plus-outline" size={24} color="#fff" />
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>Ajouter mes produits</Text>
+                  <Text style={styles.cardSub}>Gérer votre catalogue</Text>
+                </View>
               </TouchableOpacity>
-            </View>)
+            </View>
 
-          : null}
-        </View>
+            <TouchableOpacity style={styles.Promotion} activeOpacity={0.9}>
+              <View style={styles.promoInner}>
+                <FontAwesome6 name="money-bill-trend-up" size={26} color="#000" />
+                <Text style={styles.promoText}>Promouvoir mes produits</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        ) : null}
 
         {/* Section Déconnexion */}
         <View style={styles.logoutSection}>
@@ -333,204 +352,116 @@ const Profile = ({ navigation }) => {
       </ScrollView>
 
       <NavBarData navigation={navigation} active_page="profil" />
-
-      {/* Navigation Bar
-      <View style={styles.navbar}>
-      <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => navigation.navigate('Produit')}
-        >
-          <View style={styles.iconContainer}>
-            <Image
-              style={styles.logoNavBar}
-              source={require('../assets/Icons/Dark-Product.png')}
-            />
-          </View>
-          <Text style={styles.navButtonText}>Produit</Text>
-        </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={() => navigation.navigate('Accueil')}
-      >
-        <View style={styles.iconContainer}>
-          <Image
-            style={styles.logoNavBar}
-            source={require('../assets/Icons/Dark-House.png')}
-          />
-        </View>
-        <Text style={styles.navButtonText}>Accueil</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={() => navigation.navigate('Hub')}
-      >
-        <View style={styles.iconContainer}>
-          <Image
-            style={styles.logoNavBar}
-            source={require('../assets/Icons/Dark-Hub.png')}
-          />
-        </View>
-        <Text style={styles.navButtonText}>Hub</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.navButton, styles.activeButton]}
-        onPress={() => navigation.navigate('Profil')}
-      >
-        <View style={[styles.logoNavBar, styles.activeIcon]}>
-          <Image
-            style={[styles.logoNavBar, styles.activeIcon]}
-            source={require('../assets/Icons/Dark-profile.png')}
-          />
-        </View>
-        <Text style={[styles.navButtonText, styles.activeText]}>Profil</Text>
-      </TouchableOpacity>
-    </View>*/}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  Promotion : {
-  marginTop: 24,
-      marginHorizontal: 20,
-      backgroundColor: '#f7d00bff',
-      borderRadius: 12,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 2.22,
-      elevation: 3,
-      height : 70,
-    overflow: "hidden",
-  },
-    Promotion : {
-      marginTop: 24,
-      marginHorizontal: 20,
-      backgroundColor: '#FF8C00',
-      borderRadius: 12,
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 1,
-      },
-      shadowOpacity: 0.1,
-      shadowRadius: 2.22,
-      elevation: 3,
-      height : 70,
-    overflow: "hidden",
-  },
-  PromotionButton : {
-    display : "flex",
-      flexDirection : "row",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: 15,
-      marginTop: 20
-  },
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f6f7fb',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Espace pour la navbar
+    paddingBottom: 120, // Espace pour la navbar
   },
 
   // Header Profile
   profileHeader: {
     backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingTop: 48,
+    paddingBottom: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 6,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 6,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 110,
+    height: 110,
+    borderRadius: 56,
     borderWidth: 3,
-    borderColor: '#e9ecef',
+    borderColor: '#fff',
+    backgroundColor: '#e9ecef'
   },
   editAvatarButton: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#007bff',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    bottom: 2,
+    right: 2,
+    backgroundColor: '#FF8C00',
+    width: 34,
+    height: 34,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#fff',
+    shadowColor: '#FF8C00',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    elevation: 4,
   },
   editAvatarText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
   },
   userInfo: {
     alignItems: 'center',
   },
   userName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#212529',
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#222',
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#6c757d',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   editProfileButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    shadowColor: '#007bff',
+    backgroundColor: '#FF8C00',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 22,
+    shadowColor: '#FF8C00',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 5,
   },
   editProfileText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   // Options Section
   optionsSection: {
-    marginTop: 24,
+    marginTop: 18,
     paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#495057',
     marginBottom: 12,
     marginLeft: 4,
@@ -543,8 +474,8 @@ const styles = StyleSheet.create({
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2.22,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     elevation: 3,
   },
   optionItem: {
@@ -562,15 +493,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionIcon: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     marginRight: 12,
     tintColor: '#6c757d',
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#212529',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   chevron: {
     fontSize: 20,
@@ -584,9 +515,95 @@ const styles = StyleSheet.create({
     color: '#dc3545',
   },
 
+  // Fournisseur cards
+  fournisseurWrap: {
+    marginTop: 18,
+    paddingHorizontal: 20,
+  },
+  fournisseurActions: {
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  fournisseurCard: {
+    flex: 1,
+    borderRadius: 14,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  fournisseurCardLeft: {
+    backgroundColor: '#FF8C00',
+    marginRight: 6,
+  },
+  fournisseurCardRight: {
+    backgroundColor: '#0ea5a4',
+    marginLeft: 6,
+  },
+  cardIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitle: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 2,
+  },
+  cardSub: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  Promotion: {
+    marginTop: 6,
+    marginHorizontal: 0,
+    backgroundColor: '#f7d00bff',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
+    height : 64,
+    justifyContent: 'center'
+  },
+
+  promoInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    justifyContent: 'center'
+  },
+  promoText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000'
+  },
+
   // Logout Section
   logoutSection: {
-    marginTop: 24,
+    marginTop: 20,
     marginHorizontal: 20,
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -595,12 +612,12 @@ const styles = StyleSheet.create({
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2.22,
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     elevation: 3,
   },
 
-  // Navigation Bar
+  // Navigation Bar (kept as before)
   navbar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
