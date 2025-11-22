@@ -12,9 +12,16 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { createClient } from '@supabase/supabase-js';
+
+
+const SUPABASE_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ProfilPublic = ({ route }) => {
-  const { id, type } = route.params;
+  const { id, type } = route.params; // id is the target_id we need
 
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +45,6 @@ const ProfilPublic = ({ route }) => {
       });
 
       const data = await response.json();
-      console.log("dataUser");
       setUserData(data);
       setLoading(false);
     } catch (error) {
@@ -67,42 +73,45 @@ const ProfilPublic = ({ route }) => {
     }
   };
 
-  // --- New: fetch photos from Supabase Function (signed URLs) ---
-  const GET_PHOTOS_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co/functions/v1/upload-photo';
-  // Optional: keep token if needed by your function; remove if public
-  const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
-
+  // --- 2. UPDATED: Fetch Photos using Supabase Client ---
   const fetchPhotos = async () => {
     if (!id) return;
     setLoadingPhotos(true);
     setPhotosError(null);
 
     try {
-      const params = new URLSearchParams({
-        target_type: 'fournisseur',
-        target_id: String(id),
-        with_url: '1'
-      });
+      // A. Query the Database Table 'photos'
+      // We filter by the 'target_id' passed in navigation (id)
+      const { data: dbPhotos, error } = await supabase
+        .from('photos')
+        .select('*')
+        .eq('target_id', id)
+        // Optional: If you want to be strict about type (client vs fournisseur)
+        // .eq('target_type', 'client')
+        .order('created_at', { ascending: false });
 
-      const headers = { Accept: 'application/json' };
-      if (ACCESS_TOKEN) headers['Authorization'] = `Bearer ${ACCESS_TOKEN}`;
+      if (error) throw error;
 
-      const res = await fetch(`${GET_PHOTOS_URL}?${params.toString()}`, {
-        method: 'GET',
-        headers,
-      });
+      // B. Generate Public URLs for the UI
+      if (dbPhotos && dbPhotos.length > 0) {
+        const photosWithUrls = dbPhotos.map((photo) => {
+          // Use the filename or storage_path stored in DB to get the link
+          const { data } = supabase.storage
+            .from('media') // Bucket Name
+            .getPublicUrl(photo.filename); // Or photo.storage_path depending on how you saved it
 
-      const json = await res.json();
-      if (!res.ok) {
-        const err = json?.error || JSON.stringify(json);
-        setPhotosError(err);
-        console.error('Photos fetch error:', err);
+          return {
+            ...photo,
+            signed_url: data.publicUrl // Add the URL to the object
+          };
+        });
+        setPhotos(photosWithUrls);
       } else {
-        setPhotos(json.photos || []);
+        setPhotos([]);
       }
     } catch (err) {
-      console.error('Fetch photos error:', err);
-      setPhotosError(String(err));
+      console.error('Fetch photos error:', err.message);
+      setPhotosError("Could not load photos.");
     } finally {
       setLoadingPhotos(false);
     }
@@ -110,8 +119,13 @@ const ProfilPublic = ({ route }) => {
 
   useEffect(() => {
     getProfile();
-    if (type === "fournisseur"){ getProducts(); fetchPhotos(); }
 
+    // Fetch photos for both types, or restrict if needed
+    fetchPhotos();
+
+    if (type === "fournisseur"){
+      getProducts();
+    }
   }, []);
 
   const renderStars = (rating) => {
@@ -160,8 +174,8 @@ const ProfilPublic = ({ route }) => {
 
   //const rating = userData.note_client || userData.note_fourni || 0;
   const rating = 3;
-  const name = userData.nom_client || userData.nom_fournisseur;
-  const prenom = userData.prenom_client || userData.prenom_fournisseur;
+  const name =  userData.nom_fournisseur || userData.nom_client;
+  const prenom = userData.prenom_fournisseur || userData.prenom_client;
   const isSupplier = userData.type === "fournisseur";
 
   return (
@@ -314,43 +328,54 @@ const ProfilPublic = ({ route }) => {
               contentContainerStyle={styles.productsList}
             />
           ) : (
-            <Text style={styles.noProductsText}>Aucun porduit valide.</Text>
+            <Text style={styles.noProductsText}>Aucun produit valide.</Text>
           )}
         </View>
 
-        {/* Photos Section (from Supabase function) */}
-        {isSupplier && (
-          <View style={[styles.productsSection, { marginBottom: 40 }]}>
-            <Text style={styles.sectionTitle}>Photos du fournisseur</Text>
+        {/* --- 3. UPDATED: Photos UI Section --- */}
+        <View style={[styles.productsSection, { marginBottom: 40 }]}>
+          <Text style={styles.sectionTitle}>Photos de l'utilisateur</Text>
 
-            {loadingPhotos ? (
-              <ActivityIndicator size="small" color="#00B14F" />
-            ) : photosError ? (
-              <Text style={{ color: 'red' }}>{photosError}</Text>
-            ) : photos.length > 0 ? (
-              <FlatList
-                data={photos}
-                keyExtractor={(item) => item.id}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.productsList}
-                renderItem={({ item }) => (
-                  <View style={{ marginRight: 12, width: 200 }}>
-                    {item.signed_url ? (
-                      <Image source={{ uri: item.signed_url }} style={{ width: 200, height: 150, borderRadius: 8 }} />
-                    ) : (
-                      <Image source={{ uri: item.url || 'https://via.placeholder.com/200' }} style={{ width: 200, height: 150, borderRadius: 8 }} />
-                    )}
-                    <Text numberOfLines={1} style={{ marginTop: 6, fontWeight: '600' }}>{item.metadata?.caption || item.filename}</Text>
-                    <Text style={{ color: '#666', fontSize: 12 }}>{new Date(item.created_at).toLocaleString()}</Text>
-                  </View>
-                )}
-              />
-            ) : (
-              <Text style={styles.noProductsText}>Aucune photo disponible.</Text>
-            )}
-          </View>
-        )}
+          {loadingPhotos ? (
+            <ActivityIndicator size="small" color="#00B14F" />
+          ) : photosError ? (
+            <Text style={{ color: '#FF6B6B', textAlign: 'center' }}>{photosError}</Text>
+          ) : photos.length > 0 ? (
+            <FlatList
+              data={photos}
+              keyExtractor={(item) => item.id.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.productsList}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{ marginRight: 12, width: 200 }}
+                  onPress={() => {
+                     // Optional: Add a full screen modal viewer here if needed
+                     console.log('View photo:', item.signed_url);
+                  }}
+                >
+                  <Image
+                    source={{ uri: item.signed_url }}
+                    style={{ width: 200, height: 150, borderRadius: 12, backgroundColor: '#eee' }}
+                    resizeMode="cover"
+                  />
+                  {item.metadata?.caption && (
+                     <Text numberOfLines={1} style={{ marginTop: 6, fontWeight: '600', fontSize: 12 }}>
+                        {item.metadata.caption}
+                     </Text>
+                  )}
+                  <Text style={{ color: '#999', fontSize: 10, marginTop: 2 }}>
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          ) : (
+            <Text style={styles.noProductsText}>Aucune photo disponible.</Text>
+          )}
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );

@@ -18,9 +18,11 @@ import { decode } from 'base64-arraybuffer';
 import * as FileSystem from 'expo-file-system';
 import { getAlertRef } from "../util/AlertService";
 import { read_file } from '../util/file-manager';
-import { read } from 'react-native-fs';
 import { getUserDataIdFromSession } from '../util/Polyvalent';
-const SUPABASE_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co  ';
+
+// --- Removed 'react-native-fs' import to fix the crash ---
+
+const SUPABASE_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
 const BUCKET_NAME = 'media';
 const MAX_PHOTOS = 4;
@@ -35,7 +37,9 @@ export default function UploadPhoto({ navigation }) {
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [pendingAssets, setPendingAssets] = useState([]);
   const fadeAnim = new Animated.Value(0);
-  cont [NbPhotoTaken, SetNbPhotoTaken] = useState(0);
+
+  // FIX: Changed 'cont' to 'const'
+  const [NbPhotoTaken, SetNbPhotoTaken] = useState(0);
 
   useEffect(() => {
     loadPhotos();
@@ -48,28 +52,11 @@ export default function UploadPhoto({ navigation }) {
       useNativeDriver: true,
     }).start();
   }, [photos]);
-/*  // DEBBUG CHECK BUCKET
-  useEffect(() => {
-  const checkBuckets = async () => {
-    const { data, error } = await supabase.storage.listBuckets();
-    if (error) {
-      console.error("CRITICAL: Could not list buckets:", error);
-      Alert.alert("Connection Error", "Check your Supabase URL/Key");
-    } else {
-      console.log("AVAILABLE BUCKETS:", JSON.stringify(data, null, 2));
-      const names = data.map(b => b.name);
-      Alert.alert("Debug Info", `Supabase sees these buckets: \n${names.join(', ')}`);
-    }
-  };
-  checkBuckets();
-}, []);*/
-
 
   const loadPhotos = async () => {
     try {
       setLoadingPhotos(true);
 
-      // 1. List files from the bucket
       const { data, error } = await supabase.storage
         .from(BUCKET_NAME)
         .list('', {
@@ -80,7 +67,6 @@ export default function UploadPhoto({ navigation }) {
 
       if (error) throw error;
 
-      // 2. Map files to include Public URLs for the UI to render
       if (data) {
         const photosWithUrls = data.map((file) => {
             const { data: urlData } = supabase.storage
@@ -90,11 +76,12 @@ export default function UploadPhoto({ navigation }) {
             return {
                 id: file.id,
                 filename: file.name,
-                // Map the public URL to signed_url so the existing UI works
                 signed_url: urlData.publicUrl,
             };
         });
         setPhotos(photosWithUrls);
+        // Optional: Update NbPhotoTaken based on existing photos if needed
+        // SetNbPhotoTaken(photosWithUrls.length);
       }
     } catch (err) {
       debbug_log(`Error loading photos: ${err.message}`, 'red');
@@ -103,99 +90,98 @@ export default function UploadPhoto({ navigation }) {
     }
   };
 
-
   const queuePhotos = async (assets) => {
     setPendingAssets((prev) => [...prev, ...assets]);
   };
 
   const uploadQueuedPhotos = async () => {
-  if (pendingAssets.length === 0) return;
-  setBusy(true);
+    if (pendingAssets.length === 0) return;
+    setBusy(true);
 
-  const failed = [];
-  // Create a copy of pending assets to iterate over
-  const assetsToUpload = [...pendingAssets];
+    const failed = [];
+    const assetsToUpload = [...pendingAssets];
 
-  for (const asset of assetsToUpload) {
+    for (const asset of assetsToUpload) {
+      try {
+        await uploadPhoto(asset);
+      } catch (err) {
+        debbug_log(`Queue item failed: ${asset.uri}`, 'red');
+        failed.push(asset);
+      }
+    }
+
+    if (failed.length === 0) {
+      setPendingAssets([]);
+      Alert.alert('Success', 'All images uploaded successfully.');
+    } else {
+      setPendingAssets(failed);
+      Alert.alert(
+        'Upload Incomplete',
+        `${failed.length} image(s) failed. They are still in the queue.`
+      );
+    }
+
+    await loadPhotos();
+    setBusy(false);
+  };
+
+  const uploadPhoto = async (asset) => {
     try {
-      await uploadPhoto(asset);
+      const ext = asset.uri.split('.').pop().toLowerCase();
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const storagePath = `media/${fileName}`;
+
+      // Use Expo FileSystem (Correct for Expo)
+      const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      const fileData = decode(base64);
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(storagePath, fileData, {
+          contentType: asset.mimeType || 'image/jpeg',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Database Insert
+      const user_data = await read_file("auto.json");
+      // Handle potential null read_file result
+      if (!user_data) throw new Error("Could not read local user data");
+
+      const id = getUserDataIdFromSession(user_data.session_id);
+
+      if(id === null){
+        // FIX: Changed 'alert.alert' to 'Alert.alert'
+        Alert.alert("Oups", "Une erreur a eu lieu veuillez reessayer plus tard");
+        return; // Stop execution
+      }
+
+      const { error: dbError } = await supabase
+        .from('photos')
+        .insert({
+          target_type: 'fournisseur',
+          target_id: id,
+          filename: fileName,
+          storage_path: storagePath,
+          content_type: asset.mimeType || 'image/jpeg',
+          size: fileData.byteLength,
+          metadata: { caption: 'Uploaded from RN' }
+        });
+
+      if (dbError) throw dbError;
+
+      console.log('Upload successful!');
+
     } catch (err) {
-      // Now this catch block will actually run!
-      debbug_log(`Queue item failed: ${asset.uri}`, 'red');
-      failed.push(asset);
+      console.error('Upload failed inside function:', err.message);
+      throw err;
     }
-  }
+  };
 
-  // Update State
-  if (failed.length === 0) {
-    setPendingAssets([]);
-    Alert.alert('Success', 'All images uploaded successfully.');
-  } else {
-    setPendingAssets(failed);
-    Alert.alert(
-      'Upload Incomplete',
-      `${failed.length} image(s) failed. They are still in the queue.`
-    );
-  }
-
-  await loadPhotos();
-  setBusy(false);
-};
-
-const uploadPhoto = async (asset) => {
-  try {
-    const ext = asset.uri.split('.').pop().toLowerCase();
-    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-    const storagePath = `media/${fileName}`;
-
-    const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
-
-    // Convert Base64 string to ArrayBuffer (which Supabase loves)
-    const fileData = decode(base64);
-
-    // Upload the ArrayBuffer
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('media')
-      .upload(storagePath, fileData, {
-        contentType: asset.mimeType || 'image/jpeg',
-        upsert: false,
-      });
-
-    if (uploadError) throw uploadError;
-
-    // Database Insert
-    const user_data = await read_file("auto.json");
-    const id = getUserDataIdFromSession(user_data.session_id);
-    if(id === null){
-      alert.alert("Oups", "Une erreur a eu lieu veuillez reessayer plus tard");
-    }
-
-    const { error: dbError } = await supabase
-      .from('photos')
-      .insert({
-        target_type: 'fournisseur',
-        target_id: id,
-        filename: fileName,
-        storage_path: storagePath,
-        content_type: asset.mimeType || 'image/jpeg',
-        size: fileData.byteLength,
-        metadata: { caption: 'Uploaded from RN' }
-      });
-
-    if (dbError) throw dbError;
-
-    console.log('Upload successful!');
-
-  } catch (err) {
-    // Log exact error for debugging
-    console.error('Upload failed inside function:', err.message);
-    throw err;
-  }
-};
-
-  // --- Supabase Storage Logic: Delete ---
   const deletePhoto = async (filename) => {
     try {
       setBusy(true);
@@ -224,12 +210,12 @@ const uploadPhoto = async (asset) => {
         "Vous avez déjà upload le nombre maximum de photos, pour enregristrer plus de photos évoluez vers notre offre premium",
         true,
         "Evoluez",
-        null,  // {() => navigation.navigate("PremiumPage")}
+        null,
         true,
         "Non merci",
         null
       );
-      return ;
+      return;
     }
     SetNbPhotoTaken(NbPhotoTaken + 1);
 
@@ -247,12 +233,12 @@ const uploadPhoto = async (asset) => {
         "Vous avez déjà upload le nombre maximum de photos, pour enregristrer plus de photos évoluez vers notre offre premium",
         true,
         "Evoluez",
-        null,  // {() => navigation.navigate("PremiumPage")}
+        null,
         true,
         "Non merci",
         null
       );
-      return ;
+      return;
     }
     SetNbPhotoTaken(NbPhotoTaken + 1);
 
@@ -263,7 +249,6 @@ const uploadPhoto = async (asset) => {
     if (!result.canceled) queuePhotos(result.assets);
   };
 
-  // --- Render Helpers ---
   const renderPhotoItem = ({ item }) => (
     <TouchableOpacity style={styles.photoCard} onPress={() => setSelectedPhoto(item)}>
       <Image source={{ uri: item.signed_url }} style={styles.thumbnail} />
@@ -354,7 +339,7 @@ const uploadPhoto = async (asset) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f3f3f7' },
-  headerBar: { padding: 16, backgroundColor: '#1c1c1e', paddingTop: 60 }, // Adjusted for status bar
+  headerBar: { padding: 16, backgroundColor: '#1c1c1e', paddingTop: 60 },
   headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
   actionRow: { flexDirection: 'row', padding: 16, justifyContent: 'space-between' },
   buttonPrimary: { flex: 1, backgroundColor: '#0a84ff', padding: 14, borderRadius: 12, marginRight: 8 },

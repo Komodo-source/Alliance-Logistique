@@ -9,7 +9,7 @@ $type = $data['type'];
 // Correction : toujours définir $id correctement
 if($data['is_session']){
     $session_id = $data['session_id'];
-    //$id = getIdSession($session_id); // Récupérer l'ID réel à partir de la session
+    $id = getIdSession($session_id); // Récupérer l'ID réel à partir de la session
 } else {
     $id = $data['session_id']; // Utiliser directement l'ID fourni
 }
