@@ -36,7 +36,7 @@ import CoursierProcessScreen from './screens/sub_screens/CoursierProcessScreen';
 import { setupNotificationListener, setupNotificationResponseListener } from './NotificationService';
 import UploadPhoto from './screens/sub_screens/UploadPhotos';
 import DebbugMenu from './screens/util/debbugMenu';
-
+import PremiumPage from './screens/sub_screens/PremiumPage';
 
 const Stack = createNativeStackNavigator();
 
@@ -93,6 +93,7 @@ const App = () => {
             <Stack.Screen name="CoursierProcessScreen" component={CoursierProcessScreen} options={{ headerShown: false }}/>
             <Stack.Screen name="UploadPhoto" component={UploadPhoto} options={{ headerShown: false }}/>
             <Stack.Screen name="DebbugMenu" component={DebbugMenu} />
+            <Stack.Screen name="PremiumPage" component={PremiumPage} options={{ headerShown: false }}/>
           </Stack.Navigator>
         </NavigationContainer>
       </ErrorBoundary>

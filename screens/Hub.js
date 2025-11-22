@@ -10,6 +10,8 @@ import {
   Alert,
   ScrollView,
   Dimensions,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -22,46 +24,48 @@ import { getAlertRef } from "./util/AlertService";
 import { debbug_log } from "./util/debbug.js";
 import { getUserDataType } from "./util/Polyvalent.js";
 
-
 const Hub = ({ navigation }) => {
   const [commande, setCommande] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [filter, setFilter] = useState("all"); // all, pending, completed, cancelled
-  const [userType, setUserType] = useState('')
+  const [userType, setUserType] = useState("");
 
-const handleDisconnect = async () => {
-  getAlertRef().current?.showAlert(
-    "Aïe",
-    "Une erreur à eu lieu veuillez vous reconnecter",
-    true,
-    "continuer",
-    null
-  );
-  try {
-    // Clear all user data
-    await fileManager.modify_value_local_storage("id", "", "auto.json");
-    await fileManager.modify_value_local_storage("name", "", "auto.json");
-    await fileManager.modify_value_local_storage("firstname", "", "auto.json");
-    await fileManager.modify_value_local_storage("type", "", "auto.json");
-    await fileManager.modify_value_local_storage(
-      "stay_loogged",
-      false,
-      "auto.json"
+  const handleDisconnect = async () => {
+    getAlertRef().current?.showAlert(
+      "Aïe",
+      "Une erreur à eu lieu veuillez vous reconnecter",
+      true,
+      "continuer",
+      null
     );
-    //await fileManager.modify_value_local_storage("first_conn", true, 'auto.json');
+    try {
+      // Clear all user data
+      await fileManager.modify_value_local_storage("id", "", "auto.json");
+      await fileManager.modify_value_local_storage("name", "", "auto.json");
+      await fileManager.modify_value_local_storage(
+        "firstname",
+        "",
+        "auto.json"
+      );
+      await fileManager.modify_value_local_storage("type", "", "auto.json");
+      await fileManager.modify_value_local_storage(
+        "stay_loogged",
+        false,
+        "auto.json"
+      );
+      //await fileManager.modify_value_local_storage("first_conn", true, 'auto.json');
 
-    debbug_log("User logged out successfully", "green");
-    navigation.navigate("HomePage");
-  } catch (error) {
-    console.error("Error during logout:", error);
-    debbug_log("Error during logout: " + error.message, "red");
-    // Still navigate even if there's an error
-    navigation.navigate("HomePage");
-  }
-
-};
+      debbug_log("User logged out successfully", "green");
+      navigation.navigate("HomePage");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      debbug_log("Error during logout: " + error.message, "red");
+      // Still navigate even if there's an error
+      navigation.navigate("HomePage");
+    }
+  };
 
   useEffect(() => {
     const checkUserType = async () => {
@@ -122,22 +126,22 @@ const handleDisconnect = async () => {
 
       debbug_log("UserType: " + data.type, "cyan");
       let url_recup_cmd;
-      if(data.type == "client"){
-        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php"
-      }else if(data.type == "fournisseur"){
-        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_fourni.php"
-      }else{
-        url_recup_cmd = "https://backend-logistique-api-latest.onrender.com/recup_commande_cour.php"
+      if (data.type == "client") {
+        url_recup_cmd =
+          "https://backend-logistique-api-latest.onrender.com/recup_commande_cli.php";
+      } else if (data.type == "fournisseur") {
+        url_recup_cmd =
+          "https://backend-logistique-api-latest.onrender.com/recup_commande_fourni.php";
+      } else {
+        url_recup_cmd =
+          "https://backend-logistique-api-latest.onrender.com/recup_commande_cour.php";
       }
 
-      const response = await fetch(
-        url_recup_cmd,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id }),
-        }
-      );
+      const response = await fetch(url_recup_cmd, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -146,7 +150,7 @@ const handleDisconnect = async () => {
       const responseData = await response.json();
       console.log("Commandes récupérées:", responseData);
       if (responseData.error === "Invalid session_id") {
-        handleDisconnect()
+        handleDisconnect();
       }
       setCommande(Array.isArray(responseData) ? responseData : []);
       setLoading(false);
@@ -161,19 +165,19 @@ const handleDisconnect = async () => {
     switch (status) {
       case "En préparation":
       case "En préparation":
-        return "#FF9500";
+        return "#F59E0B"; // Amber
       case "Livré":
       case "Livré":
       case "livré":
-        return "#34D399";
+        return "#10B981"; // Emerald
       case "cancelled":
       case "annulé":
-        return "#EF4444";
+        return "#EF4444"; // Red
       case "En cours de livraison":
       case "En cours de livraison":
-        return "#3B82F6";
+        return "#4F46E5"; // Indigo
       default:
-        return "#6B7280";
+        return "#64748B"; // Slate
     }
   };
 
@@ -231,174 +235,169 @@ const handleDisconnect = async () => {
       }
     };
 
-    const statusColor = getStatusColor(getStatusEquivalent[item.id_status]);
-    const statusText = getStatusEquivalent[item.id_status];
-    //console.log(getStatusEquivalent[item.id_status])
-    //console.log("Status text:", statusText, "Color:", statusColor);
+    const statusRaw = getStatusEquivalent[item.id_status];
+    const statusColor = getStatusColor(statusRaw);
+    const statusText = statusRaw;
 
     return (
       <TouchableOpacity
-        style={[
-          styles.commandeCard,
-          {
-            transform: [{ scale: 1 }],
-            opacity: 1,
-          },
-        ]}
+        style={styles.cardContainer}
         onPress={handlePress}
-        activeOpacity={0.95}
+        activeOpacity={0.85}
       >
-        <View style={styles.cardHeader}>
-          <View style={styles.cardTitleContainer}>
-            <Text style={styles.cardTitle} numberOfLines={1}>
-              {item.nom_dmd || `Commande #${index + 1}`}
-            </Text>
-            <Text style={styles.commandeId}>
-              #{item.id_public_cmd || "N/A"}
-            </Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <Text style={styles.statusText}>{statusText}</Text>
-          </View>
-        </View>
+        {/* Status Strip */}
+        <View style={[styles.statusStrip, { backgroundColor: statusColor }]} />
 
-        <View style={styles.cardContent}>
-          <View style={styles.infoRow}>
-            <View style={styles.iconContainer}>
+        <View style={styles.cardInner}>
+          {/* Header Part */}
+          <View style={styles.cardHeader}>
+            <View>
+              <Text style={styles.cmdId}>CMD #{item.id_public_cmd || "---"}</Text>
+              <Text style={styles.cmdTitle} numberOfLines={1}>
+                {item.nom_dmd || `Commande #${index + 1}`}
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: statusColor + "15" }, // 15 is roughly 8% opacity hex
+              ]}
+            >
+              <Text style={[styles.statusText, { color: statusColor }]}>
+                {statusText}
+              </Text>
+            </View>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Date Section */}
+          <View style={styles.detailRow}>
+            <View style={styles.iconBox}>
               <MaterialCommunityIcons
-                name="calendar"
+                name="calendar-clock"
                 size={20}
                 color="#64748B"
               />
             </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Livraison prévue</Text>
-              <Text style={styles.infoValue}>
+            <View style={styles.detailContent}>
+              <Text style={styles.detailLabel}>LIVRAISON ESTIMÉE</Text>
+              <Text style={styles.detailValue}>
                 {item.date_fin
                   ? new Date(item.date_fin).toLocaleDateString("fr-FR", {
-                      weekday: "short",
-                      year: "numeric",
-                      month: "short",
+                      weekday: "long",
                       day: "numeric",
+                      month: "long",
                     })
-                  : "Non définie"}
+                  : "Date non définie"}
               </Text>
             </View>
           </View>
 
-          {item.desc_dmd && (
-            <View style={styles.infoRow}>
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons name="text" size={20} color="#64748B" />
+          {/* Description (if any) */}
+          {item.desc_dmd ? (
+            <View style={styles.detailRow}>
+              <View style={styles.iconBox}>
+                <MaterialCommunityIcons
+                  name="text-short"
+                  size={20}
+                  color="#64748B"
+                />
               </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Description</Text>
-                <Text style={styles.infoValue} numberOfLines={2}>
+              <View style={styles.detailContent}>
+                <Text style={styles.detailLabel}>NOTE</Text>
+                <Text style={styles.detailValue} numberOfLines={2}>
                   {item.desc_dmd}
                 </Text>
               </View>
             </View>
-          )}
+          ) : null}
 
-          <View style={styles.productsSection}>
-            <View style={styles.productHeader}>
-              <Text style={styles.productHeaderText}>
-                <MaterialCommunityIcons
-                  name="package-variant"
-                  size={18}
-                  color="#1E293B"
-                />{" "}
-                Produits ({item.produits?.length || 0})
-              </Text>
-            </View>
-            <View style={styles.productsList}>
+          {/* Products Preview */}
+          <View style={styles.productPreviewContainer}>
+            <Text style={styles.productPreviewHeader}>
+              {item.produits?.length || 0} Article
+              {item.produits?.length > 1 ? "s" : ""}
+            </Text>
+            <View style={styles.previewList}>
               {item.produits &&
                 Array.isArray(item.produits) &&
-                item.produits.slice(0, 3).map((produit, prodIndex) => (
-                  <View key={prodIndex} style={styles.productItem}>
-                    <View style={styles.productDot} />
-                    <Text style={styles.productText} numberOfLines={1}>
-                      {produit.nom_produit || "Produit"}
-                      <Text style={styles.productQuantity}>
-                        {" "}
-                        × {produit.quantite || 1} {produit.type_vendu || ""}
+                item.produits.slice(0, 2).map((produit, prodIndex) => (
+                  <View key={prodIndex} style={styles.previewItem}>
+                    <View style={styles.bullet} />
+                    <Text style={styles.previewText} numberOfLines={1}>
+                      <Text style={styles.previewQty}>
+                        {produit.quantite}x{" "}
                       </Text>
+                      {produit.nom_produit}
                     </Text>
                   </View>
                 ))}
-              {item.produits && item.produits.length > 3 && (
-                <Text style={styles.moreProductsText}>
-                  +{item.produits.length - 3} autres produits...
+              {item.produits && item.produits.length > 2 && (
+                <Text style={styles.moreItems}>
+                  +{item.produits.length - 2} autres...
                 </Text>
               )}
             </View>
           </View>
-        </View>
 
-        <View style={styles.cardFooter}>
-          <TouchableOpacity
-            style={styles.viewDetailsButton}
-            onPress={handlePress}
-          >
-            <Text style={styles.viewDetailsText}>Voir détails</Text>
+          {/* Action Footer */}
+          <View style={styles.cardFooter}>
+            <Text style={styles.viewDetailsLabel}>Voir le détail</Text>
             <MaterialCommunityIcons
-              name="arrow-right"
-              size={18}
-              color="#FFFFFF"
+              name="arrow-right-circle"
+              size={28}
+              color="#4F46E5"
             />
-          </TouchableOpacity>
+          </View>
         </View>
       </TouchableOpacity>
     );
   };
 
-  const renderFilterButton = (filterType, label, iconName) => (
-    <TouchableOpacity
-      style={[
-        styles.filterButton,
-        filter === filterType && styles.activeFilterButton,
-      ]}
-      onPress={() => setFilter(filterType)}
-    >
-      <MaterialCommunityIcons
-        name={iconName}
-        size={16}
-        color={filter === filterType ? "#FFFFFF" : "#64748B"}
-        style={styles.filterIcon}
-      />
-      <Text
-        style={[
-          styles.filterText,
-          filter === filterType && styles.activeFilterText,
-        ]}
+  const renderFilterButton = (filterType, label, iconName) => {
+    const isActive = filter === filterType;
+    return (
+      <TouchableOpacity
+        style={[styles.filterPill, isActive && styles.filterPillActive]}
+        onPress={() => setFilter(filterType)}
+        activeOpacity={0.7}
       >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+        <MaterialCommunityIcons
+          name={iconName}
+          size={18}
+          color={isActive ? "#FFFFFF" : "#64748B"}
+          style={{ marginRight: 6 }}
+        />
+        <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   const EmptyState = () => (
-    <View style={styles.emptyStateContainer}>
-      <View style={styles.emptyStateIcon}>
+    <View style={styles.emptyContainer}>
+      <View style={styles.emptyIconBg}>
         <MaterialCommunityIcons
-          name="package-variant"
-          size={40}
-          color="#64748B"
+          name={filter === "all" ? "inbox-outline" : "filter-remove-outline"}
+          size={48}
+          color="#94A3B8"
         />
       </View>
-      <Text style={styles.emptyStateTitle}>
-        {filter === "all"
-          ? "Aucune commande"
-          : "Aucune commande dans cette catégorie"}
+      <Text style={styles.emptyTitle}>
+        {filter === "all" ? "C'est calme ici..." : "Aucun résultat"}
       </Text>
-      <Text style={styles.emptyStateSubtitle}>
+      <Text style={styles.emptySub}>
         {filter === "all"
-          ? "Vous n'avez passé aucune commande pour le moment"
-          : "Essayez de changer le filtre pour voir d'autres commandes"}
+          ? "Vous n'avez aucune commande active pour le moment."
+          : "Aucune commande ne correspond à ce filtre."}
       </Text>
+
       {isClient && filter === "all" && (
         <TouchableOpacity
-          style={styles.emptyStateButton}
+          style={styles.ctaButton}
           onPress={() => {
             try {
               navigation.navigate("Formulaire");
@@ -407,9 +406,13 @@ const handleDisconnect = async () => {
             }
           }}
         >
-          <Text style={styles.emptyStateButtonText}>
-            Passer ma première commande
-          </Text>
+          <MaterialCommunityIcons
+            name="plus"
+            size={20}
+            color="#FFF"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.ctaText}>Nouvelle commande</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -420,24 +423,31 @@ const handleDisconnect = async () => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header with gradient background */}
-        <View style={styles.header}>
-          {userType === "coursier" ? (<Text style={styles.headerTitle}>Mes livraisons</Text>):
-          (<Text style={styles.headerTitle}>Mes commandes</Text>)}
-          <Text style={styles.headerSubtitle}>
-            {userData !== null
-              ? userData.firstname + " " + userData.name
-              : "Utilisateur"}{" "}
-            • {commande.length} {userType === "coursier" ? "livraison" : "commande" }{commande.length > 1 ? "s" : ""}
+    <SafeAreaView style={styles.screen}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+
+      <View style={styles.headerContainer}>
+        <View>
+          <Text style={styles.greetingSub}>
+            {userData ? `Bonjour, ${userData.firstname}` : "Bienvenue"}
+          </Text>
+          <Text style={styles.pageTitle}>
+            {userType === "coursier" ? "Mes Livraisons" : "Hub Central"}
           </Text>
         </View>
+        <View style={styles.avatarPlaceholder}>
+           <Text style={styles.avatarInitials}>
+             {userData?.firstname?.[0]}{userData?.name?.[0]}
+           </Text>
+        </View>
+      </View>
 
-        {/* Quick Actions Section */}
-        {userType  === "client" ? (<View style={styles.quickActionsSection}>
+      <View style={styles.contentContainer}>
+        {/* Feature Banner (Client Only) */}
+        {userType === "client" && (
           <TouchableOpacity
-            style={styles.quickActionCard}
+            style={styles.featureBanner}
+            activeOpacity={0.9}
             onPress={() => {
               try {
                 navigation.navigate("commande_reccurente");
@@ -446,147 +456,72 @@ const handleDisconnect = async () => {
               }
             }}
           >
-            <View style={styles.quickActionIcon}>
-              <MaterialCommunityIcons name="repeat" size={28} color="#3B82F6" />
+            <View style={styles.featureIconBox}>
+              <MaterialCommunityIcons name="repeat-variant" size={24} color="#FFFFFF" />
             </View>
-            <View style={styles.quickActionContent}>
-              <Text style={styles.quickActionTitle}>Commandes récurrentes</Text>
-              <Text style={styles.quickActionSubtitle}>
-                Gérer vos abonnements
-              </Text>
+            <View style={styles.featureTextContainer}>
+              <Text style={styles.featureTitle}>Commandes Récurrentes</Text>
+              <Text style={styles.featureSub}>Gérez vos abonnements auto</Text>
             </View>
-            <MaterialCommunityIcons
-              name="arrow-right"
-              size={20}
-              color="#64748B"
-            />
+            <MaterialCommunityIcons name="chevron-right" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-        </View>) : null}
+        )}
 
-
-        {/* Filter Section */}
-        <View style={styles.filtersSection}>
+        {/* Filters */}
+        <View style={styles.filterSection}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filtersContainer}
+            contentContainerStyle={styles.filterScroll}
           >
-            {renderFilterButton("all", "Toutes", "clipboard-text")}
-            {renderFilterButton("En préparation", "En attente", "clock")}
-            {renderFilterButton(
-              "En cours de livraison",
-              "En cours",
-              "truck-delivery"
-            )}
-            {renderFilterButton("Livré", "Livrées", "check-circle")}
-            {renderFilterButton("annulé", "Annulées", "close-circle")}
+            {renderFilterButton("all", "Tout", "layers-outline")}
+            {renderFilterButton("En préparation", "En attente", "clock-time-four-outline")}
+            {renderFilterButton("En cours de livraison", "En cours", "truck-fast-outline")}
+            {renderFilterButton("Livré", "Terminé", "check-all")}
+            {renderFilterButton("annulé", "Annulé", "close-circle-outline")}
           </ScrollView>
         </View>
 
-        {/* Commands List */}
-        <View style={styles.commandsSection}>
+        {/* Main List */}
+        <View style={styles.listContainer}>
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <View style={styles.loadingSpinner}>
-                <MaterialCommunityIcons
-                  name="loading"
-                  size={30}
-                  color="#3B82F6"
-                />
-              </View>
-              <Text style={styles.loadingText}>
-                Chargement de vos commandes...
-              </Text>
+            <View style={styles.loadingState}>
+              <MaterialCommunityIcons name="loading" size={32} color="#4F46E5" style={styles.spinner} />
+              <Text style={styles.loadingLabel}>Synchronisation...</Text>
             </View>
           ) : filteredCommandes.length > 0 ? (
             <FlatList
               data={filteredCommandes}
               renderItem={renderCommande}
-              keyExtractor={(item) =>
-                item.id_dmd?.toString() || Math.random().toString()
-              }
-              contentContainerStyle={styles.flatListContent}
+              keyExtractor={(item) => item.id_dmd?.toString() || Math.random().toString()}
+              contentContainerStyle={styles.flatListPadding}
               showsVerticalScrollIndicator={false}
-              ItemSeparatorComponent={() => (
-                <View style={styles.itemSeparator} />
-              )}
             />
           ) : (
             <EmptyState />
           )}
         </View>
+      </View>
 
-        {/* Floating Action Button */}
-        {isClient && (
-          <TouchableOpacity
-            style={styles.fab}
-            onPress={() => {
-              try {
-                navigation.navigate("Formulaire");
-              } catch (error) {
-                console.error("Navigation error:", error);
-              }
-            }}
-          >
-            <MaterialCommunityIcons name="plus" size={32} color="#FFFFFF" />
-          </TouchableOpacity>
-        )}
+      {/* FAB */}
+      {isClient && (
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.8}
+          onPress={() => {
+            try {
+              navigation.navigate("Formulaire");
+            } catch (error) {
+              console.error("Navigation error:", error);
+            }
+          }}
+        >
+          <MaterialCommunityIcons name="plus" size={32} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
 
-        {/* Navigation Bar
-        <View style={styles.navbar}>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => {
-              try {
-                navigation.navigate('Produit');
-              } catch (error) {
-                console.error("Navigation error:", error);
-              }
-            }}
-          >
-            <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-Product.png')} />
-            <Text style={styles.navButtonText}>Produit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => {
-              try {
-                navigation.navigate('Accueil');
-              } catch (error) {
-                console.error("Navigation error:", error);
-              }
-            }}
-          >
-            <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-House.png')} />
-            <Text style={styles.navButtonText}>Accueil</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.navButton, styles.activeButton]}
-            onPress={() => {
-              try {
-                navigation.navigate('Hub');
-              } catch (error) {
-                console.error("Navigation error:", error);
-              }
-            }}
-          >
-            <Image style={[styles.logoNavBar, styles.activeIcon]} source={require('../assets/Icons/Dark-Hub.png')} />
-            <Text style={[styles.navButtonText, styles.activeText]}>Hub</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.navButton}
-            onPress={() => {
-              try {
-                navigation.navigate('Profil');
-              } catch (error) {
-                console.error("Navigation error:", error);
-              }
-            }}
-          >
-            <Image style={styles.logoNavBar} source={require('../assets/Icons/Dark-profile.png')} />
-            <Text style={styles.navButtonText}>Profil</Text>
-          </TouchableOpacity>
-        </View>*/}
+      {/* NavBar Overlay */}
+      <View style={styles.navBarWrapper}>
         <NavBarData navigation={navigation} active_page="hub" />
       </View>
     </SafeAreaView>
@@ -594,413 +529,354 @@ const handleDisconnect = async () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  // --- Structural ---
+  screen: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#F8FAFC", // Slate 50
   },
-  container: {
+  contentContainer: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-  header: {
-    paddingHorizontal: 30,
-    paddingVertical: 24,
-    marginLeft: 20,
-    marginRight: 20,
-    marginTop: 20,
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  headerTitle: {
-    fontSize: 32,
-    fontWeight: "800",
-    color: "#111",
-    marginBottom: 4,
-    letterSpacing: -0.5,
-    textAlign: "center",
-  },
-  headerSubtitle: {
-    fontSize: 16,
-    color: "rgba(7, 7, 7, 0.8)",
-    fontWeight: "500",
-    textAlign: "center",
-  },
-  quickActionsSection: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
   },
-  quickActionCard: {
+
+  // --- Header ---
+  headerContainer: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    paddingHorizontal: 24,
+    paddingTop: 10,
+    paddingBottom: 20,
   },
-  quickActionIcon: {
+  greetingSub: {
+    fontSize: 14,
+    color: "#64748B", // Slate 500
+    fontWeight: "600",
+    marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  pageTitle: {
+    fontSize: 28,
+    color: "#0F172A", // Slate 900
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  avatarPlaceholder: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#F1F5F9",
-    alignItems: "center",
+    backgroundColor: "#E0E7FF", // Indigo 100
     justifyContent: "center",
-    marginRight: 16,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
   },
-  quickActionContent: {
-    flex: 1,
-  },
-  quickActionTitle: {
-    fontSize: 16,
+  avatarInitials: {
+    fontSize: 18,
     fontWeight: "700",
-    color: "#1E293B",
-    marginBottom: 2,
+    color: "#4F46E5",
   },
-  quickActionSubtitle: {
-    fontSize: 14,
-    color: "#64748B",
-    fontWeight: "500",
-  },
-  filtersSection: {
-    paddingVertical: 8,
-  },
-  filtersContainer: {
-    paddingHorizontal: 10,
-    gap: 2,
-  },
-  filterButton: {
+
+  // --- Feature Banner ---
+  featureBanner: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    backgroundColor: "#4F46E5", // Indigo 600
     borderRadius: 20,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  featureIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 14,
+  },
+  featureTextContainer: {
+    flex: 1,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  featureSub: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.8)",
+    marginTop: 2,
+  },
+
+  // --- Filters ---
+  filterSection: {
+    marginBottom: 16,
+  },
+  filterScroll: {
+    paddingRight: 20,
+    gap: 8,
+  },
+  filterPill: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#FFFFFF",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 30,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
-    marginRight: 8,
+    borderColor: "#E2E8F0", // Slate 200
   },
-  activeFilterButton: {
-    backgroundColor: "#3B82F6",
-    borderColor: "#3B82F6",
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  filterIcon: {
-    marginRight: 6,
+  filterPillActive: {
+    backgroundColor: "#0F172A", // Slate 900
+    borderColor: "#0F172A",
   },
   filterText: {
     fontSize: 14,
     fontWeight: "600",
     color: "#64748B",
   },
-  activeFilterText: {
+  filterTextActive: {
     color: "#FFFFFF",
   },
-  commandsSection: {
+
+  // --- List & Cards ---
+  listContainer: {
     flex: 1,
-    paddingHorizontal: 20,
   },
-  flatListContent: {
+  flatListPadding: {
     paddingBottom: 120,
+    paddingTop: 4,
   },
-  itemSeparator: {
-    height: 12,
-  },
-  commandeCard: {
+  cardContainer: {
+    marginBottom: 20,
+    borderRadius: 24,
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 0,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
+    shadowColor: "#64748B",
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 16,
+    elevation: 5,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(241, 245, 249, 1)",
+  },
+  statusStrip: {
+    height: 6,
+    width: "100%",
+  },
+  cardInner: {
+    padding: 20,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    padding: 20,
-    paddingBottom: 16,
-    backgroundColor: "#FAFBFC",
+    marginBottom: 16,
   },
-  cardTitleContainer: {
-    flex: 1,
-    marginRight: 12,
+  cmdId: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 0.5,
+    marginBottom: 4,
   },
-  cardTitle: {
+  cmdTitle: {
     fontSize: 18,
     fontWeight: "800",
     color: "#1E293B",
-    marginBottom: 4,
-  },
-  commandeId: {
-    fontSize: 14,
-    color: "#64748B",
-    fontWeight: "600",
+    maxWidth: width * 0.55,
   },
   statusBadge: {
-    paddingHorizontal: 12,
     paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
   },
   statusText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#FFFFFF",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
-  cardContent: {
-    padding: 20,
-    paddingTop: 0,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+  divider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
     marginBottom: 16,
   },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#F1F5F9",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
+
+  // --- Card Details ---
+  detailRow: {
+    flexDirection: "row",
+    marginBottom: 14,
   },
-  infoTextContainer: {
+  iconBox: {
+    width: 32,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    marginRight: 8,
+  },
+  detailContent: {
     flex: 1,
   },
-  infoLabel: {
-    fontSize: 13,
-    color: "#64748B",
-    fontWeight: "600",
+  detailLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 0.8,
     marginBottom: 2,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
-  infoValue: {
+  detailValue: {
     fontSize: 15,
-    color: "#1E293B",
+    color: "#334155",
     fontWeight: "600",
     lineHeight: 20,
   },
-  productsSection: {
-    marginTop: 8,
-  },
-  productHeader: {
-    marginBottom: 12,
-  },
-  productHeaderText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#1E293B",
-  },
-  productsList: {
-    gap: 8,
-  },
-  productItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  productDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#3B82F6",
-    marginRight: 10,
-  },
-  productText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#475569",
-    fontWeight: "500",
-  },
-  productQuantity: {
-    fontWeight: "700",
-    color: "#1E293B",
-  },
-  moreProductsText: {
-    fontSize: 13,
-    color: "#64748B",
-    fontStyle: "italic",
-    marginLeft: 16,
+
+  // --- Product Preview ---
+  productPreviewContainer: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 16,
+    padding: 12,
     marginTop: 4,
-  },
-  cardFooter: {
-    padding: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-  },
-  viewDetailsButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#3B82F6",
-    borderRadius: 12,
-  },
-  viewDetailsText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    marginRight: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 60,
-  },
-  loadingSpinner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#F1F5F9",
-    alignItems: "center",
-    justifyContent: "center",
     marginBottom: 16,
   },
-  loadingText: {
-    fontSize: 16,
+  productPreviewHeader: {
+    fontSize: 12,
+    fontWeight: "700",
     color: "#64748B",
-    fontWeight: "600",
+    marginBottom: 8,
   },
-  emptyStateContainer: {
+  previewList: {
+    gap: 6,
+  },
+  previewItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  bullet: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#CBD5E1",
+    marginRight: 8,
+  },
+  previewText: {
+    fontSize: 13,
+    color: "#475569",
     flex: 1,
+  },
+  previewQty: {
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  moreItems: {
+    fontSize: 12,
+    color: "#94A3B8",
+    fontStyle: "italic",
+    marginLeft: 12,
+  },
+
+  // --- Card Footer ---
+  cardFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+  },
+  viewDetailsLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4F46E5",
+    marginRight: 6,
+  },
+
+  // --- States ---
+  loadingState: {
+    paddingVertical: 40,
+    alignItems: "center",
+  },
+  loadingLabel: {
+    marginTop: 12,
+    color: "#94A3B8",
+    fontSize: 14,
+  },
+  emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 40,
     paddingVertical: 60,
+    paddingHorizontal: 30,
   },
-  emptyStateIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  emptyIconBg: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: "#F1F5F9",
-    alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    alignItems: "center",
+    marginBottom: 20,
   },
-  emptyStateTitle: {
+  emptyTitle: {
     fontSize: 20,
     fontWeight: "800",
     color: "#1E293B",
     marginBottom: 8,
-    textAlign: "center",
   },
-  emptyStateSubtitle: {
-    fontSize: 16,
+  emptySub: {
+    fontSize: 15,
     color: "#64748B",
     textAlign: "center",
     lineHeight: 22,
-    marginBottom: 32,
+    marginBottom: 30,
   },
-  emptyStateButton: {
-    backgroundColor: "#3B82F6",
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    shadowColor: "#3B82F6",
+  ctaButton: {
+    flexDirection: "row",
+    backgroundColor: "#0F172A",
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 50,
+    alignItems: "center",
+    shadowColor: "#0F172A",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 6,
   },
-  emptyStateButtonText: {
+  ctaText: {
     color: "#FFFFFF",
-    fontSize: 16,
     fontWeight: "700",
+    fontSize: 15,
   },
+
+  // --- Floating Action Button ---
   fab: {
     position: "absolute",
-    right: 24,
-    bottom: 100,
-    backgroundColor: "#3B82F6",
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
+    right: 20,
+    bottom: 100, // Above navbar
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#4F46E5",
     justifyContent: "center",
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-    zIndex: 10,
-  },
-  navbar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
     alignItems: "center",
+    shadowColor: "#4F46E5",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+    zIndex: 50,
+  },
+
+  // --- Navbar Wrapper ---
+  navBarWrapper: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  navButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    borderRadius: 12,
-    minHeight: 60,
-  },
-  activeButton: {
-    backgroundColor: "#3B82F6",
-    shadowColor: "#3B82F6",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  logoNavBar: {
-    width: 28,
-    height: 28,
-    marginBottom: 2,
-    tintColor: "#666666",
-  },
-  activeIcon: {
-    tintColor: "#FFFFFF",
-    width: 26,
-    height: 26,
-  },
-  navButtonText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#666666",
-    textAlign: "center",
-  },
-  activeText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
   },
 });
+
 export default Hub;

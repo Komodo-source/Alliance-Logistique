@@ -210,7 +210,7 @@ export default function UploadPhoto({ navigation }) {
         "Vous avez déjà upload le nombre maximum de photos, pour enregristrer plus de photos évoluez vers notre offre premium",
         true,
         "Evoluez",
-        null,
+        () => navigation.naivate("PremiumPage"),
         true,
         "Non merci",
         null

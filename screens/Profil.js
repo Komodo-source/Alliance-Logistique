@@ -334,7 +334,9 @@ const Profile = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.Promotion} activeOpacity={0.9}>
+            <TouchableOpacity style={styles.Promotion} activeOpacity={0.9}
+            onPress={() => navigation.navigate("PremiumPage")}
+            >
               <View style={styles.promoInner}>
                 <FontAwesome6 name="money-bill-trend-up" size={26} color="#000" />
                 <Text style={styles.promoText}>Promouvoir mes produits</Text>
