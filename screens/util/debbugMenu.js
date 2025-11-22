@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Button, Text, ActivityIndicator, Image, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import * as FileManager from './file-manager';
+import { generateLocalNotification } from '../../NotificationService';
 
 export default function DebbugMenu({ navigation }) {
   const [autoData, setAutoData] = useState(null);
@@ -8,6 +9,10 @@ export default function DebbugMenu({ navigation }) {
   const [testServeurPHP, setTest1] = useState('');
   const [testServeurSupaBase, setTest2] = useState('');
   const [navigationPage, setNavigationPage] = useState('');
+  const [NotificationTitle, setNotificationTitle] = useState('');
+  const [NotificationBody, setNotificationBody] = useState('');
+  const [key, setKey] = useState('');
+  const [value, setValue] = useState('');
 
   const getServeurData = async () => {
     try {
@@ -59,6 +64,15 @@ export default function DebbugMenu({ navigation }) {
     }
   }
 
+  const changeData = async(key, value) => {
+    try{
+      await FileManager.modify_value_local_storage(key, value, "auto.json");
+      alert.alert("valeu modified", "Modified Sucessfully");
+    }catch(error){
+      alert.alert("value not modified", `Error "${error}" `);
+    }
+  }
+
   const handleNavigate = () => {
     if (navigationPage.trim()) {
       try {
@@ -88,6 +102,47 @@ export default function DebbugMenu({ navigation }) {
         />
         <TouchableOpacity style={styles.button} onPress={handleNavigate}>
           <Text style={styles.buttonText}>Naviguer</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.title}>change value auto.json</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="key json"
+          value={key}
+          onChangeText={setKey}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="new value"
+          value={value}
+          onChangeText={setValue}
+        />
+        <TouchableOpacity style={styles.button} onPress={() => changeData(key, value)}>
+          <Text style={styles.buttonText}>Change</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.title}>Générer une notification</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Titre"
+          value={NotificationTitle}
+          onChangeText={setNotificationTitle}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Body"
+          multiline
+          value={NotificationBody}
+          onChangeText={setNotificationBody}
+        />
+        <TouchableOpacity
+        style={styles.button}
+        onPress={() => generateLocalNotification(NotificationTitle, NotificationBody)}>
+          <Text style={styles.buttonText}>Créer une notification</Text>
         </TouchableOpacity>
       </View>
 

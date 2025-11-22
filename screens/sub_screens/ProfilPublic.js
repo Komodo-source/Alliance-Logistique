@@ -21,6 +21,11 @@ const ProfilPublic = ({ route }) => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
+  // Added photo state
+  const [photos, setPhotos] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [photosError, setPhotosError] = useState(null);
+
   const getProfile = async () => {
     try {
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_user_info.php', {
@@ -62,10 +67,50 @@ const ProfilPublic = ({ route }) => {
     }
   };
 
-  useEffect(() => {
+  // --- New: fetch photos from Supabase Function (signed URLs) ---
+  const GET_PHOTOS_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co/functions/v1/upload-photo';
+  // Optional: keep token if needed by your function; remove if public
+  const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
 
+  const fetchPhotos = async () => {
+    if (!id) return;
+    setLoadingPhotos(true);
+    setPhotosError(null);
+
+    try {
+      const params = new URLSearchParams({
+        target_type: 'fournisseur',
+        target_id: String(id),
+        with_url: '1'
+      });
+
+      const headers = { Accept: 'application/json' };
+      if (ACCESS_TOKEN) headers['Authorization'] = `Bearer ${ACCESS_TOKEN}`;
+
+      const res = await fetch(`${GET_PHOTOS_URL}?${params.toString()}`, {
+        method: 'GET',
+        headers,
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        const err = json?.error || JSON.stringify(json);
+        setPhotosError(err);
+        console.error('Photos fetch error:', err);
+      } else {
+        setPhotos(json.photos || []);
+      }
+    } catch (err) {
+      console.error('Fetch photos error:', err);
+      setPhotosError(String(err));
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  useEffect(() => {
     getProfile();
-    if (type === "fournisseur"){getProducts();}
+    if (type === "fournisseur"){ getProducts(); fetchPhotos(); }
 
   }, []);
 
@@ -272,6 +317,40 @@ const ProfilPublic = ({ route }) => {
             <Text style={styles.noProductsText}>Aucun porduit valide.</Text>
           )}
         </View>
+
+        {/* Photos Section (from Supabase function) */}
+        {isSupplier && (
+          <View style={[styles.productsSection, { marginBottom: 40 }]}>
+            <Text style={styles.sectionTitle}>Photos du fournisseur</Text>
+
+            {loadingPhotos ? (
+              <ActivityIndicator size="small" color="#00B14F" />
+            ) : photosError ? (
+              <Text style={{ color: 'red' }}>{photosError}</Text>
+            ) : photos.length > 0 ? (
+              <FlatList
+                data={photos}
+                keyExtractor={(item) => item.id}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.productsList}
+                renderItem={({ item }) => (
+                  <View style={{ marginRight: 12, width: 200 }}>
+                    {item.signed_url ? (
+                      <Image source={{ uri: item.signed_url }} style={{ width: 200, height: 150, borderRadius: 8 }} />
+                    ) : (
+                      <Image source={{ uri: item.url || 'https://via.placeholder.com/200' }} style={{ width: 200, height: 150, borderRadius: 8 }} />
+                    )}
+                    <Text numberOfLines={1} style={{ marginTop: 6, fontWeight: '600' }}>{item.metadata?.caption || item.filename}</Text>
+                    <Text style={{ color: '#666', fontSize: 12 }}>{new Date(item.created_at).toLocaleString()}</Text>
+                  </View>
+                )}
+              />
+            ) : (
+              <Text style={styles.noProductsText}>Aucune photo disponible.</Text>
+            )}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

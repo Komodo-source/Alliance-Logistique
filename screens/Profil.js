@@ -26,7 +26,7 @@ const Profile = ({ navigation }) => {
     email: '',
     avatar: null
   });
-  const [idFourni, SetIdFourni] = useState('');
+  const [idFourni, SetIdFourni] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const modify_profile = (data) => {
@@ -80,7 +80,7 @@ const Profile = ({ navigation }) => {
   //console.log("2");
       const data = await response.json();
       console.log('Data Received:', data);
-      SetIdFourni(data.id_fournisseur || '');
+      SetIdFourni(data.type === "fournisseur" );
   // console.log("3");
       if (data.err) {
         throw new Error('Mauvaise Réponse du serveur');
@@ -167,6 +167,8 @@ const Profile = ({ navigation }) => {
       // First, try to read the saved profile from local storage
       const profil_saved = await fileManager.read_file('auto.json');
       console.log('Saved profile:', profil_saved);
+
+      SetIdFourni(profil_saved.type === "fournisseur" );
 
       // Check if we have valid name and firstname in local storage
       if (profil_saved && profil_saved.name && profil_saved.firstname &&
@@ -299,7 +301,7 @@ const Profile = ({ navigation }) => {
         </View>
 
         {/* Fournisseur actions - clearly pop out like promotion */}
-        {!idFourni ? (
+        {idFourni ? (
           <View style={styles.fournisseurWrap}>
             <Text style={styles.sectionTitle}>Espace fournisseur</Text>
             <View style={styles.fournisseurActions}>

@@ -1,5 +1,6 @@
 import { Linking, Alert, Platform } from 'react-native';
 import * as FileManager from './file-manager';
+import { debbug_log } from './debbug';
 
 export const getUserData = async() =>{
     const data = await FileManager.read_file("auto.json");
@@ -11,6 +12,23 @@ export const getUserDataType = async() =>{
     return data.type;
 }
 
+export const getUserDataIdFromSession = async(id_session) => {
+  try{
+    const response = await fetch(
+      "https://backend-logistique-api-latest.onrender.com/get_id_from_session.php",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({id: id_session})
+      }
+    );
+    const data = await response.json();
+    return data.user_data;
+  }catch(error){
+    debbug_log(`Err occured in getUserDataIdFromSession: ${error}`, "red");
+    return null;
+  }
+}
 
 
 export const openNavigationWithChoice = async (latitude, longitude, label = 'Destination') => {

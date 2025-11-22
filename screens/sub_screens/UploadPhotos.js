@@ -7,334 +7,343 @@ import {
   Image,
   StyleSheet,
   Alert,
-  ScrollView,
   FlatList,
-  Modal
+  Modal,
+  Animated,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { createClient } from '@supabase/supabase-js';
 import { debbug_log } from '../util/debbug';
+import { decode } from 'base64-arraybuffer';
+import * as FileSystem from 'expo-file-system';
+import { getAlertRef } from "../util/AlertService";
+import { read_file } from '../util/file-manager';
+import { read } from 'react-native-fs';
+import { getUserDataIdFromSession } from '../util/Polyvalent';
+const SUPABASE_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co  ';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
+const BUCKET_NAME = 'media';
+const MAX_PHOTOS = 4;
 
-const UPLOAD_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co/functions/v1/upload';
-const DELETE_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co/functions/v1/delete-photo';
-const LIST_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co/functions/v1/list-photos';
-const ACCESS_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5iZ2ZldGxlanVza3V0dnh2Zm1kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NTI3NTMsImV4cCI6MjA3ODUyODc1M30.pIj8KNWVxzBnhatG4HvqpXB36D4dPO4T8R7E-aShuEI';
-
-//Enfaite ce script ne peux pas marcher sur émulateur
-//ar il y aun truc qui bloque le TLS
-// donc ca cause un problème
-//donc je viens de predre 1h30 de ma vie a essayé de fix un
-//truc infixable :/
-
+// Initialize Supabase Client
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function UploadPhoto({ navigation }) {
   const [busy, setBusy] = useState(false);
   const [photos, setPhotos] = useState([]);
-  const [error, setError] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loadingPhotos, setLoadingPhotos] = useState(true);
+  const [pendingAssets, setPendingAssets] = useState([]);
+  const fadeAnim = new Animated.Value(0);
+  cont [NbPhotoTaken, SetNbPhotoTaken] = useState(0);
 
   useEffect(() => {
     loadPhotos();
   }, []);
 
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [photos]);
+/*  // DEBBUG CHECK BUCKET
+  useEffect(() => {
+  const checkBuckets = async () => {
+    const { data, error } = await supabase.storage.listBuckets();
+    if (error) {
+      console.error("CRITICAL: Could not list buckets:", error);
+      Alert.alert("Connection Error", "Check your Supabase URL/Key");
+    } else {
+      console.log("AVAILABLE BUCKETS:", JSON.stringify(data, null, 2));
+      const names = data.map(b => b.name);
+      Alert.alert("Debug Info", `Supabase sees these buckets: \n${names.join(', ')}`);
+    }
+  };
+  checkBuckets();
+}, []);*/
+
+
   const loadPhotos = async () => {
     try {
       setLoadingPhotos(true);
-      const response = await fetch(`${LIST_URL}?target_type=client&target_id=1`, {
-        headers: {
-          'Authorization': `Bearer ${ACCESS_TOKEN}`,
-        },
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setPhotos(data.photos || []);
-        debbug_log(`Loaded ${data.photos?.length || 0} photos`, "green");
+      // 1. List files from the bucket
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .list('', {
+          limit: 100,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' },
+        });
+
+      if (error) throw error;
+
+      // 2. Map files to include Public URLs for the UI to render
+      if (data) {
+        const photosWithUrls = data.map((file) => {
+            const { data: urlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(file.name);
+
+            return {
+                id: file.id,
+                filename: file.name,
+                // Map the public URL to signed_url so the existing UI works
+                signed_url: urlData.publicUrl,
+            };
+        });
+        setPhotos(photosWithUrls);
       }
     } catch (err) {
-      debbug_log(`Error loading photos: ${err.message}`, "red");
+      debbug_log(`Error loading photos: ${err.message}`, 'red');
     } finally {
       setLoadingPhotos(false);
     }
   };
 
-  const uploadPhoto = async (asset) => {
-    debbug_log("uploading photo", "cyan");
-    setBusy(true);
-    setError(null);
 
+  const queuePhotos = async (assets) => {
+    setPendingAssets((prev) => [...prev, ...assets]);
+  };
+
+  const uploadQueuedPhotos = async () => {
+  if (pendingAssets.length === 0) return;
+  setBusy(true);
+
+  const failed = [];
+  // Create a copy of pending assets to iterate over
+  const assetsToUpload = [...pendingAssets];
+
+  for (const asset of assetsToUpload) {
     try {
-      const metadata = {
-        caption: 'Uploaded from RN',
-        tags: ['mobile', 'react-native'],
-      };
+      await uploadPhoto(asset);
+    } catch (err) {
+      // Now this catch block will actually run!
+      debbug_log(`Queue item failed: ${asset.uri}`, 'red');
+      failed.push(asset);
+    }
+  }
 
-      const target_type = 'client';
-      const target_id = '1';
+  // Update State
+  if (failed.length === 0) {
+    setPendingAssets([]);
+    Alert.alert('Success', 'All images uploaded successfully.');
+  } else {
+    setPendingAssets(failed);
+    Alert.alert(
+      'Upload Incomplete',
+      `${failed.length} image(s) failed. They are still in the queue.`
+    );
+  }
 
-      const formData = new FormData();
+  await loadPhotos();
+  setBusy(false);
+};
 
-      formData.append('file', {
-        uri: asset.uri,
-        type: asset.type || 'image/jpeg',
-        name: asset.fileName || `photo_${Date.now()}.jpg`,
+const uploadPhoto = async (asset) => {
+  try {
+    const ext = asset.uri.split('.').pop().toLowerCase();
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const storagePath = `media/${fileName}`;
+
+    const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    // Convert Base64 string to ArrayBuffer (which Supabase loves)
+    const fileData = decode(base64);
+
+    // Upload the ArrayBuffer
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('media')
+      .upload(storagePath, fileData, {
+        contentType: asset.mimeType || 'image/jpeg',
+        upsert: false,
       });
 
-      formData.append('target_type', target_type);
-      formData.append('target_id', target_id);
-      formData.append('metadata', JSON.stringify(metadata));
+    if (uploadError) throw uploadError;
 
-      const headers = {
-        'Authorization': `Bearer ${ACCESS_TOKEN}`,
-      };
+    // Database Insert
+    const user_data = await read_file("auto.json");
+    const id = getUserDataIdFromSession(user_data.session_id);
+    if(id === null){
+      alert.alert("Oups", "Une erreur a eu lieu veuillez reessayer plus tard");
+    }
 
-      debbug_log(`Uploading to: ${UPLOAD_URL}`, "cyan");
-
-      const response = await fetch(UPLOAD_URL, {
-        method: 'POST',
-        headers,
-        body: formData,
+    const { error: dbError } = await supabase
+      .from('photos')
+      .insert({
+        target_type: 'fournisseur',
+        target_id: id,
+        filename: fileName,
+        storage_path: storagePath,
+        content_type: asset.mimeType || 'image/jpeg',
+        size: fileData.byteLength,
+        metadata: { caption: 'Uploaded from RN' }
       });
 
-      const json = await response.json();
+    if (dbError) throw dbError;
 
-      if (!response.ok) {
-        debbug_log(`Error occurred: ${json?.error}`, "red");
-        setError(json?.error || JSON.stringify(json));
-        Alert.alert('Upload Failed', json?.error || 'Unknown error');
+    console.log('Upload successful!');
+
+  } catch (err) {
+    // Log exact error for debugging
+    console.error('Upload failed inside function:', err.message);
+    throw err;
+  }
+};
+
+  // --- Supabase Storage Logic: Delete ---
+  const deletePhoto = async (filename) => {
+    try {
+      setBusy(true);
+
+      const { error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .remove([filename]);
+
+      if (error) {
+        Alert.alert('Error', 'Delete failed: ' + error.message);
       } else {
-        debbug_log("Upload successful!", "green");
-        Alert.alert('Success', 'Photo uploaded successfully!');
-        await loadPhotos(); // Reload photos list
+        setSelectedPhoto(null);
+        await loadPhotos();
       }
     } catch (err) {
-      console.error('Upload error:', err);
-      debbug_log(`Upload error: ${err.message}`, "red");
-      setError(String(err.message || err));
-      Alert.alert('Error', 'Failed to upload photo');
+      Alert.alert('Oups', 'Une erreur inconnue a survenue veuillez reesayez plus tard.');
     } finally {
       setBusy(false);
     }
   };
 
-  const deletePhoto = async (photoId) => {
-    Alert.alert(
-      'Delete Photo',
-      'Are you sure you want to delete this photo?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setBusy(true);
-              const response = await fetch(`${DELETE_URL}/${photoId}`, {
-                method: 'DELETE',
-                headers: {
-                  'Authorization': `Bearer ${ACCESS_TOKEN}`,
-                },
-              });
-
-              if (response.ok) {
-                debbug_log(`Photo ${photoId} deleted`, "green");
-                Alert.alert('Success', 'Photo deleted successfully!');
-                setSelectedPhoto(null);
-                await loadPhotos();
-              } else {
-                const json = await response.json();
-                Alert.alert('Error', json?.error || 'Failed to delete photo');
-              }
-            } catch (err) {
-              debbug_log(`Delete error: ${err.message}`, "red");
-              Alert.alert('Error', 'Failed to delete photo');
-            } finally {
-              setBusy(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleTakePhoto = async () => {
-    try {
-      debbug_log("📷 Requesting camera permissions...", "cyan");
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
-      if (status !== 'granted') {
-        debbug_log("❌ Camera permission denied", "red");
-        Alert.alert('Permission needed', 'Camera permission is required');
-        return;
-      }
-
-      debbug_log("📸 Launching camera...", "cyan");
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-        allowsEditing: false,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        debbug_log(`Photo captured: ${result.assets[0].uri}`, "green");
-        await uploadPhoto(result.assets[0]);
-      }
-    } catch (err) {
-      console.error('Camera error:', err);
-      debbug_log(`💥 Camera error: ${err.message}`, "red");
-      Alert.alert('Error', 'Failed to launch camera');
+    if(NbPhotoTaken >= MAX_PHOTOS){
+      getAlertRef().current?.showAlert(
+        "Photo maximum",
+        "Vous avez déjà upload le nombre maximum de photos, pour enregristrer plus de photos évoluez vers notre offre premium",
+        true,
+        "Evoluez",
+        null,  // {() => navigation.navigate("PremiumPage")}
+        true,
+        "Non merci",
+        null
+      );
+      return ;
     }
+    SetNbPhotoTaken(NbPhotoTaken + 1);
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    if (!result.canceled) queuePhotos(result.assets);
   };
 
   const handlePickFromGallery = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Photo library permission is required');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.8,
-        allowsEditing: false,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        await uploadPhoto(result.assets[0]);
-      }
-    } catch (err) {
-      console.error('Gallery error:', err);
-      Alert.alert('Error', 'Failed to open gallery');
+    if(NbPhotoTaken >= MAX_PHOTOS){
+      getAlertRef().current?.showAlert(
+        "Photo maximum",
+        "Vous avez déjà upload le nombre maximum de photos, pour enregristrer plus de photos évoluez vers notre offre premium",
+        true,
+        "Evoluez",
+        null,  // {() => navigation.navigate("PremiumPage")}
+        true,
+        "Non merci",
+        null
+      );
+      return ;
     }
+    SetNbPhotoTaken(NbPhotoTaken + 1);
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({ allowsMultipleSelection: true, quality: 0.8 });
+    if (!result.canceled) queuePhotos(result.assets);
   };
 
+  // --- Render Helpers ---
   const renderPhotoItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.photoCard}
-      onPress={() => setSelectedPhoto(item)}
-      activeOpacity={0.7}
-    >
-      <Image
-        source={{ uri: item.signed_url }}
-        style={styles.thumbnail}
-        resizeMode="cover"
-      />
-      <View style={styles.photoInfo}>
-        <Text style={styles.photoFilename} numberOfLines={1}>
-          {item.filename}
-        </Text>
-        <Text style={styles.photoDate}>
-          {new Date(item.created_at).toLocaleDateString()}
-        </Text>
-      </View>
+    <TouchableOpacity style={styles.photoCard} onPress={() => setSelectedPhoto(item)}>
+      <Image source={{ uri: item.signed_url }} style={styles.thumbnail} />
+      <Text style={styles.photoFilename} numberOfLines={1}>{item.filename}</Text>
     </TouchableOpacity>
+  );
+
+  const renderPendingItem = ({ item }) => (
+    <View style={styles.pendingCard}>
+      <Image source={{ uri: item.uri }} style={styles.pendingThumb} />
+    </View>
   );
 
   return (
     <View style={styles.container}>
-      {/* Action Buttons */}
-      <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.cameraButton]}
-          onPress={handleTakePhoto}
-          disabled={busy}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.actionButtonIcon}>📷</Text>
-          <Text style={styles.actionButtonText}>Take Photo</Text>
-        </TouchableOpacity>
+      <View style={styles.headerBar}>
+        <Text style={styles.headerTitle}>Gestionnaire Photo</Text>
+      </View>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.galleryButton]}
-          onPress={handlePickFromGallery}
-          disabled={busy}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.actionButtonIcon}>🖼️</Text>
-          <Text style={styles.actionButtonText}>Gallery</Text>
+      <View style={styles.actionRow}>
+        <TouchableOpacity style={styles.buttonPrimary} onPress={handleTakePhoto}>
+          <Text style={styles.buttonText}>prendre une Photo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonSecondary} onPress={handlePickFromGallery}>
+          <Text style={styles.buttonText}>Gallerie</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Photos Grid */}
-      <View style={styles.photosSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>My Photos</Text>
-          <TouchableOpacity onPress={loadPhotos} disabled={loadingPhotos}>
-            <Text style={styles.refreshButton}>🔄</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loadingPhotos ? (
-          <View style={styles.centerContent}>
-            <ActivityIndicator size="large" color="#007AFF" />
-          </View>
-        ) : photos.length === 0 ? (
-          <View style={styles.centerContent}>
-            <Text style={styles.emptyText}>📸</Text>
-            <Text style={styles.emptySubtext}>No photos yet</Text>
-            <Text style={styles.emptyHint}>Take a photo to get started</Text>
-          </View>
-        ) : (
+      {pendingAssets.length > 0 && (
+        <View style={styles.pendingSection}>
+          <Text style={styles.pendingTitle}>Attente de l'Upload</Text>
           <FlatList
-            data={photos}
-            renderItem={renderPhotoItem}
-            keyExtractor={(item) => item.id.toString()}
-            numColumns={2}
-            contentContainerStyle={styles.gridContent}
-            showsVerticalScrollIndicator={false}
+            data={pendingAssets}
+            horizontal
+            renderItem={renderPendingItem}
+            keyExtractor={(item, index) => index.toString()}
+            style={{ marginBottom: 8 }}
           />
-        )}
-      </View>
-
-      {/* Upload Progress */}
-      {busy && (
-        <View style={styles.uploadOverlay}>
-          <View style={styles.uploadCard}>
-            <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.uploadText}>Processing...</Text>
-          </View>
+          <TouchableOpacity style={styles.uploadAllButton} onPress={uploadQueuedPhotos} disabled={busy}>
+            <Text style={styles.uploadAllText}>Enregistrer</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Photo Detail Modal */}
-      <Modal
-        visible={selectedPhoto !== null}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedPhoto(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSelectedPhoto(null)}
-            >
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        {loadingPhotos ? (
+          <ActivityIndicator size="large" style={{ marginTop: 20 }} />
+        ) : (
+          <FlatList
+            data={photos}
+            numColumns={2}
+            renderItem={renderPhotoItem}
+            keyExtractor={(item) => item.id ? item.id.toString() : item.filename}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        )}
+      </Animated.View>
 
+      {busy && (
+        <View style={styles.busyOverlay}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
+
+      <Modal visible={selectedPhoto !== null} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedPhoto(null)}>
+              <Text style={styles.closeText}>X</Text>
+            </TouchableOpacity>
             {selectedPhoto && (
-              <>
-                <Image
-                  source={{ uri: selectedPhoto.signed_url }}
-                  style={styles.fullImage}
-                  resizeMode="contain"
-                />
-                <View style={styles.modalInfo}>
-                  <Text style={styles.modalFilename}>{selectedPhoto.filename}</Text>
-                  <Text style={styles.modalDate}>
-                    {new Date(selectedPhoto.created_at).toLocaleString()}
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => deletePhoto(selectedPhoto.id)}
-                    disabled={busy}
-                  >
-                    <Text style={styles.deleteButtonText}>🗑️ Delete Photo</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
+              <Image source={{ uri: selectedPhoto.signed_url }} style={styles.fullImage} />
+            )}
+            {selectedPhoto && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => deletePhoto(selectedPhoto.filename)}
+              >
+                <Text style={styles.deleteText}>Supprimer Photo</Text>
+              </TouchableOpacity>
             )}
           </View>
         </View>
@@ -344,184 +353,28 @@ export default function UploadPhoto({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F7',
-  },
-  actionBar: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  actionButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  cameraButton: {
-    backgroundColor: '#007AFF',
-  },
-  galleryButton: {
-    backgroundColor: '#34C759',
-  },
-  actionButtonIcon: {
-    fontSize: 24,
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  photosSection: {
-    flex: 1,
-    padding: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#000',
-  },
-  refreshButton: {
-    fontSize: 24,
-  },
-  gridContent: {
-    paddingBottom: 16,
-  },
-  photoCard: {
-    flex: 1,
-    margin: 6,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  thumbnail: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#E5E5EA',
-  },
-  photoInfo: {
-    padding: 8,
-  },
-  photoFilename: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 2,
-  },
-  photoDate: {
-    fontSize: 11,
-    color: '#8E8E93',
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 64,
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 4,
-  },
-  emptyHint: {
-    fontSize: 14,
-    color: '#8E8E93',
-  },
-  uploadOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  uploadCard: {
-    backgroundColor: '#fff',
-    padding: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 16,
-  },
-  uploadText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
-    justifyContent: 'center',
-  },
-  modalContent: {
-    flex: 1,
-    position: 'relative',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: '600',
-  },
-  fullImage: {
-    flex: 1,
-    width: '100%',
-  },
-  modalInfo: {
-    backgroundColor: '#fff',
-    padding: 20,
-    gap: 8,
-  },
-  modalFilename: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-  },
-  modalDate: {
-    fontSize: 14,
-    color: '#8E8E93',
-    marginBottom: 12,
-  },
-  deleteButton: {
-    backgroundColor: '#FF3B30',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: '#f3f3f7' },
+  headerBar: { padding: 16, backgroundColor: '#1c1c1e', paddingTop: 60 }, // Adjusted for status bar
+  headerTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
+  actionRow: { flexDirection: 'row', padding: 16, justifyContent: 'space-between' },
+  buttonPrimary: { flex: 1, backgroundColor: '#0a84ff', padding: 14, borderRadius: 12, marginRight: 8 },
+  buttonSecondary: { flex: 1, backgroundColor: '#30d158', padding: 14, borderRadius: 12, marginLeft: 8 },
+  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
+  pendingSection: { padding: 16, backgroundColor: '#fff', marginBottom: 10 },
+  pendingTitle: { fontWeight: '700', marginBottom: 8, fontSize: 16 },
+  pendingCard: { marginRight: 8, borderRadius: 10, overflow: 'hidden' },
+  pendingThumb: { width: 80, height: 80, borderRadius: 8 },
+  uploadAllButton: { backgroundColor: '#007aff', padding: 12, borderRadius: 10, marginTop: 10 },
+  uploadAllText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
+  photoCard: { flex: 1, margin: 8, backgroundColor: '#fff', borderRadius: 12, padding: 8, elevation: 2 },
+  thumbnail: { width: '100%', aspectRatio: 1, borderRadius: 8 },
+  photoFilename: { marginTop: 6, fontSize: 12, fontWeight: '600' },
+  busyOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', padding: 20 },
+  modalBox: { backgroundColor: '#fff', borderRadius: 14, padding: 16 },
+  closeButton: { alignSelf: 'flex-end', padding: 10 },
+  closeText: { fontSize: 18, fontWeight: '700', color: '#333' },
+  fullImage: { width: '100%', height: 300, resizeMode: 'contain', marginVertical: 10 },
+  deleteButton: { backgroundColor: '#ff3b30', padding: 12, borderRadius: 10 },
+  deleteText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
 });

@@ -275,14 +275,14 @@ import React, { useEffect, useState} from 'react';
       // Check if the server is reachable
       //
       try {
-        const response = await measureFetchSpeed('https://google.com');
-        //const response = await simpleCheck('https://google.com');
+        //const response = await measureFetchSpeed('https://google.com');
+        const response = await simpleCheck('https://google.com');
         //A activer en prod
 
         if (response.ok) {
           debbug_lib.debbug_log("Connecté a Internet", "green");
-          const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/check_conn.php');
-          //const response_server = await simpleCheck('https://backend-logistique-api-latest.onrender.com/product.php');
+          //const response_server = await measureFetchSpeed('https://backend-logistique-api-latest.onrender.com/check_conn.php');
+          const response_server = await simpleCheck('https://backend-logistique-api-latest.onrender.com/product.php');
 
           if (response_server.ok) {
             debbug_lib.debbug_log("Serveur distant/Backend Actif", "green");
