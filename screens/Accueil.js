@@ -11,7 +11,6 @@ import {
   StatusBar,
   RefreshControl,
   useWindowDimensions,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CarouselCards from "./sub_screens/CarouselCards";
@@ -31,19 +30,20 @@ const Accueil = ({ navigation }) => {
   const [userType, setIsClient] = useState('');
   const [jours_restants, setJours_restants] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [sponsorisedCommand, SetSponsorisedCommand] = useState([]);
-  const [bestCommand, SetBestCommand] = useState([]);
-  const [sponsoredProducts, setSponsoredProducts] = useState({});
-  const [bestProducts, setBestProducts] = useState({});
-  const { width: windowWidth } = useWindowDimensions();
+
+  // FIX: Initialize as empty arrays, not objects
+  const [sponsoredProducts, setSponsoredProducts] = useState([]);
+  const [bestProducts, setBestProducts] = useState([]);
+
   const snackBarRef = useRef();
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
       await fetch_commande();
+      await loadFeaturedData(); // Reload featured data on refresh too
       setCurrentTime(new Date());
-      snackBarRef.current?.show("Commande mis à jour(" + new Date() + ")", "info");
+      snackBarRef.current?.show("Données mises à jour", "info");
     } catch (error) {
       console.error("Error during refresh:", error);
     } finally {
@@ -70,7 +70,7 @@ const Accueil = ({ navigation }) => {
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
       return diffDays;
     } catch (error) {
-      console.error("Erreur dans getDaysDifference:", error, "dateString:", dateString);
+      console.error("Erreur date:", error);
       return 0;
     }
   };
@@ -104,13 +104,41 @@ const Accueil = ({ navigation }) => {
     setNbCommandeLivraison(val);
   };
 
-  const getFileCommand = async () => {
-    const sponsorisedData = await FileManager.read_file("sponsorisedCommand.json");
-    const bestCommandData = await FileManager.read_file("mostCommandedProduct.json");
-    const bestProducts = bestCommandData?._j || bestCommandData;
-    const sponsoredProducts = sponsorisedData?._j || sponsorisedData;
-    SetSponsorisedCommand(sponsoredProducts);
-    SetBestCommand(bestProducts);
+  // FIX: Robust data loading function
+  const loadFeaturedData = async () => {
+    try {
+      const sponsorisedData = await FileManager.read_file("sponsorisedCommand.json");
+      const bestCommandData = await FileManager.read_file("mostCommandedProduct.json");
+
+      // Handle Expo filesystem promise object wrappers (_j) or raw data
+      const cleanBest = bestCommandData?._j || bestCommandData || [];
+      const cleanSponsored = sponsorisedData?._j || sponsorisedData || [];
+
+      // Ensure we actully set Arrays
+      if (Array.isArray(cleanBest)) {
+          setBestProducts(cleanBest);
+      } else if (cleanBest && typeof cleanBest === 'object') {
+          // If it returned a single object instead of array, wrap it
+          setBestProducts([cleanBest]);
+      }
+
+      if (Array.isArray(cleanSponsored)) {
+          setSponsoredProducts(cleanSponsored);
+      } else if (cleanSponsored && typeof cleanSponsored === 'object') {
+          setSponsoredProducts([cleanSponsored]);
+      }
+
+      console.log("Loaded Featured:", {
+          best: Array.isArray(cleanBest) ? cleanBest.length : 'Not Array',
+          sponsored: Array.isArray(cleanSponsored) ? cleanSponsored.length : 'Not Array'
+      });
+
+    } catch (error) {
+      console.error("Error loading featured data:", error);
+      // Fallback to empty arrays on error so UI doesn't break
+      setBestProducts([]);
+      setSponsoredProducts([]);
+    }
   };
 
   const fetch_commande = async () => {
@@ -142,7 +170,7 @@ const Accueil = ({ navigation }) => {
       try {
         parsedData = JSON.parse(responseText);
       } catch (parseError) {
-        throw new Error(`Erreur de réponse serveur`);
+        // Silent fail or minimal log
       }
       if (!parsedData || !Array.isArray(parsedData)) {
         setCommande([]);
@@ -298,25 +326,17 @@ const Accueil = ({ navigation }) => {
         activeOpacity={0.9}
       >
         <View style={styles.sponsoredContent}>
-            <Text style={styles.sponsoredTitle} numberOfLines={2}>{item.nom_produit}</Text>
-            <Text style={styles.sponsoredSub}>{item.nom_orga}</Text>
+            <View>
+                <Text style={styles.sponsoredTitle} numberOfLines={2}>{item.nom_produit}</Text>
+                <Text style={styles.sponsoredSub}>{item.nom_orga}</Text>
+            </View>
             <View style={styles.sponsoredBadge}>
                 <Text style={styles.sponsoredBadgeText}>Sponsorisé</Text>
+                <MaterialCommunityIcons name="star" size={12} color="#F59E0B" style={{marginLeft: 4}} />
             </View>
         </View>
       </TouchableOpacity>
   );
-
-  const loadSponsoredData = async () => {
-    try {
-      const sponsoredData = await FileManager.read_file("sponsorisedCommand.json");
-      const bestProductsData = await FileManager.read_file("mostCommandedProduct.json");
-      if (sponsoredData) setSponsoredProducts(sponsoredData);
-      if (bestProductsData) setBestProducts(bestProductsData);
-    } catch (error) {
-      console.error("Error loading sponsored data:", error);
-    }
-  };
 
   useEffect(() => {
     fetch_commande();
@@ -332,11 +352,10 @@ const Accueil = ({ navigation }) => {
     if (commande.length > 0) {
         setJours_restants(getDaysDifference(commande[0].date_fin));
     }
-}, [commande, currentTime]);
+  }, [commande, currentTime]);
 
   useEffect(() => {
-    loadSponsoredData();
-    getFileCommand();
+    loadFeaturedData();
   }, []);
 
   return (
@@ -461,20 +480,20 @@ const Accueil = ({ navigation }) => {
             </ScrollView>
         </View>
 
-        {/* Featured Products */}
-        {(Object.keys(bestProducts).length > 0 || Object.keys(sponsoredProducts).length > 0) && (
+        {/* Featured Products - FIXED SECTION */}
+        {(bestProducts.length > 0 || sponsoredProducts.length > 0) && (
         <View style={styles.sectionContainer}>
-            <Text style={styles.sectionHeader}>Tendances</Text>
+            <Text style={styles.sectionHeader}>Tendances & Sponsorisés</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hListContent}>
                  {/* Render Best Products */}
-                 {Array.isArray(bestProducts) && bestProducts.map((item, index) => (
-                     <View key={`best-${index}`} style={{marginRight: 15}}>
+                 {bestProducts.map((item, index) => (
+                     <View key={`best-${index}`} style={{marginRight: 16}}>
                          <BestProductsCard item={item} />
                      </View>
                  ))}
                  {/* Render Sponsored */}
-                 {Array.isArray(sponsoredProducts) && sponsoredProducts.map((item, index) => (
-                     <View key={`spon-${index}`} style={{marginRight: 15}}>
+                 {sponsoredProducts.map((item, index) => (
+                     <View key={`spon-${index}`} style={{marginRight: 16}}>
                          <SponsoredProductCard item={item} />
                      </View>
                  ))}
@@ -721,7 +740,7 @@ const styles = StyleSheet.create({
   },
   hListContent: {
     paddingHorizontal: 24,
-    gap: 16,
+    paddingRight: 40,
   },
 
   // Quick Actions
@@ -766,6 +785,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#F1F5F9',
     marginRight: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   orderCardHeader: {
     flexDirection: 'row',
@@ -846,6 +870,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#FFF',
     position: 'relative',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   productImage: {
     width: '100%',
@@ -862,14 +891,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)', // Subtle darkening
-    backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', // Just simulation logic
+    backgroundColor: 'rgba(0,0,0,0.05)',
   },
   productName: {
     color: '#1E293B',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -892,11 +920,16 @@ const styles = StyleSheet.create({
   // Sponsored
   sponsoredCard: {
     width: 200,
-    height: 120,
-    backgroundColor: '#0F172A', // Dark slate
+    height: 200, // Matched height with product card for symmetry
+    backgroundColor: '#1E293B',
     borderRadius: 20,
-    padding: 16,
+    padding: 20,
     justifyContent: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sponsoredContent: {
     justifyContent: 'space-between',
@@ -904,23 +937,27 @@ const styles = StyleSheet.create({
   },
   sponsoredTitle: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
+    marginBottom: 4,
   },
   sponsoredSub: {
     color: '#94A3B8',
-    fontSize: 12,
+    fontSize: 13,
   },
   sponsoredBadge: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   sponsoredBadgeText: {
     color: '#CBD5E1',
-    fontSize: 10,
+    fontSize: 11,
+    fontWeight: '600',
     textTransform: 'uppercase',
   },
 
@@ -935,16 +972,21 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   promoContent: {
-    backgroundColor: '#1E293B',
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: '#0F172A',
+    borderRadius: 24,
+    padding: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
   promoTitle: {
     color: '#FFF',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     marginBottom: 4,
   },
@@ -953,10 +995,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   promoBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#4F46E5',
     alignItems: 'center',
     justifyContent: 'center',
   },

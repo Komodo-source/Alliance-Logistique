@@ -6,7 +6,7 @@ include_once('db.php');
 $data = json_decode(file_get_contents("php://input"), true);
 $type = $data['type'];
 
-// Correction : toujours définir $id correctement
+
 if($data['is_session']){
     $session_id = $data['session_id'];
     $id = getIdSession($session_id); // Récupérer l'ID réel à partir de la session
@@ -45,7 +45,7 @@ $data_fournisseur_produits = $conn->prepare(
     "SELECT FR.id_produit,
             FR.nb_produit_fourni,
             P.nom_produit,
-            ROUND((prix_produit * 1.45),2) as prix_produit,
+            ROUND((prix_produit * 1.45),2) as prix_produit
      FROM FOURNIR FR
      INNER JOIN PRODUIT P ON P.id_produit = FR.id_produit
      WHERE FR.id_fournisseur = ?");

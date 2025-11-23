@@ -707,7 +707,7 @@ const DetailCommande = ({ route, navigation }) => {
                 <TouchableOpacity style={[styles.button, styles.providerButton]}
                 onPress={() => {getAlertRef().current?.showAlert(
                      'Code Personnel',
-                     'Votre code fournisseur est: '+ item.code_echange_fourni,
+                     'Votre code fournisseur est: '+ item.code_echange_fourni + '\n\n(Vous ne devez donner ce code qu\'à votre couriser)',
                      true,
                      "OK",
                      null

@@ -35,13 +35,14 @@ const ProfilPublic = ({ route }) => {
 
   const getProfile = async () => {
     try {
+      console.log({ id: id, type: type, is_session: false });
       const response = await fetch('https://backend-logistique-api-latest.onrender.com/get_user_info.php', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ session_id: id, type: type, is_session: true })
+        body: JSON.stringify({ session_id: id, type: type, is_session: false })
       });
 
       const data = await response.json();
@@ -159,7 +160,7 @@ const ProfilPublic = ({ route }) => {
     <View style={styles.productCard}>
       <Image source={{ uri: item.image_produit || 'https://via.placeholder.com/150' }} style={styles.productImage} />
       <Text style={styles.productName}>{item.nom_produit}</Text>
-      <Text style={styles.productPrice}>€{item.prix_produit}</Text>
+      <Text style={styles.productPrice}>FCFA {item.prix_produit}</Text>
       <Text style={styles.productDescription}>{item.description_produit}</Text>
     </View>
   );
@@ -286,7 +287,7 @@ const ProfilPublic = ({ route }) => {
               />
               <View style={styles.featuredInfo}>
                 <Text style={styles.featuredName}>{userData.nom_produit}</Text>
-                <Text style={styles.featuredPrice}>€{userData.prix_produit}</Text>
+                <Text style={styles.featuredPrice}>FCFA{userData.prix_produit}</Text>
                 <View style={styles.featuredRating}>
                   <Ionicons name="star" size={14} color="#FFD700" />
                   <Text style={styles.featuredRatingText}>{rating}</Text>

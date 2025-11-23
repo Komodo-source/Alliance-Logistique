@@ -3,12 +3,10 @@ import json
 
 # URL de ton backend (change-la par l'URL de ton API)
 #https://backend-logistique-api-latest.onrender.com/db.php
-url = "https://backend-logistique-api-latest.onrender.com/get_fournisseur_produit.php"
+url = "https://backend-logistique-api-latest.onrender.com/get_user_info.php"
 
 # Données à envoyer (modifie selon tes besoins)
-payload =  {
-  "id_produit": 1
-}
+payload = {"session_id": 999325, "is_session": False, "type": "fournisseur"}
 
 # En-têtes HTTP
 headers = {
