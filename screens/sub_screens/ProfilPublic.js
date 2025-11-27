@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createClient } from '@supabase/supabase-js';
+import { loadImages } from '../util/ReferenceImage';
 
 
 const SUPABASE_URL = 'https://nbgfetlejuskutvxvfmd.supabase.co';
@@ -158,7 +159,7 @@ const ProfilPublic = ({ route }) => {
 
   const renderProductCard = ({ item }) => (
     <View style={styles.productCard}>
-      <Image source={{ uri: item.image_produit || 'https://via.placeholder.com/150' }} style={styles.productImage} />
+      <Image source={{ uri: loadImages(item.id_produit) }} style={styles.productImage} />
       <Text style={styles.productName}>{item.nom_produit}</Text>
       <Text style={styles.productPrice}>FCFA {item.prix_produit}</Text>
       <Text style={styles.productDescription}>{item.description_produit}</Text>
@@ -199,6 +200,7 @@ const ProfilPublic = ({ route }) => {
         <View style={styles.profileSection}>
           <View style={styles.profileHeader}>
             <View style={styles.profileImageContainer}>
+              {/*
               <Image
                 style={styles.profileImage}
                 source={{
@@ -206,7 +208,7 @@ const ProfilPublic = ({ route }) => {
                     ? 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=150&h=150&fit=crop&crop=face'
                     : 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
                 }}
-              />
+              />*/}
             </View>
 
             <View style={styles.profileInfo}>
@@ -228,7 +230,7 @@ const ProfilPublic = ({ route }) => {
                   {renderStars(rating)}
                 </View>
                 <Text style={styles.ratingText}>
-                  {rating} ({userData.nb_commande || 0} {isSupplier ? 'orders' : 'orders'})
+                  {rating} ({userData.nb_commande || 0} {isSupplier ? 'commandes' : 'commandes'})
                 </Text>
               </View>
             </View>

@@ -190,6 +190,10 @@ const Login = ({ navigation }) => {
           debbug_lib.debbug_log(" Notification token already registered", "green")
         }
 
+        if(!fileManager.is_file_existing("local_alerte_notification.json")){
+          fileManager.create("local_alerte_notification.json");
+        }
+
         // Fixed Alert.alert call - proper format with buttons array
         getAlertRef().current?.showAlert(
           "Connecté",

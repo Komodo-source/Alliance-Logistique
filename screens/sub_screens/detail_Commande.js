@@ -13,34 +13,12 @@ import { debbug_log } from '../util/debbug.js';
 import { getAlertRef } from '../util/AlertService';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { openNavigationWithChoice  }  from "../util/Polyvalent.js";
+import { loadImages } from '../util/ReferenceImage.js';
 
 var headers = {
   'Accept': 'application/json',
   'Content-Type': 'application/json'
 };
-
-export const loadImages = (id_produit) => {
-  switch (id_produit) {
-    case "1":
-      return require('../../assets/img_product/3.jpg');
-    case "2":
-      return require('../../assets/img_product/2.jpg');
-    case "3":
-      return require('../../assets/img_product/3.jpg');
-    case "4":
-      return require('../../assets/img_product/4.jpg');
-    case "8":
-      return require('../../assets/img_product/8.jpg');
-    case "10":
-      return require('../../assets/img_product/10.jpg');
-    case "11":
-      return require('../../assets/img_product/11.jpg');
-    case "12":
-      return require('../../assets/img_product/12.jpg');
-    default:
-      return require('../../assets/img_product/default.png');
-  }
-}
 
 const DetailCommande = ({ route, navigation }) => {
   const item = route && route.params && route.params.item ? route.params.item : null;
@@ -810,7 +788,7 @@ const DetailCommande = ({ route, navigation }) => {
               item.produits.map((produit, index) => (
                 <View key={index} style={styles.productItem}>
                   <Image
-                    source={loadImages(produit.id_produit?.toString() || '0')}
+                    source={{uri: loadImages(produit.id_produit?.toString())}}
                     style={styles.productImage}
                   />
                   <View style={styles.productDetails}>

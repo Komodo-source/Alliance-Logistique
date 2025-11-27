@@ -1,7 +1,7 @@
 Alliance logistique
-	◦	Message avertissement plus fourni loin plus le temps de livraison sera long
+	X	Message avertissement plus fourni loin plus le temps de livraison sera long
 	◦	Page profil
-	◦	Serveur ftp photo
+	X	Serveur ftp photo
 	x	Acceptation conditions d’utilisation register
 	x	Organisation register
 	◦	Client doit payer avant la livraison ou pendant
@@ -9,7 +9,7 @@ Alliance logistique
 	◦	Ajout sponsorisé page accueil
 	x	Produit les plus commandés
 	x	Reinclure coursier
-	◦	Système notification
+	x	Système notification
 	x	Bool si fournir discount
         - affiche des produits randoms discount
 	x	Refresh les commandes
@@ -25,5 +25,6 @@ Alliance logistique
 	x séparer par fournisseur
 	x voir le mot de passe
 	X DATE LIVRAISON
+	◦ Remplacer icones local par celle en ligne
 
 

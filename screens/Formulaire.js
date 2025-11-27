@@ -425,7 +425,7 @@ const Formulaire = ({ navigation, route }) => {
   }, []);
 
   // Get products
-  const getProduct = useCallback(async () => {
+  const getProductd = useCallback(async () => {
     try {
       const fileData = await fileManager.read_file("product.json");
       let data = {};
@@ -784,7 +784,9 @@ const Formulaire = ({ navigation, route }) => {
         setProducts([]);
         setSelectedLocation(null);
         setChargement(false);
-        generateLocalNotification("Commande passée 📦e", "Votre commande a été passé et elle est déjà en cours de préparation");
+        generateLocalNotification("Commande passée 📦", "Votre commande a été passé et elle est déjà en cours de préparation");
+
+        
         navigation.navigate("Accueil");
       })
       .catch((error) => {

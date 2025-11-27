@@ -36,6 +36,9 @@ export default function UploadPhoto({ navigation }) {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loadingPhotos, setLoadingPhotos] = useState(true);
   const [pendingAssets, setPendingAssets] = useState([]);
+  const [caption, setCaption] = useState("");
+  const [captionList, setCaptionList] = ([]);
+
   const fadeAnim = new Animated.Value(0);
 
   // FIX: Changed 'cont' to 'const'
@@ -221,6 +224,7 @@ export default function UploadPhoto({ navigation }) {
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') return;
+    
 
     const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
     if (!result.canceled) queuePhotos(result.assets);

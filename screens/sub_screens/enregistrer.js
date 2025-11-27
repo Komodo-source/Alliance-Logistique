@@ -343,9 +343,11 @@ const enregistrer = ({route, navigation }) => {
           null
         );
 
+        fileManager.create_file("local_alerte_notification.json");
         if(formData.data == "fo"){
           navigation.navigate("fournisseur_produit");
         }else{
+
           navigation.navigate('Login');
         }
 

@@ -242,8 +242,10 @@ const Profile = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header avec profil */}
+
         <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
+          {/*<View style={styles.avatarContainer}>
+
             <Image
               source={
                 userData.avatar
@@ -256,7 +258,7 @@ const Profile = ({ navigation }) => {
             onPress={() => navigation.navigate('ModifProfil')}>
               <Text style={styles.editAvatarText}>✎</Text>
             </TouchableOpacity>
-          </View>
+          </View>*/}
 
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{userData.name}</Text>
@@ -402,23 +404,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
     backgroundColor: '#e9ecef'
   },
-  editAvatarButton: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    backgroundColor: '#FF8C00',
-    width: 34,
-    height: 34,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-    shadowColor: '#FF8C00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    elevation: 4,
-  },
+
   editAvatarText: {
     color: '#fff',
     fontSize: 14,

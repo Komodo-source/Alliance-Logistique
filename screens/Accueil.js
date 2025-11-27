@@ -18,7 +18,7 @@ import * as FileManager from "./util/file-manager.js";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { NavBarData } from "./util/UI_navbar.js";
-
+import { loadImages } from "./util/ReferenceImage.js";
 const { width } = Dimensions.get("window");
 
 const Accueil = ({ navigation }) => {
@@ -303,8 +303,8 @@ const Accueil = ({ navigation }) => {
         onPress={() => navigation.navigate("Produit", { category: item.produit })}
         activeOpacity={0.9}
       >
-        {item.image_url ? (
-            <Image source={{ uri: item.image_url }} style={styles.productImage} resizeMode="cover" />
+        {item.id_produit ? (
+            <Image source={{ uri: loadImages(item.id_produit?.toString()) }} style={styles.productImage} resizeMode="cover" />
         ) : (
             <View style={[styles.productImage, styles.placeholderImage]}>
                  <MaterialCommunityIcons name="food-variant" size={30} color="#CBD5E1" />

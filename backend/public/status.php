@@ -76,7 +76,7 @@ function getStatus($baseUrl, $accessToken, $subscriptionKey, $referenceId, $targ
     return json_decode($response, true);
 }
 
-// 🔄 Appel des fonctions
+
 $accessToken = getAccessToken($baseUrl, $subscriptionKey, $apiUser, $apiKey);
 
 if (!$accessToken) {

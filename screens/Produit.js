@@ -5,29 +5,8 @@ import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 import * as FileManager from '../screens/util/file-manager.js'
 import { NavBarData } from './util/UI_navbar.js';
+import { loadImages } from './util/ReferenceImage.js';
 
-export const loadImages = (id_produit) => {
-  switch(id_produit){
-      case "1":
-          return 'https://arena.ct.ws/product/3.jpg';
-      case "2":
-          return 'https://arena.ct.ws/product/2.jpg';
-      case "3":
-          return 'https://arena.ct.ws/product/3.jpg';
-      case "4":
-          return 'https://arena.ct.ws/product/4.jpg';
-      case "8":
-          return 'https://arena.ct.ws/product/8.jpg';
-      case "10":
-          return 'https://arena.ct.ws/product/10.jpg';
-      case "11":
-          return 'https://arena.ct.ws/product/11.jpg';
-      case "12":
-          return 'https://arena.ct.ws/product/12.jpg';
-      default:
-          return 'https://arena.ct.ws/product/default.jpg';
-  }
-}
 
 const Produit = ({ navigation, route}) => {
   const [produits, setProduits] = useState([]);
@@ -184,7 +163,7 @@ const Produit = ({ navigation, route}) => {
         contentContainerStyle={styles.productGrid}
       />
       <NavBarData navigation={navigation} active_page="produit" />
-    {/**}
+    {/**
     <View style={styles.navbar}>
       <TouchableOpacity
         style={[styles.navButton, styles.activeButton]}
