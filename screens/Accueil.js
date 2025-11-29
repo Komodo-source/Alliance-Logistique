@@ -717,7 +717,8 @@ const styles = StyleSheet.create({
 
   // Sections
   sectionContainer: {
-    marginBottom: 30,
+    marginBottom: 35,
+
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -790,6 +791,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 5,
     elevation: 2,
+    marginBottom: 50
   },
   orderCardHeader: {
     flexDirection: 'row',

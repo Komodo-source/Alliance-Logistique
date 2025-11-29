@@ -15,8 +15,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as FileManager from '../util/file-manager';
 import { debbug_log } from '../util/debbug';
-
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { openNavigationWithChoice } from '../util/Polyvalent';
 const { width } = Dimensions.get('window');
+//import * as Clipboard from '@react-native-clipboard/clipboard';
+import SnackBar from '../util/SnackBar';
+
 
 const CoursierProcessScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
@@ -29,6 +33,8 @@ const CoursierProcessScreen = ({ navigation, route }) => {
 
   // route param item may be undefined; guard early
   const item = route?.params?.item ?? null;
+
+  const snackBarRef = useRef();
 
   useEffect(() => {
     fetchCommandData();
@@ -220,6 +226,20 @@ const handleClientCodeSubmit = () => {
   }
 };
 
+const copyClipboard = () => {
+  if (!commandData || !item) {
+    snackBarRef.current?.show("Impossible de copier : données manquantes", "error");
+    return;
+  }
+  const from = String(commandData.fournisseur.localisation || '').split(';')[0] || '';
+  const to = String(item.localisation_dmd || '').split(';')[1] || '';
+  const text = `${from} ${to}`.trim();
+
+  //Clipboard.default.setString(text);
+  console.log("Information compié " + text);
+  snackBarRef.current?.show("Coordonnées copiées !", "info");
+}
+
   const getStepIcon = (stepNumber) => {
     switch (stepNumber) {
       case 1:
@@ -383,8 +403,12 @@ const handleClientCodeSubmit = () => {
                   <Ionicons name="location" size={16} color="#666" />
                   <Text style={styles.infoText}>{commandData.fournisseur.localisation}</Text>
                 </View>
+                <SnackBar ref={snackBarRef} />
               </View>
+
             </View>
+
+
 
             <View style={styles.infoCard}>
               <View style={styles.infoHeader}>
@@ -406,6 +430,41 @@ const handleClientCodeSubmit = () => {
               </View>
             </View>
 
+          <View style={styles.actionContainer}>
+              {/* 1. Navigation Button */}
+              <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => openNavigationWithChoice(commandData.fournisseur.localisation.split(";")[0], commandData.fournisseur.localisation.split(";")[1])}
+                  activeOpacity={0.7}
+              >
+                  <MaterialCommunityIcons
+                      name="navigation"
+                      size={24}
+                      color="#FFF" // Use a color that contrasts with the background
+                      style={styles.icon}
+                  />
+                  <Text style={[styles.buttonText, { color: '#FFF' }]}>
+                      Naviguer
+                  </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                  style={[styles.actionButton, styles.copyButton]}
+                  onPress={() =>  copyClipboard()}
+                  activeOpacity={0.7}
+              >
+                  <MaterialCommunityIcons
+                      name="content-copy" // Icon for copying
+                      size={24}
+                      color="#111" // Use the original color or another contrasting color
+                      style={styles.icon}
+                  />
+                  <Text style={[styles.buttonText, { color: '#111' }]}>
+                      Copier
+                  </Text>
+              </TouchableOpacity>
+          </View>
+
             <View style={styles.codeInputContainer}>
               <Text style={styles.codeLabel}>Code de confirmation fournisseur</Text>
               <TextInput
@@ -418,7 +477,10 @@ const handleClientCodeSubmit = () => {
               <TouchableOpacity style={[styles.button, !fournisseurCode && styles.buttonDisabled]} onPress={handleFournisseurCodeSubmit} disabled={!fournisseurCode}>
                 <Text style={styles.buttonText}>Valider la récupération</Text>
               </TouchableOpacity>
+
+
             </View>
+            <SnackBar ref={snackBarRef} />
           </Animated.View>
         );
 
@@ -485,9 +547,45 @@ const handleClientCodeSubmit = () => {
               </View>
             </View>
 
+            <View style={styles.actionContainer}>
+              {/* 1. Navigation Button */}
+              <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => openNavigationWithChoice(commandData.client.localisation.split(";")[0], commandData.client.localisation.split(";")[1])}
+                  activeOpacity={0.7}
+              >
+                  <MaterialCommunityIcons
+                      name="navigation"
+                      size={24}
+                      color="#FFF" // Use a color that contrasts with the background
+                      style={styles.icon}
+                  />
+                  <Text style={[styles.buttonText, { color: '#FFF' }]}>
+                      Naviguer
+                  </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                  style={[styles.actionButton, styles.copyButton]}
+                  onPress={() =>  copyClipboard()}
+                  activeOpacity={0.7}
+              >
+                  <MaterialCommunityIcons
+                      name="content-copy" // Icon for copying
+                      size={24}
+                      color="#111" // Use the original color or another contrasting color
+                      style={styles.icon}
+                  />
+                  <Text style={[styles.buttonText, { color: '#111' }]}>
+                      Copier
+                  </Text>
+              </TouchableOpacity>
+          </View>
+
             <TouchableOpacity style={styles.button} onPress={() => setCurrentStep(2.5)}>
               <Text style={styles.buttonText}>J'arrive chez le client</Text>
             </TouchableOpacity>
+            <SnackBar ref={snackBarRef} />
           </Animated.View>
         );
 
@@ -573,6 +671,7 @@ const handleClientCodeSubmit = () => {
                 <TouchableOpacity style={[styles.button, styles.buttonSecondary]} onPress={() => navigation.goBack()}>
                   <Text style={styles.buttonText}>Retour à l'accueil</Text>
                 </TouchableOpacity>
+                <SnackBar ref={snackBarRef} />
               </View>
             )}
           </Animated.View>
@@ -976,6 +1075,79 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 8,
+    marginBottom: 55,
+    borderColor: "#111",
+    borderWidth: 2
+  },
+  buttonText: {
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "500",
+    marginRight: 8,
+  },
+  actionContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between', // Puts space between the buttons
+        alignItems: 'center',
+        marginVertical: 8,
+        marginBottom: 55, // Retained the large bottom margin
+        // Apply overall shadow/elevation to the container if desired, or let buttons handle it
+    },
+
+    // Style for the individual action buttons
+    actionButton: {
+        flex: 1, // Each button takes up equal space
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#111', // Primary color for the Navigation button
+        borderRadius: 8,
+        padding: 10,
+        marginHorizontal: 4, // Small space between the buttons
+
+        // Shadow/Elevation
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+        borderWidth: 1, // Add a slight border for separation
+        borderColor: '#111',
+    },
+
+    // Specific style for the Copy button to differentiate it (e.g., inverse colors)
+    copyButton: {
+        backgroundColor: 'white', // White background
+        borderColor: '#111',
+        borderWidth: 2,
+    },
+
+    icon: {
+        marginRight: 4, // Small space between icon and text
+        marginLeft: 0,
+    },
+
+    buttonText: {
+        textAlign: "center",
+        fontSize: 16,
+        fontWeight: "600", // Increased weight for better visibility
+    },
 });
 
 export default CoursierProcessScreen;

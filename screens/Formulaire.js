@@ -425,7 +425,7 @@ const Formulaire = ({ navigation, route }) => {
   }, []);
 
   // Get products
-  const getProductd = useCallback(async () => {
+  const getProduct = useCallback(async () => {
     try {
       const fileData = await fileManager.read_file("product.json");
       let data = {};
@@ -785,8 +785,17 @@ const Formulaire = ({ navigation, route }) => {
         setSelectedLocation(null);
         setChargement(false);
         generateLocalNotification("Commande passée 📦", "Votre commande a été passé et elle est déjà en cours de préparation");
+{/*
+        try{
+          let actualnotification = await JSON.parse(fileManager.read_file("local_alerte_notification.json"));
+          actualnotification.add({
+            "title": "Commande impayé de " +
+            "name": "Vous avez une commandes impayée:" + formData.nom_dmd,
 
-        
+          })
+          fileManager.modify_value_local_storage("Notification")
+        }
+*/}
         navigation.navigate("Accueil");
       })
       .catch((error) => {

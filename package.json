@@ -20,6 +20,7 @@
     "@expo/dev-server": "~0.5.5",
     "@expo/metro-runtime": "~4.0.1",
     "@expo/vector-icons": "~14.0.4",
+    "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-native-community/cli": "~19.1.1",
     "@react-native-community/datetimepicker": "8.2.0",
     "@react-navigation/native": "~7.1.14",

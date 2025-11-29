@@ -658,7 +658,7 @@ const DetailCommande = ({ route, navigation }) => {
             <Text style={styles.subtitle}>{item.desc_dmd || 'Description non disponible'}</Text>
             <View style={styles.badgesContainer}>
               {renderStatusBadge()}
-              {renderPaymentBadge()}
+              {typeUser === "client" ? renderPaymentBadge() : null}
             </View>
           </View>
 
@@ -694,15 +694,24 @@ const DetailCommande = ({ route, navigation }) => {
                 </TouchableOpacity>
               </View>
             ) : typeUser === "coursier" ? (
-              <View style={styles.card}>
-                <Text style={styles.title}>Information sur la course</Text>
-                <Text style={styles.description}>Consultez les détails de cette livraison</Text>
-                <TouchableOpacity style={[styles.button, styles.courierButton]}
-                onPress={() => {navigation.navigate("CoursierProcessScreen", {item})}}>
-                  <Text style={[styles.buttonText, {color: "#FFF"}]}>Voir les détails</Text>
-                </TouchableOpacity>
-              </View>
-            ) : null}
+              // MODIFIED LOGIC FOR COURSIER (COURIER)
+              item.id_status === 2 ? (
+                <View style={[styles.card, styles.deliveredCard]}>
+                  <MaterialCommunityIcons name="check-circle" size={30} color="#06bd09" style={{ marginBottom: 10 }} />
+                  <Text style={styles.title}>Commande Livrée</Text>
+                  <Text style={styles.description}>Cette commande a déjà été livrée et finalisée.</Text>
+                </View>
+              ) : (
+                <View style={styles.card}>
+                  <Text style={styles.title}>Information sur la course</Text>
+                  <Text style={styles.description}>Consultez les détails de cette livraison</Text>
+                  <TouchableOpacity style={[styles.button, styles.courierButton]}
+                  onPress={() => {navigation.navigate("CoursierProcessScreen", {item})}}>
+                    <Text style={[styles.buttonText, {color: "#FFF"}]}>Voir les détails</Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            ): null}
           </View>
 
           {/* Order Info Section */}
@@ -725,31 +734,6 @@ const DetailCommande = ({ route, navigation }) => {
               <Text style={styles.infoText}>Code de commande: <Text style={styles.infoValue}>{(typeUser === "client" ?  item.code_echange : item.code_echange_fourni) || 'Code Introuvable'}</Text></Text>
             </View>): null}
           </View>
-
-        {!isAdresse && typeUser === "coursier"  ? (
-          <View style={styles.navButton}>
-              <TouchableOpacity
-                style={{    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',}}
-                onPress={() => openNavigationWithChoice(item.localisation_dmd.split(";")[0], item.localisation_dmd.split(";")[1])}
-                activeOpacity={0.7}
-              >
-                <MaterialCommunityIcons
-                  name="navigation"
-                  size={28}
-                  color="#111"
-                  style={styles.icon}
-                />
-                <Text style={styles.buttonText}>
-                  Naviguer vers la livraison
-                </Text>
-
-              </TouchableOpacity>
-          </View>) : null}
-
-
-
 
 
           {/* Payment Info Section */}
@@ -852,7 +836,7 @@ const DetailCommande = ({ route, navigation }) => {
             </Text>
           </TouchableOpacity>
           </View>
-        ) : typeUser === "coursier" ? (
+        ) : typeUser === "coursier" && item.id_status !== 2? (
           <TouchableOpacity
             style={[
               styles.invoiceButton,
@@ -1327,6 +1311,12 @@ activeNavText: {
     fontWeight: "500",
     marginRight: 8,
   },
+  deliveredCard: {
+  backgroundColor: '#e8f5e9', // Light green background for delivered status
+  borderColor: '#06bd09',
+  borderWidth: 1,
+  alignItems: 'center',
+},
 });
 
 export default DetailCommande;

@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 include_once('db.php');
 
-function trigger_notification_client($payload_num){
+function trigger_notification_client($payload_num, $conn){
     $sql = "SELECT session_id FROM SESSION S
             INNER JOIN COMMANDE CMD ON S.id_user = CMD.id_client
             WHERE id_cmd=?";
@@ -12,25 +12,25 @@ function trigger_notification_client($payload_num){
     $stmt->query($sql);
     $session_id = $stmt->fetch_assoc();
 
-$url = 'https://backend-logistique-api-latest.onrender.com/sendNotification.php';
-$data = ['session_id' => $session_id, 'type'=> 'client', 'payload_num'=> $payload_num];
+    $url = 'https://backend-logistique-api-latest.onrender.com/sendNotification.php';
+    $data = ['session_id' => $session_id, 'type'=> 'client', 'payload_num'=> $payload_num];
 
-$options = [
-    'http' => [
-        'header'  => "Content-Type: application/json\r\n",
-        'method'  => 'POST',
-        'content' => json_encode($data),
-    ],
-];
+    $options = [
+        'http' => [
+            'header'  => "Content-Type: application/json\r\n",
+            'method'  => 'POST',
+            'content' => json_encode($data),
+        ],
+    ];
 
-$context  = stream_context_create($options);
-$response = file_get_contents($url, false, $context);
+    $context  = stream_context_create($options);
+    $response = file_get_contents($url, false, $context);
 
-if ($response === FALSE) {
-    // Handle error
-}
+    if ($response === FALSE) {
+        // Handle error
+    }
 
-$data = json_decode($response, true);
+    $data = json_decode($response, true);
 
 
 }
@@ -44,18 +44,21 @@ try{
     $sql = "UPDATE COMMANDE SET id_status = ? WHERE id_cmd = ?";
     $stmt = $conn->prepare($sql);
 
-    $stmt->bind_param("ii", $nv_status, $id_cmd);  // Corrigé
+    $stmt->bind_param("ii", $nv_status, $id_cmd); 
     $stmt->execute();
 
     $status_to_payload = [
         1 => 3,//livraison en cours
         2 => 4//livré
     ];
-    trigger_notification_client($status_to_payload[$nv_status]);
+    try{
+        trigger_notification_client($status_to_payload[$nv_status], $conn);
+    }catch(Exception $e){
+        ;
+    }
 
     if($stmt->affected_rows > 0) {
         echo json_encode(["ok" => "success", "updated" => true]);
-
     } else {
         echo json_encode(["ok" => "success", "updated" => false, "message" => "No rows affected"]);
     }

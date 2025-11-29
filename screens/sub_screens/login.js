@@ -192,6 +192,7 @@ const Login = ({ navigation }) => {
 
         if(!fileManager.is_file_existing("local_alerte_notification.json")){
           fileManager.create("local_alerte_notification.json");
+          fileManager.add_value_to_local_storage("Notification", []);
         }
 
         // Fixed Alert.alert call - proper format with buttons array
