@@ -157,6 +157,17 @@ const ProfilPublic = ({ route }) => {
     return stars;
   };
 
+  const randomMarketPictures = () => {
+    let index = Math.floor(Math.random() * 4);
+    let list_image = [
+      "https://plus.unsplash.com/premium_photo-1686529896385-8a8d581d0225?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://images.unsplash.com/photo-1488459716781-31db52582fe9?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://images.unsplash.com/photo-1572402123736-c79526db405a?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "https://plus.unsplash.com/premium_photo-1747816993831-3c8b50fd8edd?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+    ]
+    return list_image[index];
+  }
+
   const renderProductCard = ({ item }) => (
     <View style={styles.productCard}>
       <Image source={{ uri: loadImages(item.id_produit) }} style={styles.productImage} />
@@ -190,7 +201,7 @@ const ProfilPublic = ({ route }) => {
             source={{
               uri: isSupplier
                 ? 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=200&fit=crop'
-                : 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=200&fit=crop'
+                : randomMarketPictures()
             }}
           />
           <View style={styles.headerOverlay} />
@@ -226,9 +237,9 @@ const ProfilPublic = ({ route }) => {
               )}
 
               <View style={styles.ratingContainer}>
-                <View style={styles.starsContainer}>
+                {/*<View style={styles.starsContainer}>
                   {renderStars(rating)}
-                </View>
+                </View>*/}
                 <Text style={styles.ratingText}>
                   {rating} ({userData.nb_commande || 0} {isSupplier ? 'commandes' : 'commandes'})
                 </Text>
@@ -266,12 +277,12 @@ const ProfilPublic = ({ route }) => {
                 <Text style={styles.statNumber}>{userData.nb_commande || 0}</Text>
                 <Text style={styles.statLabel}>Total Commande</Text>
               </View>
-
+{/*
               <View style={styles.statCard}>
                 <Ionicons name="star" size={24} color="#FFD700" />
                 <Text style={styles.statNumber}>{rating}</Text>
                 <Text style={styles.statLabel}>Evaluation</Text>
-              </View>
+              </View>*/}
             </>
           )}
         </View>
@@ -337,7 +348,7 @@ const ProfilPublic = ({ route }) => {
 
         {/* --- 3. UPDATED: Photos UI Section --- */}
         <View style={[styles.productsSection, { marginBottom: 40 }]}>
-          <Text style={styles.sectionTitle}>Photos de l'utilisateur</Text>
+          <Text style={styles.sectionTitle}>Photos du fournisseur</Text>
 
           {loadingPhotos ? (
             <ActivityIndicator size="small" color="#00B14F" />

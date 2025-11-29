@@ -480,7 +480,7 @@ const Accueil = ({ navigation }) => {
             </ScrollView>
         </View>
 
-        {/* Featured Products - FIXED SECTION */}
+        {/* Featured Products */}
         {(bestProducts.length > 0 || sponsoredProducts.length > 0) && (
         <View style={styles.sectionContainer}>
             <Text style={styles.sectionHeader}>Tendances & Sponsorisés</Text>

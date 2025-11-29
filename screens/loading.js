@@ -253,7 +253,7 @@ import React, { useEffect, useState} from 'react';
         // a mettre dans le loading et récup dans un fichier ici
         try {
           const response = await fetch('https://backend-logistique-api-latest.onrender.com/produitPlusVendu.php', {
-            method: 'POST',
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },

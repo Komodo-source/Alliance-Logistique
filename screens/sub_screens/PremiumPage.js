@@ -33,6 +33,7 @@ export default function PremiumPage({ navigation }) {
 
   // Selection State (Default to Yearly for upsell)
   const [selectedPlan, setSelectedPlan] = useState('yearly'); // 'monthly' or 'yearly'
+  const [plan, setPlan] = useState(5800);
 
   useEffect(() => {
     Animated.parallel([
@@ -86,7 +87,7 @@ export default function PremiumPage({ navigation }) {
             {/* Monthly Option */}
             <TouchableOpacity
               style={[styles.planCard, selectedPlan === 'monthly' && styles.selectedCard]}
-              onPress={() => setSelectedPlan('monthly')}
+              onPress={() => {setSelectedPlan('monthly');setPlan(500)}}
               activeOpacity={0.9}
             >
               <Text style={styles.planTitle}>Mensuel</Text>
@@ -96,14 +97,14 @@ export default function PremiumPage({ navigation }) {
             {/* Yearly Option - Highlighted */}
             <TouchableOpacity
               style={[styles.planCard, selectedPlan === 'yearly' && styles.selectedCard]}
-              onPress={() => setSelectedPlan('yearly')}
+              onPress={() => {setSelectedPlan('yearly');setPlan(5800)}}
               activeOpacity={0.9}
             >
               <View style={styles.saveBadge}>
                 <Text style={styles.saveText}>MEILLEURE OFFRE</Text>
               </View>
               <Text style={styles.planTitle}>Annuel</Text>
-              <Text style={styles.price}>6000 FCFA<Text style={styles.period}>/an</Text></Text>
+              <Text style={styles.price}>5800 FCFA<Text style={styles.period}>/an</Text></Text>
             </TouchableOpacity>
           </View>
 
@@ -113,8 +114,8 @@ export default function PremiumPage({ navigation }) {
             <FeatureItem text="Mise en avant sur la page principale" />
             <FeatureItem text="Possibilité de vente au niveau National" />
             <FeatureItem text="Bonus pour un niveau de vente élevé" />
-            <FeatureItem text="Support client prioritaire 24/7" />
             <FeatureItem text="Badge vendeur certifié" />
+            <FeatureItem text="Et plus..." />
           </View>
 
           {/* Bottom CTA Section */}
@@ -124,7 +125,7 @@ export default function PremiumPage({ navigation }) {
               <Text style={styles.trialText}>Profitez de 14 jours de premium gratuit pour votre nouvelle inscription.</Text>
             </View>
 
-            <TouchableOpacity style={styles.mainButton} onPress={handleSubscribe}>
+            <TouchableOpacity style={styles.mainButton} onPress={() => navigation.navigate("payement", { command_data: null, amount: plan})}>
               <Text style={styles.mainButtonText}>
                 {selectedPlan === 'yearly' ? 'COMMENCER (14 Jours Gratuits)' : 'S\'ABONNER MAINTENANT'}
               </Text>

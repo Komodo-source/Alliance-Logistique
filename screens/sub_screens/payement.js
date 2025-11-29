@@ -4,6 +4,9 @@ import * as fileManager from '../util/file-manager.js';
 import { StripeProvider, useStripe } from '@stripe/stripe-react-native';
 
 const payement = ({ navigation, route }) => {
+  if(route.params.command_data === null){
+    
+  }
     const [formData, setFormData] = useState({
         id: route.params.command_data?.id_cmd || route.params.id_cmd,
         amount: route.params.amount || route.params.command_data?.amount || 1000,

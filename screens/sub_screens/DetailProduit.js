@@ -4,6 +4,7 @@ import { Ionicons, FontAwesome } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { debbug_log } from '../util/debbug';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { read_file } from '../util/file-manager';
 
 var headers = {
   'Accept' : 'application/json',
@@ -39,7 +40,7 @@ const DetailProduit = ({ route, navigation }) => {
   const [fourni, setFourni] = useState(null);
   const [estCharge, setFourniCharge] = useState(false);
   const [locationLoading, setLocationLoading] = useState(true);
-
+  const [type, setType] = useState("");
     const { item } = route.params;
     console.log(item );
 
@@ -70,6 +71,10 @@ const DetailProduit = ({ route, navigation }) => {
     }
   };
 
+  const getType = async() => {
+    const data = await read_file("auto.json");
+    setType(data.type);
+  }
 
   const getFourni = async () => {
     let data = {};
@@ -182,13 +187,14 @@ const renderFourniChoix = ({ item: fourni, index }) => {
 };
 
     useEffect(() => {
+      getType();
     getCurrentLocation();
     getFourni();
   }, []);
 
   return (
   <ScrollView
-    
+
   >
     <SafeAreaView style={styles.container}>
       <View style={styles.main}>
@@ -203,14 +209,18 @@ const renderFourniChoix = ({ item: fourni, index }) => {
 
         <Text style={styles.description}>Ceci est une description du produit le temps que l'on introduise la description du produit</Text>
 
-      <TouchableOpacity
+      {type === "client" ? (
+<TouchableOpacity
         style={styles.Panier}
         onPress={() => navigation.navigate('commande_reccurente')}
       >
+
         <Text style={{color: "#fff", fontSize: 19, fontWeight: "500", numberOfLines:1, adjustsFontSizeToFit:true}}>
           Ajouter à une commande récurrente
         </Text>
       </TouchableOpacity>
+      ) : null}
+
 
       <SafeAreaView style={styles.listFourni}>
         <Text style={styles.NbFourni}>Nombre de fournisseur produisant<Text style={{color: "#2757F5"}}> {item.nom_produit}</Text> : {item.nb_fournisseur}</Text>

@@ -13,7 +13,7 @@ try{
         FROM COMMANDE_PRODUIT CP
         INNER JOIN PRODUIT P
             ON CP.id_produit = P.id_produit
-        GROUP BY P.nom_produit
+        GROUP BY P.id_produit,P.nom_produit
         ORDER BY total_commandes DESC
         LIMIT 5;
         ");
